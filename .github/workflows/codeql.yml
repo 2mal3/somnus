@@ -1,0 +1,55 @@
+name: "CodeQL"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "**.py"
+      - "**.toml"
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+    paths:
+      - "**.py"
+      - "**.toml"
+  schedule:
+    - cron: '29 19 * * 5'
+
+jobs:
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          cache: pip
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Run Ruff
+        run: ruff check --output-format=github
+
+  pyright:
+    name: Pyright
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          cache: pip
+      - name: Install Dependencies
+        run: pip install -r requirements.lock
+
+      - name: Run Pyright
+        uses: jakebailey/pyright-action@v2
