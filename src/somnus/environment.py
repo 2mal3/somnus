@@ -11,6 +11,7 @@ class Config(BaseModel):
     HOST_SERVER_PASSWORD: str
     HOST_SERVER_MAC: str
     MC_SERVER_START_CMD: str
+    MC_SERVER_START_CMD_SUDO: str
     MC_SERVER_ADDRESS: str
 
 

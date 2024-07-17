@@ -1,5 +1,6 @@
 import asyncio
 
+from pexpect import exceptions, pxssh
 from asyncer import asyncify
 from ping3 import ping
 from wakeonlan import send_magic_packet
@@ -34,7 +35,7 @@ async def start_server(config: Config = CONFIG):
         async for _ in _start_mc_server(config):
             yield
     except Exception as e:
-        raise RuntimeError(f"Could not start MC server | {e}")
+        raise RuntimeError(f"Could not start MC server | {repr(e)}")
 
 
 async def _start_host_server(config: Config):
@@ -60,13 +61,20 @@ async def _start_mc_server(config: Config):
     yield
 
     log.debug("Starting screen session ...")
-    ssh.sendline("screen -S mc-server-control")
+    if config.MC_SERVER_START_CMD_SUDO != "true":
+        ssh.sendline("screen -S mc-server-control")
+    else:
+        log.debug("Using sudo screen session ...")
+        ssh.sendline("sudo screen -S mc-server-control")
+        ssh.expect("sudo")
+        ssh.sendline(config.HOST_SERVER_PASSWORD)
     yield
 
     log.debug("Send MC server start command ...")
     ssh.sendline(config.MC_SERVER_START_CMD)
     yield
 
+    log.debug("Waiting for MC server to start ...")
     messages = ["Starting", "Loading libraries", "Environment", "Preparing level", ">"]
     for i, message in enumerate(messages):
         ssh.expect(message)

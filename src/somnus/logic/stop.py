@@ -19,7 +19,7 @@ async def stop_server(config: Config = CONFIG):
 
     try:
         if mc_server_state == ServerState.RUNNING:
-            async for _ in _stop_mc_server(ssh):
+            async for _ in _stop_mc_server(ssh, config):
                 yield
         yield
     except Exception as e:
@@ -28,9 +28,15 @@ async def stop_server(config: Config = CONFIG):
     ssh.logout()
 
 
-async def _stop_mc_server(ssh: pxssh.pxssh):
+async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
     log.debug("Connecting to screen session ...")
-    ssh.sendline("screen -r mc-server-control")
+    if config.MC_SERVER_START_CMD_SUDO != "true":
+        ssh.sendline("screen -r mc-server-control")
+    else:
+        log.debug("Using sudo screen session ...")
+        ssh.sendline("sudo screen -r mc-server-control")
+        ssh.expect("sudo")
+        ssh.sendline(config.HOST_SERVER_PASSWORD)
     ssh.expect(">")
     yield
 
