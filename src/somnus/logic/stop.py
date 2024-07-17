@@ -1,3 +1,5 @@
+import asyncio
+
 from pexpect import pxssh
 
 from somnus.environment import Config, CONFIG
@@ -40,3 +42,12 @@ async def _stop_mc_server(ssh: pxssh.pxssh):
     log.debug("Exiting screen session ...")
     ssh.sendline("exit")
     ssh.prompt()
+
+
+async def main():
+    async for _ in stop_server():
+        pass
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

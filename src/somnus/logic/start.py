@@ -78,3 +78,12 @@ async def _start_mc_server(config: Config):
     ssh.sendcontrol("d")
     ssh.prompt()
     ssh.logout()
+
+
+async def main():
+    async for _ in start_server():
+        pass
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
