@@ -7,8 +7,8 @@ from mcstatus import JavaServer
 from pexpect import pxssh
 from ping3 import ping
 
-from somuns.environment import Config
-from somuns.logger import log
+from somnus.environment import Config
+from somnus.logger import log
 
 
 class ServerState(Enum):

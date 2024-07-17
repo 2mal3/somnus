@@ -4,9 +4,9 @@ from asyncer import asyncify
 from ping3 import ping
 from wakeonlan import send_magic_packet
 
-from somuns.environment import Config, CONFIG
-from somuns.logger import log
-from somuns.logic.utils import ServerState, get_server_state, ssh_login, UserInputError
+from somnus.environment import Config, CONFIG
+from somnus.logger import log
+from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError
 
 
 async def start_server(config: Config = CONFIG):

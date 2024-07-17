@@ -1,8 +1,8 @@
 from pexpect import pxssh
 
-from somuns.environment import Config, CONFIG
-from somuns.logger import log
-from somuns.logic.utils import ServerState, get_server_state, ssh_login, UserInputError
+from somnus.environment import Config, CONFIG
+from somnus.logger import log
+from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError
 
 
 async def stop_server(config: Config = CONFIG):

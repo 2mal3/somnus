@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 
-from somuns.environment import CONFIG, Config
-from somuns.logger import log
-from somuns.logic import start, stop, utils
+from somnus.environment import CONFIG, Config
+from somnus.logger import log
+from somnus.logic import start, stop, utils
 
 intents = discord.Intents.default()
 intents.message_content = True

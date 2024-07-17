@@ -15,7 +15,7 @@ _console_handler.setLevel(_LEVEL)
 _console_handler.setFormatter(_formatter)
 log.addHandler(_console_handler)
 
-_LOG_FILE_PATH = Path.cwd() / "somuns.log"
+_LOG_FILE_PATH = Path.cwd() / "somnus.log"
 open(_LOG_FILE_PATH, "w").close()
 _file_handler = logging.FileHandler(_LOG_FILE_PATH)
 _file_handler.setLevel(_LEVEL)
