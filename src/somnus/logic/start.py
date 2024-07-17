@@ -1,6 +1,5 @@
 import asyncio
 
-from pexpect import exceptions, pxssh
 from asyncer import asyncify
 from ping3 import ping
 from wakeonlan import send_magic_packet
@@ -75,7 +74,13 @@ async def _start_mc_server(config: Config):
     yield
 
     log.debug("Waiting for MC server to start ...")
-    messages = ["Starting", "Loading libraries", "Environment", "Preparing level", ">"]
+    messages = [
+        ["Starting", "running"],
+        ["Loading libraries", "Loading"],
+        ["Environment", "Preparing"],
+        ["Preparing level", "Done"],
+        ">"
+    ]
     for i, message in enumerate(messages):
         ssh.expect(message)
         yield
