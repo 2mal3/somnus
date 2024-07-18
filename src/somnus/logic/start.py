@@ -15,6 +15,7 @@ async def start_server(config: Config = CONFIG):
 
     if ServerState.STOPPED not in (host_server_state, mc_server_state):
         raise UserInputError("Server is already running")
+    yield
 
     # Start host server
     if host_server_state == ServerState.STOPPED:

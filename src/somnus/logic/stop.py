@@ -13,6 +13,7 @@ async def stop_server(config: Config = CONFIG):
 
     if ServerState.RUNNING not in (host_server_state, mc_server_state):
         raise UserInputError("Server already stopped")
+    yield
 
     ssh = await ssh_login(config)
     yield
