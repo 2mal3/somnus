@@ -43,9 +43,9 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
     ssh.sendline("stop")
     messages = ["overworld", "the_end", "nether"]
     for message in messages:
-        ssh.expect(message)
+        ssh.expect(message, timeout=120)
         yield
-    ssh.prompt()
+    ssh.prompt(timeout=120)
     yield
 
     log.debug("Exiting screen session ...")
