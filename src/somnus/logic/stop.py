@@ -41,6 +41,10 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
 
     log.debug("Sending stop command ...")
     ssh.sendline("stop")
+    messages = ["overworld", "the_end", "nether"]
+    for message in messages:
+        ssh.expect(message)
+        yield
     ssh.prompt()
     yield
 
