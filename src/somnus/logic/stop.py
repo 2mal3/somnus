@@ -37,7 +37,6 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
         ssh.sendline("sudo screen -r mc-server-control")
         ssh.expect("sudo")
         ssh.sendline(config.HOST_SERVER_PASSWORD)
-    ssh.expect(">")
     yield
 
     log.debug("Sending stop command ...")
