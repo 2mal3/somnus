@@ -24,7 +24,7 @@ async def ping_command(ctx: discord.Interaction):
 
 @bot.tree.command(name="start", description="Starts the server")
 async def start_server_command(ctx: discord.Interaction):
-    start_steps = 10
+    start_steps = 20
     message = "Starting Server ..."
 
     log.info("Received start command ...")
@@ -33,7 +33,7 @@ async def start_server_command(ctx: discord.Interaction):
     i = 0
     try:
         async for _ in start.start_server():
-            i += 1
+            i += 2
             await ctx.edit_original_response(content=_generate_progress_bar(i, start_steps, message))
     except Exception as e:
         if isinstance(e, utils.UserInputError):
@@ -63,7 +63,7 @@ async def stop_server_command(ctx: discord.Interaction):
     i = 0
     try:
         async for _ in stop.stop_server():
-            i += 1
+            i += 2
             await ctx.edit_original_response(content=_generate_progress_bar(i, stop_steps, message))
     except Exception as e:
         if isinstance(e, utils.UserInputError):
