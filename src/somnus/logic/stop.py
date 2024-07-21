@@ -4,7 +4,7 @@ from pexpect import pxssh
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError
+from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command, exit_screen
 
 
 async def stop_server(config: Config = CONFIG):
@@ -24,20 +24,22 @@ async def stop_server(config: Config = CONFIG):
                 yield
         yield
     except Exception as e:
+        await exit_screen(ssh)
+        await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")
+        ssh.prompt()
+        ssh.logout()
         raise RuntimeError(f"Could not stop MC server | {e}")
 
+    log.debug("Exiting screen session ...")
+    ssh.sendline("exit")
+    ssh.prompt()
     ssh.logout()
 
 
 async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
     log.debug("Connecting to screen session ...")
-    if config.MC_SERVER_START_CMD_SUDO != "true":
-        ssh.sendline("screen -r mc-server-control")
-    else:
-        log.debug("Using sudo screen session ...")
-        ssh.sendline("sudo screen -r mc-server-control")
-        ssh.expect("sudo")
-        ssh.sendline(config.HOST_SERVER_PASSWORD)
+
+    await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
     yield
 
     log.debug("Sending stop command ...")
@@ -47,11 +49,6 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
         ssh.expect(message, timeout=120)
         yield
     ssh.prompt(timeout=120)
-    yield
-
-    log.debug("Exiting screen session ...")
-    ssh.sendline("exit")
-    ssh.prompt()
 
 
 async def main():

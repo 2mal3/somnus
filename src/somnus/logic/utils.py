@@ -58,3 +58,19 @@ async def get_server_state(config: Config) -> tuple[ServerState, ServerState]:
 
     # Host server and MC server running
     return ServerState.RUNNING, ServerState.RUNNING
+
+
+async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
+    if config.MC_SERVER_START_CMD_SUDO != "true":
+        ssh.sendline(command)
+    else:
+        ssh.sendline(f"sudo {command}")
+        ssh.expect("sudo")
+        ssh.sendline(config.HOST_SERVER_PASSWORD)
+
+
+async def exit_screen(ssh: pxssh.pxssh):
+    ssh.sendcontrol("a")
+    await asyncio.sleep(0.1)
+    ssh.sendcontrol("d")
+    ssh.prompt()

@@ -3,10 +3,12 @@ import asyncio
 from asyncer import asyncify
 from ping3 import ping
 from wakeonlan import send_magic_packet
+from pexpect import pxssh
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError
+from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command, \
+    exit_screen
 
 
 async def start_server(config: Config = CONFIG):
@@ -31,11 +33,24 @@ async def start_server(config: Config = CONFIG):
 
     # Start MC server
     log.debug("Starting MC server ...")
+    ssh = await ssh_login(config)
+    yield
+
     try:
-        async for _ in _start_mc_server(config):
+        async for _ in _start_mc_server(config, ssh):
             yield
+    # Cancel screen session if MC server could not be started so we don't open useless screens
     except Exception as e:
-        raise RuntimeError(f"Could not start MC server | {repr(e)}")
+        await exit_screen(ssh)
+        await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")
+        ssh.prompt()
+        ssh.logout()
+        raise RuntimeError(f"Could not start MC server | {e}")
+
+    log.debug("Logging out ...")
+    await exit_screen(ssh)
+    ssh.prompt()
+    ssh.logout()
 
 
 async def _start_host_server(config: Config):
@@ -56,18 +71,9 @@ async def _start_host_server(config: Config):
     raise TimeoutError("Could not start host server")
 
 
-async def _start_mc_server(config: Config):
-    ssh = await ssh_login(config)
-    yield
-
+async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
     log.debug("Starting screen session ...")
-    if config.MC_SERVER_START_CMD_SUDO != "true":
-        ssh.sendline("screen -S mc-server-control")
-    else:
-        log.debug("Using sudo screen session ...")
-        ssh.sendline("sudo screen -S mc-server-control")
-        ssh.expect("sudo")
-        ssh.sendline(config.HOST_SERVER_PASSWORD)
+    await send_possible_sudo_command(ssh, config, "screen -S mc-server-control")
     yield
 
     log.debug("Send MC server start command ...")
@@ -85,13 +91,6 @@ async def _start_mc_server(config: Config):
     for i, message in enumerate(messages):
         ssh.expect(message)
         yield
-
-    log.debug("Logging out ...")
-    ssh.sendcontrol("a")
-    await asyncio.sleep(0.1)
-    ssh.sendcontrol("d")
-    ssh.prompt()
-    ssh.logout()
 
 
 async def main():
