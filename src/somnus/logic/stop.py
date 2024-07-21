@@ -4,7 +4,7 @@ from pexpect import pxssh
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command, exit_screen
+from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command, send_sudo_command
 
 
 async def stop_server(config: Config = CONFIG):
@@ -18,21 +18,28 @@ async def stop_server(config: Config = CONFIG):
     ssh = await ssh_login(config)
     yield
 
-    try:
-        if mc_server_state == ServerState.RUNNING:
+    # Stop MC server
+    if mc_server_state == ServerState.RUNNING:
+        try:
             async for _ in _stop_mc_server(ssh, config):
                 yield
-        yield
-    except Exception as e:
-        await exit_screen(ssh)
-        await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")
-        ssh.prompt()
-        ssh.logout()
-        raise RuntimeError(f"Could not stop MC server | {e}")
+        except Exception as e:
+            raise RuntimeError(f"Could not stop MC server | {e}")
+    yield
 
+    # Exit screen session
     log.debug("Exiting screen session ...")
     ssh.sendline("exit")
     ssh.prompt()
+    yield
+
+    # Stop host server
+    if host_server_state == ServerState.RUNNING:
+        try:
+            await send_sudo_command(ssh, config, "shutdown -h now")
+        except Exception as e:
+            raise RuntimeError(f"Could not stop host server | {e}")
+
     ssh.logout()
 
 

@@ -64,9 +64,13 @@ async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: 
     if config.MC_SERVER_START_CMD_SUDO != "true":
         ssh.sendline(command)
     else:
-        ssh.sendline(f"sudo {command}")
-        ssh.expect("sudo")
-        ssh.sendline(config.HOST_SERVER_PASSWORD)
+        await send_sudo_command(ssh, config, command)
+
+
+async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
+    ssh.sendline(f"sudo {command}")
+    ssh.expect("sudo")
+    ssh.sendline(config.HOST_SERVER_PASSWORD)
 
 
 async def exit_screen(ssh: pxssh.pxssh):
