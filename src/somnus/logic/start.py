@@ -7,8 +7,7 @@ from pexpect import pxssh
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command, \
-    exit_screen
+from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command
 
 
 async def start_server(config: Config = CONFIG):
@@ -41,15 +40,19 @@ async def start_server(config: Config = CONFIG):
             yield
     # Cancel screen session if MC server could not be started so we don't open useless screens
     except Exception as e:
-        await exit_screen(ssh)
-        await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")
+        ssh.sendline("exit")
+        await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")    # close screen
         ssh.prompt()
         ssh.logout()
         raise RuntimeError(f"Could not start MC server | {e}")
 
     log.debug("Logging out ...")
-    await exit_screen(ssh)
+    # Exit screen session
+    ssh.sendcontrol("a")
+    await asyncio.sleep(0.1)
+    ssh.sendcontrol("d")
     ssh.prompt()
+
     ssh.logout()
 
 

@@ -71,10 +71,3 @@ async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
     ssh.sendline(f"sudo {command}")
     ssh.expect("sudo")
     ssh.sendline(config.HOST_SERVER_PASSWORD)
-
-
-async def exit_screen(ssh: pxssh.pxssh):
-    ssh.sendcontrol("a")
-    await asyncio.sleep(0.1)
-    ssh.sendcontrol("d")
-    ssh.prompt()

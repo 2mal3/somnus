@@ -37,6 +37,7 @@ async def stop_server(config: Config = CONFIG):
     if host_server_state == ServerState.RUNNING:
         try:
             await send_sudo_command(ssh, config, "shutdown -h now")
+            yield
         except Exception as e:
             raise RuntimeError(f"Could not stop host server | {e}")
 
