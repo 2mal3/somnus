@@ -4,7 +4,14 @@ from pexpect import pxssh
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command, send_sudo_command
+from somnus.logic.utils import (
+    ServerState,
+    get_server_state,
+    ssh_login,
+    UserInputError,
+    send_possible_sudo_command,
+    send_sudo_command,
+)
 
 
 async def stop_server(config: Config = CONFIG):
@@ -34,7 +41,7 @@ async def stop_server(config: Config = CONFIG):
     yield
 
     # Stop host server
-    if host_server_state == ServerState.RUNNING:
+    if host_server_state == ServerState.RUNNING and config.DEBUG != "0":
         try:
             await send_sudo_command(ssh, config, "shutdown -h now")
             yield
