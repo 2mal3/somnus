@@ -1,7 +1,6 @@
 import asyncio
 from enum import Enum
 
-from asyncer import asyncify
 from mcstatus import JavaServer
 
 from pexpect import pxssh
@@ -45,7 +44,7 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
 
 async def get_server_state(config: Config) -> tuple[ServerState, ServerState]:
     # Host server not running
-    host_server_running = await asyncify(ping)(config.HOST_SERVER_HOST)
+    host_server_running = ping(config.HOST_SERVER_HOST)
     if not host_server_running:
         return ServerState.STOPPED, ServerState.STOPPED
 

@@ -1,6 +1,5 @@
 import asyncio
 
-from asyncer import asyncify
 from ping3 import ping
 from wakeonlan import send_magic_packet
 from pexpect import pxssh
@@ -41,7 +40,7 @@ async def start_server(config: Config = CONFIG):
     # Cancel screen session if MC server could not be started so we don't open useless screens
     except Exception as e:
         ssh.sendline("exit")
-        await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")    # close screen
+        await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")  # close screen
         ssh.prompt()
         ssh.logout()
         raise RuntimeError(f"Could not start MC server | {e}")
@@ -67,7 +66,7 @@ async def _start_host_server(config: Config):
     for _ in range(5):
         await asyncio.sleep(300 // speed)
 
-        if await asyncify(ping)(config.HOST_SERVER_HOST, timeout=speed):
+        if ping(config.HOST_SERVER_HOST, timeout=speed):
             return
         log.warn("Could not start host server, trying again...")
 
@@ -89,7 +88,7 @@ async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
         ["Loading libraries", "Loading"],
         ["Environment", "Preparing"],
         ["Preparing level", "Done"],
-        ">"
+        ">",
     ]
     for i, message in enumerate(messages):
         ssh.expect(message)
