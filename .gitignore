@@ -1,5 +1,6 @@
 # editor/os generated files
 .idea/
+.direnv/
 
 # python generated files
 __pycache__/
