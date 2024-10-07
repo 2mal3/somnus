@@ -6,9 +6,12 @@ from mcstatus import JavaServer
 from pexpect import pxssh
 from ping3 import ping
 
-from somnus.environment import Config
+from somnus.environment import Config, CONFIG
 from somnus.logger import log
 
+import re
+
+prompt_regex = ""
 
 class ServerState(Enum):
     RUNNING = "running"
@@ -17,6 +20,9 @@ class ServerState(Enum):
 
 class UserInputError(Exception):
     pass
+
+class Test:
+    prompt = ""
 
 
 async def ssh_login(config: Config) -> pxssh.pxssh:
@@ -70,3 +76,28 @@ async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
     ssh.sendline(f"sudo {command}")
     ssh.expect("sudo")
     ssh.sendline(config.HOST_SERVER_PASSWORD)
+
+async def get_bash_prompt(ssh: pxssh.pxssh, config: Config = CONFIG):
+    return
+    # Benutzername abfragen
+    ssh.sendline('whoami')
+    ssh.prompt()
+    # Entferne Escape-Sequenzen und extrahiere den Benutzernamen
+    username_raw = ssh.before.decode('utf-8')
+    username = remove_ansi_escapes(username_raw).splitlines()[1].strip()
+
+    # Hostname abfragen
+    ssh.sendline('hostname')
+    ssh.prompt()
+    # Entferne Escape-Sequenzen und extrahiere den Hostnamen
+    hostname_raw = ssh.before.decode('utf-8')
+    hostname = remove_ansi_escapes(hostname_raw).splitlines()[1].strip()
+
+    # Erstelle den dynamischen regulären Ausdruck für die Eingabeaufforderung
+    Test.prompt = fr'{re.escape(username)}@{re.escape(hostname)}:'
+    log.debug(f"Set prompt_regex to {Test.prompt}")
+
+def remove_ansi_escapes(text):
+    # Regulärer Ausdruck zum Entfernen von ANSI-Escape-Sequenzen
+    ansi_escape = re.compile(r'(?:\x1B[@-_][0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)

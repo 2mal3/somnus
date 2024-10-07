@@ -3,10 +3,11 @@ import asyncio
 from ping3 import ping
 from wakeonlan import send_magic_packet
 from pexpect import pxssh
+from pexpect.exceptions import TIMEOUT
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command
+from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command, get_bash_prompt
 
 
 async def start_server(config: Config = CONFIG):
@@ -34,6 +35,8 @@ async def start_server(config: Config = CONFIG):
     ssh = await ssh_login(config)
     yield
 
+    await get_bash_prompt(ssh)
+
     try:
         async for _ in _start_mc_server(config, ssh):
             yield
@@ -56,19 +59,27 @@ async def start_server(config: Config = CONFIG):
 
 
 async def _start_host_server(config: Config):
-    speed = 5
+    wol_speed = 5
+    ping_speed = 15
 
     for _ in range(5):
         send_magic_packet(config.HOST_SERVER_MAC)
-        await asyncio.sleep(speed)
+        await asyncio.sleep(wol_speed)
     yield
 
-    for _ in range(5):
-        await asyncio.sleep(300 // speed)
+    for _ in range(ping_speed):
+        await asyncio.sleep(300 // ping_speed)
 
-        if ping(config.HOST_SERVER_HOST, timeout=speed):
-            return
-        log.warn("Could not start host server, trying again...")
+        if ping(config.HOST_SERVER_HOST, timeout=ping_speed):
+            try:
+                ssh = await ssh_login(config)
+                ssh.logout()
+                return
+            except TIMEOUT:
+                log.warning("Could not start ssh connection to host server, trying again...")
+                continue
+                
+        log.warning("Could not ping host server, trying again...")
 
     raise TimeoutError("Could not start host server")
 
@@ -87,11 +98,15 @@ async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
         ["Starting", "running"],
         ["Loading libraries", "Loading"],
         ["Environment", "Preparing"],
-        ["Preparing level", "Done"],
-        ">",
+        ["Preparing level", ">"],
+        []
     ]
     for i, message in enumerate(messages):
-        ssh.expect(message)
+        index = ssh.expect(["Done"]+message)
+        if index == 0:
+            for j in range(i, len(messages)):
+                yield
+            return
         yield
 
 
