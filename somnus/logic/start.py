@@ -51,7 +51,7 @@ async def start_server(config: Config = CONFIG):
     ssh.sendcontrol("a")
     await asyncio.sleep(0.1)
     ssh.sendcontrol("d")
-    ssh.expect("@")
+    ssh.prompt()
 
     ssh.logout()
 
