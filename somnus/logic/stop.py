@@ -38,17 +38,8 @@ async def stop_server(config: Config = CONFIG):
     # Exit screen session
     log.debug("Exiting screen session ...")
 
-    # Alt, nicht korrekt funktionierend:
-    #ssh.sendline("exit")
-    #ssh.prompt() #<- does not work
-
-    # Neu, genau so schlecht funktionierend, Grund: siehe "_stop_mc_server"
-    ssh.sendline("export PS1='\\u@\\h:\\w\\$ '")  # Temporär den PS1-String setzen
     ssh.sendline("exit")
-    ssh.prompt()
-    log.debug("DEBUG-RÜCKGABE: "+str(ssh.before))
-    #ssh.expect("@", timeout=120)
-
+    ssh.expect("@")
     
     yield
 
@@ -64,19 +55,16 @@ async def stop_server(config: Config = CONFIG):
 
 
 async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
+    server_shutdown_maximum_time = 600
     log.debug("Connecting to screen session ...")
 
     await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
     yield
 
     log.debug("Sending stop command ...")
-    
-    # TODO: Da ssh.prompt immer das Timeout ausreizt (gibt auch False statt True zurück), habe ich etwas rumgetestet, aber nix funktioniert. Problem muss noch gefixt werden!
 
-    ssh.sendline("export PS1='\\u@\\h:\\w\\$ '")  # Temporär den PS1-String setzen
     ssh.sendline('stop')
-    ssh.prompt(timeout=120)
-    log.debug("DEBUG-RÜCKGABE: "+str(ssh.before))
+    ssh.expect("@", timeout=server_shutdown_maximum_time)
 
     # Es folgt: Alt oder nur zum Testen
 
@@ -89,10 +77,6 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
     # for message in stop_messages:
     #    ssh.expect(message, timeout=120)
 
-
-
-    #ssh.prompt() <- does not work
-    #ssh.expect("@", timeout=120)
 
     
 

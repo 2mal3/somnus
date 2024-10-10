@@ -7,7 +7,7 @@ from pexpect.exceptions import TIMEOUT
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command, get_bash_prompt
+from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command
 
 
 async def start_server(config: Config = CONFIG):
@@ -35,8 +35,6 @@ async def start_server(config: Config = CONFIG):
     ssh = await ssh_login(config)
     yield
 
-    await get_bash_prompt(ssh)
-
     try:
         async for _ in _start_mc_server(config, ssh):
             yield
@@ -44,7 +42,7 @@ async def start_server(config: Config = CONFIG):
     except Exception as e:
         ssh.sendline("exit")
         await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")  # close screen
-        ssh.prompt()
+        ssh.expect("@")
         ssh.logout()
         raise RuntimeError(f"Could not start MC server | {e}")
 
@@ -53,7 +51,7 @@ async def start_server(config: Config = CONFIG):
     ssh.sendcontrol("a")
     await asyncio.sleep(0.1)
     ssh.sendcontrol("d")
-    ssh.prompt()
+    ssh.expect("@")
 
     ssh.logout()
 
