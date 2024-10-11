@@ -7,7 +7,14 @@ from pexpect.exceptions import TIMEOUT
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command
+from somnus.logic.utils import (
+    ServerState,
+    get_server_state,
+    ssh_login,
+    UserInputError,
+    send_possible_sudo_command,
+    get_host_sever_state,
+)
 
 
 async def start_server(config: Config = CONFIG):
@@ -66,16 +73,11 @@ async def _start_host_server(config: Config):
     for _ in range(ping_speed):
         await asyncio.sleep(300 // ping_speed)
 
-        if ping(config.HOST_SERVER_HOST, timeout=ping_speed):
-            try:
-                ssh = await ssh_login(config)
-                ssh.logout()
-                return
-            except TIMEOUT:
-                log.warning("Could not start ssh connection to host server, trying again...")
-                continue
+        host_server_state = get_host_sever_state(config)
+        if host_server_state == ServerState.RUNNING:
+            return
 
-        log.warning("Could not ping host server, trying again...")
+        log.warning("Could not connect to host server, trying again...")
 
     raise TimeoutError("Could not start host server")
 

@@ -20,6 +20,11 @@ class UserInputError(Exception):
 
 
 async def ssh_login(config: Config) -> pxssh.pxssh:
+    """
+    Raises:
+        TimeoutError: Could not establish a SSH connection to the server
+    """
+
     ssh = pxssh.pxssh()
 
     attempts = 3
@@ -56,7 +61,7 @@ async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
 
 
 async def get_server_state(config: Config) -> tuple[ServerState, ServerState]:
-    host_server_state = _get_host_sever_state(config)
+    host_server_state = await get_host_sever_state(config)
     if host_server_state == ServerState.STOPPED:
         return ServerState.STOPPED, ServerState.STOPPED
 
@@ -75,9 +80,15 @@ async def _get_mc_server_state(config: Config) -> ServerState:
     return ServerState.RUNNING
 
 
-def _get_host_sever_state(config: Config) -> ServerState:
+async def get_host_sever_state(config: Config) -> ServerState:
     host_server_running = ping(config.HOST_SERVER_HOST)
     if not host_server_running:
+        return ServerState.STOPPED
+
+    try:
+        ssh = await ssh_login(config)
+        ssh.logout()
+    except TimeoutError:
         return ServerState.STOPPED
 
     return ServerState.RUNNING
