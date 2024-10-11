@@ -6,8 +6,9 @@ from mcstatus import JavaServer
 from pexpect import pxssh
 from ping3 import ping
 
-from somnus.environment import Config, CONFIG
+from somnus.environment import Config
 from somnus.logger import log
+
 
 class ServerState(Enum):
     RUNNING = "running"
@@ -41,23 +42,6 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
     return ssh
 
 
-async def get_server_state(config: Config) -> tuple[ServerState, ServerState]:
-    # Host server not running
-    host_server_running = ping(config.HOST_SERVER_HOST)
-    if not host_server_running:
-        return ServerState.STOPPED, ServerState.STOPPED
-
-    # Host server running, but MC server not running
-    try:
-        server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS, timeout=5)
-        await server.async_status()
-    except OSError:
-        return ServerState.RUNNING, ServerState.STOPPED
-
-    # Host server and MC server running
-    return ServerState.RUNNING, ServerState.RUNNING
-
-
 async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
     if config.MC_SERVER_START_CMD_SUDO != "true":
         ssh.sendline(command)
@@ -70,7 +54,30 @@ async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
     ssh.expect("sudo")
     ssh.sendline(config.HOST_SERVER_PASSWORD)
 
-def remove_ansi_escapes(text):
-    # Regulärer Ausdruck zum Entfernen von ANSI-Escape-Sequenzen
-    ansi_escape = re.compile(r'(?:\x1B[@-_][0-?]*[ -/]*[@-~])')
-    return ansi_escape.sub('', text)
+
+async def get_server_state(config: Config) -> tuple[ServerState, ServerState]:
+    host_server_state = _get_host_sever_state(config)
+    if host_server_state == ServerState.STOPPED:
+        return ServerState.STOPPED, ServerState.STOPPED
+
+    mc_server_state = await _get_mc_server_state(config)
+
+    return host_server_state, mc_server_state
+
+
+async def _get_mc_server_state(config: Config) -> ServerState:
+    try:
+        server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS, timeout=5)
+        await server.async_status()
+    except OSError:
+        return ServerState.STOPPED
+
+    return ServerState.RUNNING
+
+
+def _get_host_sever_state(config: Config) -> ServerState:
+    host_server_running = ping(config.HOST_SERVER_HOST)
+    if not host_server_running:
+        return ServerState.STOPPED
+
+    return ServerState.RUNNING

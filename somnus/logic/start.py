@@ -48,9 +48,7 @@ async def start_server(config: Config = CONFIG):
 
     log.debug("Logging out ...")
     # Exit screen session
-    ssh.sendcontrol("a")
-    await asyncio.sleep(0.1)
-    ssh.sendcontrol("d")
+    await _detach_screen_session(ssh)
     ssh.prompt()
 
     ssh.logout()
@@ -76,7 +74,7 @@ async def _start_host_server(config: Config):
             except TIMEOUT:
                 log.warning("Could not start ssh connection to host server, trying again...")
                 continue
-                
+
         log.warning("Could not ping host server, trying again...")
 
     raise TimeoutError("Could not start host server")
@@ -97,15 +95,21 @@ async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
         ["Loading libraries", "Loading"],
         ["Environment", "Preparing"],
         ["Preparing level", ">"],
-        []
+        [],
     ]
     for i, message in enumerate(messages):
-        index = ssh.expect(["Done"]+message)
+        index = ssh.expect(["Done"] + message)
         if index == 0:
             for j in range(i, len(messages)):
                 yield
             return
         yield
+
+
+async def _detach_screen_session(ssh: pxssh.pxssh):
+    ssh.sendcontrol("a")
+    await asyncio.sleep(0.1)
+    ssh.sendcontrol("d")
 
 
 async def main():
