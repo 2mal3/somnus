@@ -15,9 +15,9 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 async def on_ready():
     if bot.user is None:
         return
-    await check_world_selecter_json()
     await bot.change_presence(status=discord.Status.dnd)
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    await check_world_selecter_json()
 
 
 @bot.tree.command(name="ping", description="Replies with Pong!")
@@ -96,36 +96,44 @@ async def stop_server_command(ctx: discord.Interaction):
     log.info("Server stopped Messages sent!")
 
 
-@bot.tree.command(name="create_world", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation")
 #@app_commands.describe(display_name="Name that can be selected for all to see in Discord", start_cmd="Command that starts the Minecraft server on the server", sudo_start_cmd="True/False, whether the start command should be executed with sudo rights", visible="True/False, whether other people can select this world")
-async def create_world_command(ctx: discord.Interaction, display_name: str, start_cmd: str, sudo_start_cmd: bool, visible: bool):
-    if ctx.user.id != Config.DISCORD_SUPER_USER_ID:
-        await ctx.response.send_message("Nein", ephemeral=True)
-        return
+
+
+
+@bot.tree.command(name="pinging", description="Replies with Pong!")
+async def ping_command(ctx: discord.Interaction):
+    await ctx.response.send_message("Pong!")  # type: ignore
+
+
+#@bot.tree.command(name="createworld", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation", guild=discord.Object(id=910195152490999878))
+# async def create_world_command(ctx: discord.Interaction, display_name: str, start_cmd: str, sudo_start_cmd: bool, visible: bool):
+#     if ctx.user.id != Config.DISCORD_SUPER_USER_ID:
+#         await ctx.response.send_message("Nein", ephemeral=True)
+#         return
     
-    # Erstelle ein Dropdown-Menü
-    options = [
-        discord.SelectOption(label="1", value="1"),
-        discord.SelectOption(label="2", value="2"),
-        discord.SelectOption(label="3", value="3")
-    ]
+    # # Erstelle ein Dropdown-Menü
+    # options = [
+    #     discord.SelectOption(label="1", value="1"),
+    #     discord.SelectOption(label="2", value="2"),
+    #     discord.SelectOption(label="3", value="3")
+    # ]
 
-    select = discord.ui.Select(placeholder="Wähle eine Zahl...", options=options)
+    # select = discord.ui.Select(placeholder="Wähle eine Zahl...", options=options)
 
-    async def select_callback(select_interaction: discord.Interaction):
-        selected_value = select.values[0]
-        await ctx.response.send_message(f"Du hast {selected_value} ausgewählt.")
-        # Führe hier deine Methode basierend auf der Auswahl aus
-        log.debug(f"Dropdown: {selected_value}")
-        #await execute_based_on_selection(selected_value)
+    # async def select_callback(select_interaction: discord.Interaction):
+    #     selected_value = select.values[0]
+    #     await ctx.response.send_message(f"Du hast {selected_value} ausgewählt.")
+    #     # Führe hier deine Methode basierend auf der Auswahl aus
+    #     log.debug(f"Dropdown: {selected_value}")
+    #     #await execute_based_on_selection(selected_value)
 
-    select.callback = select_callback
+    # select.callback = select_callback
 
-    view = discord.ui.View()
-    view.add_item(select)
+    # view = discord.ui.View()
+    # view.add_item(select)
 
-    # Sende die Nachricht mit dem Dropdown-Menü
-    await ctx.response.send_message("Bitte wähle eine Zahl:", view=view)
+    # # Sende die Nachricht mit dem Dropdown-Menü
+    # await ctx.response.send_message("Bitte wähle eine Zahl:", view=view)
 
 
 

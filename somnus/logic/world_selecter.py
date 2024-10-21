@@ -7,19 +7,20 @@
 # delete_world() -> display_name per Drop-Down auswählen
 # 
 
-from somnus.environment import Config, CONFIG
+from somnus.environment import CONFIG, Config
 import os
 import json
 from somnus.logger import log
 import aiofiles
 
-json_path = "../world_selecter_data.json"
+json_path = "world_selecter_data.json"
 
 
 async def check_world_selecter_json():
     if os.path.exists(json_path):
-        with open(json_path, 'r', encoding='utf-8') as file:
-            data = json.load(file)
+        async with aiofiles.open(json_path, 'r', encoding='utf-8') as file:
+            content = await file.read()
+            data = json.loads(content)
             try:
                 if len(data.get("worlds")) > 0:
                     log.debug(f"'{json_path}' imported correctly")
@@ -32,14 +33,14 @@ async def check_world_selecter_json():
 
 
 
-async def _init_world_selecter_json():
+async def _init_world_selecter_json(config: Config = CONFIG):
     default_data = {
         "current_world": "Minecraft",
         "worlds": [
             {
                 "display_name": "Minecraft",
-                "start_cmd": Config.MC_SERVER_START_CMD,
-                "sudo_start_cmd": Config.MC_SERVER_START_CMD_SUDO,
+                "start_cmd": config.MC_SERVER_START_CMD,
+                "sudo_start_cmd": config.MC_SERVER_START_CMD_SUDO,
                 "visible": True
             }
         ]
@@ -48,13 +49,13 @@ async def _init_world_selecter_json():
     try:
         async with aiofiles.open(json_path, 'w', encoding='utf-8') as file:
             await file.write(json.dumps(default_data, indent=4))
-            log.debug(f"'{json_path}' was created")
+        log.debug(f"'{json_path}' was created")
     except Exception as e:
         log.error(f"Error creating JSON file: {e}")
 
 
 async def get_current_world():
-    with open(json_path, 'r', encoding='utf-8') as file:
+    async with aiofiles.open(json_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
         
         current_world_name = data[current_world]
@@ -73,7 +74,7 @@ async def create_new_world(display_name, start_cmd, sudo_start_cmd, visible):
         "visible": visible
     }
 
-    with open(json_path, 'r', encoding='utf-8') as file:
+    async with aiofiles.open(json_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
 
         if _search_world(display_name, data) != False:
@@ -93,7 +94,7 @@ async def edit_new_world(id, display_name, start_cmd, sudo_start_cmd, visible):
         "visible": visible
     }
 
-    with open(json_path, 'r', encoding='utf-8') as file:
+    async with aiofiles.open(json_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
 
         world_count = len(data["worlds"])
@@ -115,7 +116,7 @@ async def edit_new_world(id, display_name, start_cmd, sudo_start_cmd, visible):
     return True
 
 async def delete_world(display_name):
-    with open(json_path, 'r', encoding='utf-8') as file:
+    async with aiofiles.open(json_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
 
         world_to_delete = _search_world(display_name, data)
@@ -133,7 +134,7 @@ async def delete_world(display_name):
 
 
 async def get_all_data():
-    with open(json_path, 'r', encoding='utf-8') as file:
+    async with aiofiles.open(json_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
         return data
 

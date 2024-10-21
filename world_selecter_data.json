@@ -1,0 +1,11 @@
+{
+    "current_world": "Minecraft",
+    "worlds": [
+        {
+            "display_name": "Minecraft",
+            "start_cmd": "cd /home/emil/Dokumente/Minecraft-Server/ && java -Xmx1024M -Xms1024M -jar server.jar -server-ip 0.0.0.0 nogui",
+            "sudo_start_cmd": "",
+            "visible": true
+        }
+    ]
+}
