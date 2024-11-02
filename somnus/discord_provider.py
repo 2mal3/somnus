@@ -1,32 +1,35 @@
 import discord
-from discord.ext import commands
+#from discord.ext import commands
+from discord import app_commands
 
 from somnus.environment import CONFIG, Config
 from somnus.logger import log
-from somnus.logic import start, stop, utils
-from somnus.logic.world_selecter import check_world_selecter_json, get_current_world, create_new_world, edit_new_world, delete_world, get_all_data
+from somnus.logic import start, stop, utils, world_selecter
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix="/", intents=intents)
-
+bot = discord.Client(intents=intents)
+tree = app_commands.CommandTree(bot)
+guild_id = 910195152490999878
 
 @bot.event
 async def on_ready():
-    if bot.user is None:
-        return
+    await bot.change_presence(activity=discord.Game(name="booting"))
+    await tree.sync(guild=discord.Object(id=guild_id))  # Sync the command tree with Discord
     await bot.change_presence(status=discord.Status.dnd)
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
-    await check_world_selecter_json()
+    await world_selecter.check_world_selecter_json()
+    await _updateStatus()
 
 
-@bot.tree.command(name="ping", description="Replies with Pong!")
+@tree.command(name="ping", description="Replies with Pong!")
 async def ping_command(ctx: discord.Interaction):
     await ctx.response.send_message("Pong!")  # type: ignore
 
 
-@bot.tree.command(name="start", description="Starts the server")
+@tree.command(name="start", description="Starts the server")
 async def start_server_command(ctx: discord.Interaction):
+    
     start_steps = 20
     message = "Starting Server ..."
 
@@ -63,7 +66,7 @@ def _generate_progress_bar(value: int, max_value: int, message: str) -> str:
     return f"{message}\n{progress}"
 
 
-@bot.tree.command(name="stop", description="Stops the server")
+@tree.command(name="stop", description="Stops the server")
 async def stop_server_command(ctx: discord.Interaction):
     stop_steps = 10
     message = "Stopping Server ..."
@@ -100,47 +103,75 @@ async def stop_server_command(ctx: discord.Interaction):
 
 
 
-@bot.tree.command(name="pinging", description="Replies with Pong!")
-async def ping_command(ctx: discord.Interaction):
-    await ctx.response.send_message("Pong!")  # type: ignore
+# @tree.command(name="pinging", description="Replies with Pong!", guild=discord.Object(id=guild_id))
+# async def pinging_command(ctx: discord.Interaction):
+#     await ctx.response.send_message("Pong!")  # type: ignore
 
 
-#@bot.tree.command(name="createworld", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation", guild=discord.Object(id=910195152490999878))
-# async def create_world_command(ctx: discord.Interaction, display_name: str, start_cmd: str, sudo_start_cmd: bool, visible: bool):
-#     if ctx.user.id != Config.DISCORD_SUPER_USER_ID:
-#         await ctx.response.send_message("Nein", ephemeral=True)
-#         return
+@tree.command(name="createworld", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation", guild=discord.Object(id=910195152490999878))
+async def create_world_command(ctx: discord.Interaction, display_name: str, start_cmd: str, sudo_start_cmd: bool, visible: bool):
+    log.debug(f"Createworld von User {ctx.user.id}. SUDO ist {CONFIG.DISCORD_SUPER_USER_ID}")
+    if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
+        await ctx.response.send_message("Nein", ephemeral=True)
+        return
     
-    # # Erstelle ein Dropdown-Menü
-    # options = [
-    #     discord.SelectOption(label="1", value="1"),
-    #     discord.SelectOption(label="2", value="2"),
-    #     discord.SelectOption(label="3", value="3")
-    # ]
+    if await world_selecter.create_new_world(display_name, start_cmd, sudo_start_cmd, visible):
+        await ctx.response.send_message(f"The world '{display_name}' was created succesfully!", ephemeral=True)
+    else:
+        await ctx.response.send_message(f"Couldn't create the world '{display_name}'", ephemeral=True)
+    
 
-    # select = discord.ui.Select(placeholder="Wähle eine Zahl...", options=options)
+@tree.command(name="changeworld", description="Changes the current world into another visible world", guild=discord.Object(id=910195152490999878))
+async def create_world_command(ctx: discord.Interaction):
+    data = await world_selecter.get_all_data()
+    index = 0
+    options = []
+    for world in data["worlds"]:
+        if world["visible"] == True:
+            if world["display_name"] == data["current_world"]:
+                index = len(options)
+            options.append(discord.SelectOption(label=world["display_name"], value=world["display_name"]))
 
-    # async def select_callback(select_interaction: discord.Interaction):
-    #     selected_value = select.values[0]
-    #     await ctx.response.send_message(f"Du hast {selected_value} ausgewählt.")
-    #     # Führe hier deine Methode basierend auf der Auswahl aus
-    #     log.debug(f"Dropdown: {selected_value}")
-    #     #await execute_based_on_selection(selected_value)
+    select = discord.ui.Select(placeholder="Choose the world you want to play", min_values=1, max_values=1, options=options)
+    select.options[index].default = True
 
-    # select.callback = select_callback
+    async def select_callback(select_interaction: discord.Interaction):
+        selected_value = select.values[0]
+        await world_selecter.change_world(selected_value)
+        await select_interaction.channel.send(f"'{selected_value}' was selected succusfully!")
 
-    # view = discord.ui.View()
-    # view.add_item(select)
+    select.callback = select_callback
 
-    # # Sende die Nachricht mit dem Dropdown-Menü
-    # await ctx.response.send_message("Bitte wähle eine Zahl:", view=view)
+    view = discord.ui.View()
+    view.add_item(select)
+
+    # Sende die Nachricht mit dem Dropdown-Menü
+    await ctx.response.send_message("Choose the world you want to play:", view=view)
+
+
+async def _updateStatus(string = ""):
+    if string != "":
+        current_world_name = (await world_selecter.get_current_world())["display_name"]
+        server_status = await utils.get_server_state(CONFIG)
+
+        if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
+            string = f"{current_world_name}"
+
+        elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
+            string = f"Starting/Stopping, current World: '{current_world_name}'"
+
+        elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
+            string = f"/start to play Minecraft in '{current_world_name}'. /changeworld to change to another world."
+
+    await bot.change_presence(activity=discord.Game(name=string))
+
 
 
 
 
 def main(config: Config = CONFIG):
     log.info("Starting bot ...")
-    bot.run(config.DISCORD_TOKEN, log_handler=None)
+    bot.run(config.DISCORD_TOKEN,) #log_handler=None)
 
 
 if __name__ == "__main__":
