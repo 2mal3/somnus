@@ -10,12 +10,11 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
-guild_id = 910195152490999878
 
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="booting"))
-    await tree.sync(guild=discord.Object(id=guild_id))  # Sync the command tree with Discord
+    await tree.sync()#guild=discord.Object(id=guild_id))  # Sync the command tree with Discord
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
     await world_selecter.check_world_selecter_json()
     await _updateStatus()
@@ -105,7 +104,7 @@ async def stop_server_command(ctx: discord.Interaction):
     log.info("Server stopped Messages sent!")
 
 
-@tree.command(name="add_world", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation", guild=discord.Object(id=910195152490999878))
+@tree.command(name="add_world", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation")
 async def add_world_command(ctx: discord.Interaction, display_name: str, start_cmd: str, sudo_start_cmd: bool, visible: bool):
     if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
         await ctx.response.send_message("You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True)
@@ -117,7 +116,7 @@ async def add_world_command(ctx: discord.Interaction, display_name: str, start_c
         await ctx.response.send_message(f"Couldn't create the world '{display_name}'", ephemeral=True)
 
 
-@tree.command(name="edit_world", description="SUPER-USER-ONLY: Edits a reference to an installed Minecraft installation", guild=discord.Object(id=910195152490999878))
+@tree.command(name="edit_world", description="SUPER-USER-ONLY: Edits a reference to an installed Minecraft installation")
 async def edit_world_command(ctx: discord.Interaction, editing_world_name: str, new_display_name: str = None, start_cmd: str = None, sudo_start_cmd: bool = None, visible: bool = None):
     if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
         await ctx.response.send_message("You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True)
@@ -131,7 +130,7 @@ async def edit_world_command(ctx: discord.Interaction, editing_world_name: str, 
 edit_world_command.autocomplete("editing_world_name")(_get_world_choices)
     
 
-@tree.command(name="delete_world", description="SUPER-USER-ONLY: Deletes a reference to an installed Minecraft installation", guild=discord.Object(id=910195152490999878))
+@tree.command(name="delete_world", description="SUPER-USER-ONLY: Deletes a reference to an installed Minecraft installation")
 async def delete_world_command(ctx: discord.Interaction, display_name: str):
     if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
         await ctx.response.send_message("You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True)
@@ -180,7 +179,7 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
 delete_world_command.autocomplete("display_name")(_get_world_choices)
 
 
-@tree.command(name="change_world", description="Changes the current world into another visible world", guild=discord.Object(id=910195152490999878))
+@tree.command(name="change_world", description="Changes the current world into another visible world")
 async def change_world_command(ctx: discord.Interaction):
     data = await world_selecter.get_data()
     index = 0
@@ -217,7 +216,7 @@ async def change_world_command(ctx: discord.Interaction):
     await ctx.response.send_message("Choose the world you want to play:", view=view)
 
 
-@tree.command(name="show_worlds", description="Shows all available worlds", guild=discord.Object(id=910195152490999878))
+@tree.command(name="show_worlds", description="Shows all available worlds")
 async def show_worlds_command(ctx: discord.Interaction):
     if ctx.user.id == int(CONFIG.DISCORD_SUPER_USER_ID):
         sudo = True
