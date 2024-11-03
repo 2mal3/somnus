@@ -76,7 +76,7 @@ async def _get_mc_server_state(config: Config) -> ServerState:
     try:
         server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS, timeout=5)
         await server.async_status()
-    except OSError:
+    except OSError or TimeoutError:
         return ServerState.STOPPED
 
     return ServerState.RUNNING
