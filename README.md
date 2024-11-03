@@ -15,6 +15,7 @@ Start Bot with `python3 -m somnus.__main__`!
 
 `/ping`: Replies with "Pong"
 
+
 ### Commands for the super user
 `/add_world`: Creates a new reference to an installed Minecraft installation with the new display_name, start_cmd and the Booleans sudo_start_cmd (whether the start command should be executed with sudo rights) and visible (whether the world should be visible and selectable by normal users)
 
