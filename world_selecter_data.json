@@ -8,9 +8,9 @@
             "visible": true
         },
         {
-            "display_name": "CreateIFE",
-            "start_cmd": "cd /home/emil/Dokumente/ && touch dateiname.txt",
-            "sudo_start_cmd": false,
+            "display_name": "Vanilla 1.20.9 mit Mods",
+            "start_cmd": "sudo shutdown",
+            "sudo_start_cmd": true,
             "visible": true
         }
     ]

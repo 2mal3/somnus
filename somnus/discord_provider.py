@@ -14,9 +14,8 @@ guild_id = 910195152490999878
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Game(name="booting"))
+    await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="booting"))
     await tree.sync(guild=discord.Object(id=guild_id))  # Sync the command tree with Discord
-    await bot.change_presence(status=discord.Status.dnd)
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
     await world_selecter.check_world_selecter_json()
     await _updateStatus()
@@ -37,7 +36,7 @@ async def ping_command(ctx: discord.Interaction):
 
 @tree.command(name="start", description="Starts the server")
 async def start_server_command(ctx: discord.Interaction):
-    await _updateStatus("Starting Server")
+    await _updateStatus(discord.Status.idle, "Starting Server")
     start_steps = 20
     message = "Starting Server ..."
 
@@ -45,7 +44,6 @@ async def start_server_command(ctx: discord.Interaction):
     await ctx.response.send_message(_generate_progress_bar(1, start_steps, message))  # type: ignore
     old_presence = bot.status
     log.info(bot.status)
-    await bot.change_presence(status=discord.Status.idle)
 
     i = 0
     try:
@@ -55,20 +53,17 @@ async def start_server_command(ctx: discord.Interaction):
     except Exception as e:
         if isinstance(e, utils.UserInputError):
             await ctx.edit_original_response(content=str(e))
-            await bot.change_presence(status=old_presence)
-            await _updateStatus()
+            await _updateStatus(old_presence)
             return
         log.error(f"Could not start server | {e}")
         await ctx.edit_original_response(content=f"Could not start server\n-# ERROR: {e}", )
-        await bot.change_presence(status=old_presence)
-        await _updateStatus()
+        await _updateStatus(old_presence)
         return
 
     log.info("Server started!")
     await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
     await ctx.channel.send("Server started!")  # type: ignore
-    await bot.change_presence(status=discord.Status.online)
-    await _updateStatus()
+    await _updateStatus(discord.Status.online)
     log.info("Server started Messages sent!")
 
 
@@ -79,14 +74,13 @@ def _generate_progress_bar(value: int, max_value: int, message: str) -> str:
 
 @tree.command(name="stop", description="Stops the server")
 async def stop_server_command(ctx: discord.Interaction):
-    await _updateStatus("Stopping Server")
+    await _updateStatus(discord.Status.idle, "Stopping Server")
     stop_steps = 10
     message = "Stopping Server ..."
 
     log.info("Received stop command ...")
     await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
     old_presence = bot.status
-    await bot.change_presence(status=discord.Status.idle)
 
     i = 0
     try:
@@ -96,21 +90,18 @@ async def stop_server_command(ctx: discord.Interaction):
     except Exception as e:
         if isinstance(e, utils.UserInputError):
             await ctx.edit_original_response(content=str(e))
-            await bot.change_presence(status=old_presence)
-            await _updateStatus()
+            await _updateStatus(old_presence)
             return
         log.error(f"Could not stop server | {e}")
         await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {e}")
-        await bot.change_presence(status=old_presence)
-        await _updateStatus()
+        await _updateStatus(old_presence)
         return
 
     log.info("Server stopped!")
     #await ctx.edit_original_response(content="Server stopped!")
     await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
     await ctx.channel.send("Server stopped!")  # type: ignore
-    await bot.change_presence(status=discord.Status.dnd)
-    await _updateStatus()
+    await _updateStatus(discord.Status.dnd)
     log.info("Server stopped Messages sent!")
 
 
@@ -257,24 +248,28 @@ async def show_worlds_command(ctx: discord.Interaction):
     await ctx.response.send_message(string+"```", ephemeral=sudo)
 
 
-async def _updateStatus(string = ""):
+async def _updateStatus(status = None, string = ""):
     data = await world_selecter.get_data()
     current_world_name = data["current_world"]
+    server_status = await utils.get_server_state(CONFIG)
     if string == "":
-        server_status = await utils.get_server_state(CONFIG)
-
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
-            string = f"{current_world_name}"
-
+            string = f"'{current_world_name}'"
         elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
             string = f"Current World: '{current_world_name}'"
-
         elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
             string = f"/start to play '{current_world_name}'. /change_world to change to another world."
     else:
         string += f", current World: '{current_world_name}'"
+    if status == None:
+        if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
+            status = discord.Status.online
+        elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
+            status = discord.Status.idle
+        elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
+            status = discord.Status.dnd
 
-    await bot.change_presence(activity=discord.Game(name=string))
+    await bot.change_presence(status=status, activity=discord.Game(name=string))
 
 
 async def _get_formatted_world_info_string(world):
