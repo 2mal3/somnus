@@ -7,8 +7,15 @@ from pexpect.exceptions import TIMEOUT
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import ServerState, get_server_state, ssh_login, UserInputError, send_possible_sudo_command
 from somnus.logic.world_selecter import get_current_world
+from somnus.logic.utils import (
+    ServerState,
+    get_server_state,
+    ssh_login,
+    UserInputError,
+    send_possible_sudo_command,
+    get_host_sever_state,
+)
 
 
 async def start_server(config: Config = CONFIG):
@@ -49,9 +56,7 @@ async def start_server(config: Config = CONFIG):
 
     log.debug("Logging out ...")
     # Exit screen session
-    ssh.sendcontrol("a")
-    await asyncio.sleep(0.1)
-    ssh.sendcontrol("d")
+    await _detach_screen_session(ssh)
     ssh.prompt()
 
     ssh.logout()
@@ -69,16 +74,11 @@ async def _start_host_server(config: Config):
     for _ in range(ping_speed):
         await asyncio.sleep(300 // ping_speed)
 
-        if ping(config.HOST_SERVER_HOST, timeout=ping_speed):
-            try:
-                ssh = await ssh_login(config)
-                ssh.logout()
-                return
-            except TIMEOUT:
-                log.warning("Could not start ssh connection to host server, trying again...")
-                continue
-                
-        log.warning("Could not ping host server, trying again...")
+        host_server_state = get_host_sever_state(config)
+        if host_server_state == ServerState.RUNNING:
+            return
+
+        log.warning("Could not connect to host server, trying again...")
 
     raise TimeoutError("Could not start host server")
 
@@ -99,15 +99,21 @@ async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
         ["Loading libraries", "Loading"],
         ["Environment", "Preparing"],
         ["Preparing level", ">"],
-        []
+        [],
     ]
     for i, message in enumerate(messages):
-        index = ssh.expect(["Done"]+message)
+        index = ssh.expect(["Done"] + message)
         if index == 0:
             for j in range(i, len(messages)):
                 yield
             return
         yield
+
+
+async def _detach_screen_session(ssh: pxssh.pxssh):
+    ssh.sendcontrol("a")
+    await asyncio.sleep(0.1)
+    ssh.sendcontrol("d")
 
 
 async def main():
