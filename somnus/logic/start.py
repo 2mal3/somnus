@@ -7,6 +7,7 @@ from pexpect.exceptions import TIMEOUT
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
+from somnus.logic.world_selecter import get_current_world
 from somnus.logic.utils import (
     ServerState,
     get_server_state,
@@ -88,7 +89,8 @@ async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
     yield
 
     log.debug("Send MC server start command ...")
-    ssh.sendline(config.MC_SERVER_START_CMD)
+    # OLD: ssh.sendline(config.MC_SERVER_START_CMD)
+    ssh.sendline((await get_current_world())["start_cmd"]) # NEW
     yield
 
     log.debug("Waiting for MC server to start ...")

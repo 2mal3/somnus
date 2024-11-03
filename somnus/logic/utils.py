@@ -8,6 +8,7 @@ from ping3 import ping
 
 from somnus.environment import Config
 from somnus.logger import log
+from somnus.logic.world_selecter import get_current_world
 
 
 class ServerState(Enum):
@@ -48,7 +49,8 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
 
 
 async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
-    if config.MC_SERVER_START_CMD_SUDO != "true":
+    # OLD: if config.MC_SERVER_START_CMD_SUDO != "true":
+    if (await get_current_world())["sudo_start_cmd"] != True: # NEW
         ssh.sendline(command)
     else:
         await send_sudo_command(ssh, config, command)

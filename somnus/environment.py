@@ -13,6 +13,7 @@ class Config(BaseModel):
     MC_SERVER_START_CMD: str
     MC_SERVER_START_CMD_SUDO: str
     MC_SERVER_ADDRESS: str
+    DISCORD_SUPER_USER_ID: str
     DEBUG: str
 
 
