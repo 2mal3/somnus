@@ -74,7 +74,7 @@ async def _start_host_server(config: Config):
     for _ in range(ping_speed):
         await asyncio.sleep(300 // ping_speed)
 
-        host_server_state = get_host_sever_state(config)
+        host_server_state = await get_host_sever_state(config)
         if host_server_state == ServerState.RUNNING:
             return
 
