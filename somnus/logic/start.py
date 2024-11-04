@@ -102,12 +102,15 @@ async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
         [],
     ]
     for i, message in enumerate(messages):
-        index = ssh.expect(["Done"] + message)
-        if index == 0:
-            for j in range(i, len(messages)):
-                yield
-            return
-        yield
+        try:
+            index = ssh.expect(["Done"] + message, timeout=150)
+            if index == 0:
+                for j in range(i, len(messages)):
+                    yield
+                return
+            yield
+        except TimeoutError as e:
+            raise TimeoutError(f"Minecraft-Server could not be startet. Timeout in starting keyword expecting {e}")
 
 
 async def _detach_screen_session(ssh: pxssh.pxssh):
