@@ -35,14 +35,13 @@ async def ping_command(ctx: discord.Interaction):
 
 @tree.command(name="start", description="Starts the server")
 async def start_server_command(ctx: discord.Interaction):
-    await _updateStatus(discord.Status.idle, "Starting Server")
     start_steps = 20
     message = "Starting Server ..."
 
     log.info("Received start command ...")
     await ctx.response.send_message(_generate_progress_bar(1, start_steps, message))  # type: ignore
     old_presence = bot.status
-    log.info(bot.status)
+    await _updateStatus(discord.Status.idle, "Starting Server")
 
     i = 0
     try:
@@ -73,13 +72,13 @@ def _generate_progress_bar(value: int, max_value: int, message: str) -> str:
 
 @tree.command(name="stop", description="Stops the server")
 async def stop_server_command(ctx: discord.Interaction):
-    await _updateStatus(discord.Status.idle, "Stopping Server")
     stop_steps = 10
     message = "Stopping Server ..."
 
     log.info("Received stop command ...")
     await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
     old_presence = bot.status
+    await _updateStatus(discord.Status.idle, "Stopping Server")
 
     i = 0
     try:
