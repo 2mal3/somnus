@@ -11,6 +11,7 @@
   in {
     devShells."x86_64-linux".default = pkgs.mkShell {
       packages = with pkgs; [
+        rye
         openssl
 
         python311
@@ -21,6 +22,11 @@
         python311Packages.pexpect
         python311Packages.mcstatus
         python311Packages.pydantic
+        python311Packages.aiofiles
+
+        # testing
+        jdk
+        screen
       ];
     };
   };
