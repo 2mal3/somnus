@@ -140,7 +140,9 @@ async def edit_world_command(
         return
 
     try:
-        world = await world_selector.edit_new_world(editing_world_name, new_display_name, start_cmd, sudo_start_cmd, visible)
+        world = await world_selector.edit_new_world(
+            editing_world_name, new_display_name, start_cmd, sudo_start_cmd, visible
+        )
         await ctx.response.send_message(
             f"The world '{editing_world_name}' was edited succesfully! New values are:{await _get_formatted_world_info_string(world)}",
             ephemeral=True,
@@ -300,7 +302,7 @@ async def show_worlds_command(ctx: discord.Interaction):
     await ctx.response.send_message(string + "```", ephemeral=sudo)
 
 
-async def _update_bot_presence(status: Status | None = None, text: str | None = None):
+async def _update_bot_presence(status: Status | None = None, text: str = ""):
     world_selector_config = await world_selector.get_world_selector_config()
     current_world_name = world_selector_config.current_world
     server_status = await utils.get_server_state(CONFIG)
