@@ -10,7 +10,7 @@ from somnus.logic.utils import (
     ssh_login,
     UserInputError,
     send_possible_sudo_command,
-    send_sudo_command
+    send_sudo_command,
 )
 
 
@@ -39,7 +39,7 @@ async def stop_server(config: Config = CONFIG):
 
     ssh.sendline("exit")
     ssh.expect("@")
-    
+
     yield
 
     # Stop host server
@@ -62,15 +62,15 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
 
     log.debug("Sending stop command ...")
 
-    ssh.sendline('stop')
+    ssh.sendline("stop")
     ssh.expect("@", timeout=server_shutdown_maximum_time)
 
     # Es folgt: Alt oder nur zum Testen
 
     messages = ["overworld", "nether", "end"]
     for message in messages:
-       ssh.expect(message, timeout=120)
-       yield
+        ssh.expect(message, timeout=120)
+        yield
 
 
 async def main():

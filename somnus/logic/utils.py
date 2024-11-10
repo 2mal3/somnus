@@ -49,8 +49,7 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
 
 
 async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
-    # OLD: if config.MC_SERVER_START_CMD_SUDO != "true":
-    if (await get_current_world())["sudo_start_cmd"] != True: # NEW
+    if not (await get_current_world())["sudo_start_cmd"]:
         ssh.sendline(command)
     else:
         await send_sudo_command(ssh, config, command)
@@ -76,7 +75,7 @@ async def _get_mc_server_state(config: Config) -> ServerState:
     try:
         server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS, timeout=5)
         await server.async_status()
-    except OSError or TimeoutError:
+    except (OSError, TimeoutError):
         return ServerState.STOPPED
 
     return ServerState.RUNNING

@@ -1,11 +1,11 @@
 # TODO:
-# 
+#
 # create_world(display_name: str, start_command: str, sudo_start_command: bool, visible: bool) Super-User-only
 # change_world() -> display_name per Drop-Down auswählen
 # show_worlds()
 # edit_world(id:int, [display_name]: str, [start_command]: str, [sudo_start_command]: bool, [visible]: bool) -> wenn man felder leer lässt (oder nur Leerzeichen) wird nix geändert, sonst wirds überschrieben
 # delete_world() -> display_name per Drop-Down auswählen
-# 
+#
 
 from somnus.environment import CONFIG, Config
 import os
@@ -25,10 +25,9 @@ async def check_world_selecter_json():
                 return
         except:
             pass
-    
+
     log.warning(f"'{json_path}' was not found")
     await _init_world_selecter_json()
-
 
 
 async def _init_world_selecter_json(config: Config = CONFIG):
@@ -39,9 +38,9 @@ async def _init_world_selecter_json(config: Config = CONFIG):
                 "display_name": "Minecraft",
                 "start_cmd": config.MC_SERVER_START_CMD,
                 "sudo_start_cmd": config.MC_SERVER_START_CMD_SUDO,
-                "visible": True
+                "visible": True,
             }
-        ]
+        ],
     }
 
     try:
@@ -53,10 +52,10 @@ async def _init_world_selecter_json(config: Config = CONFIG):
 
 async def get_current_world():
     data = await get_data()
-    
+
     current_world_name = data["current_world"]
     current_world = await search_world(current_world_name, data)
-    if current_world == False:
+    if not current_world:
         log.error(f"Current world (display_name='{current_world_name}') not found")
 
     return current_world
@@ -67,63 +66,62 @@ async def create_new_world(display_name, start_cmd, sudo_start_cmd, visible):
         "display_name": display_name,
         "start_cmd": start_cmd,
         "sudo_start_cmd": sudo_start_cmd,
-        "visible": visible
+        "visible": visible,
     }
 
     data = await get_data()
 
     log.debug(await search_world(display_name, data))
-    if await search_world(display_name, data) != False:
+    if await search_world(display_name, data):
         log.debug(f"New World {display_name} couldn't be created because the display name is already in use")
         return False
-    
+
     data["worlds"].append(new_world)
     await _save_data(data)
-        
+
     return True
 
 
 async def change_world(new_world):
     data = await get_data()
     for world in data["worlds"]:
-        if world["display_name"] == new_world:
-            if world["visible"] == True:
-                data["current_world"] = new_world
-                await _save_data(data)
-                return True
+        if world["display_name"] == new_world and world["visible"]:
+            data["current_world"] = new_world
+            await _save_data(data)
+            return True
     return False
-
 
 
 async def edit_new_world(editing_world_name, new_display_name, start_cmd, sudo_start_cmd, visible):
     data = await get_data()
-    
+
     for i in range(len(data["worlds"])):
         if data["worlds"][i]["display_name"] == editing_world_name:
-            if new_display_name != "" and new_display_name != None:
+            if new_display_name not in ("", None):
                 data["worlds"][i]["display_name"] = new_display_name
                 if data["current_world"] == editing_world_name:
                     data["current_world"] = new_display_name
-            if start_cmd != "" and start_cmd != None:
+            if start_cmd not in ("", None):
                 data["worlds"][i]["start_cmd"] = start_cmd
-            if sudo_start_cmd != "" and sudo_start_cmd != None:
+            if sudo_start_cmd not in ("", None):
                 data["worlds"][i]["sudo_start_cmd"] = sudo_start_cmd
-            if visible != "" and visible != None:
+            if visible not in ("", None):
                 data["worlds"][i]["visible"] = visible
-            
+
             await _save_data(data)
             return data["worlds"][i]
 
     return False
 
+
 async def delete_world(display_name):
     data = await get_data()
 
     world_to_delete = await search_world(display_name, data)
-    if world_to_delete == False:
+    if not world_to_delete:
         log.error(f"world to delete (display_name='{world_to_delete}') not found")
         return False
-    
+
     for i in range(0, len(data["worlds"])):
         if data["worlds"][i]["display_name"] == display_name:
             del data["worlds"][i]
@@ -141,11 +139,11 @@ async def search_world(display_name, data):
 
 
 async def get_data():
-    async with aiofiles.open(json_path, 'r', encoding='utf-8') as file:
+    async with aiofiles.open(json_path, "r", encoding="utf-8") as file:
         content = await file.read()
         return json.loads(content)
-    
 
-async def _save_data(dict):
-    async with aiofiles.open(json_path, 'w', encoding='utf-8') as file:
-            await file.write(json.dumps(dict, indent=4))
+
+async def _save_data(data: dict):
+    async with aiofiles.open(json_path, "w", encoding="utf-8") as file:
+        await file.write(json.dumps(data, indent=4))
