@@ -17,7 +17,7 @@ class UserInputError(Exception):
 class WorldSelectorWorld(BaseModel):
     display_name: str
     start_cmd: str
-    start_cmd_sudo: bool
+    start_cmd_sudo: str | bool
     visible: bool
 
     @field_validator("start_cmd_sudo", mode="before")
@@ -45,10 +45,7 @@ async def get_current_world() -> WorldSelectorWorld:
 
 async def create_new_world(display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool):
     new_world = WorldSelectorWorld(
-        display_name=display_name,
-        start_cmd=start_cmd,
-        start_cmd_sudo=start_cmd_sudo,
-        visible=visible
+        display_name=display_name, start_cmd=start_cmd, start_cmd_sudo=start_cmd_sudo, visible=visible
     )
 
     world_selector_config = await get_world_selector_config()
@@ -80,7 +77,9 @@ async def change_world(new_world):
             return
 
 
-async def edit_new_world(editing_world_name, new_display_name, start_cmd, start_cmd_sudo, visible) -> WorldSelectorWorld:
+async def edit_new_world(
+    editing_world_name, new_display_name, start_cmd, start_cmd_sudo, visible
+) -> WorldSelectorWorld:
     world_selector_config = await get_world_selector_config()
 
     for i, world in enumerate(world_selector_config.worlds):
@@ -150,12 +149,14 @@ async def _get_world_selector_config_from_path(path: str) -> WorldSelectorConfig
 def _get_default_world_selector_config(config: Config = CONFIG) -> WorldSelectorConfig:
     data = WorldSelectorConfig(
         current_world="Minecraft",
-        worlds=[WorldSelectorWorld(
-            display_name="Minecraft",
-            start_cmd=config.MC_SERVER_START_CMD,
-            start_cmd_sudo=config.MC_SERVER_START_CMD_SUDO,
-            visible=True,
-        )]
+        worlds=[
+            WorldSelectorWorld(
+                display_name="Minecraft",
+                start_cmd=config.MC_SERVER_START_CMD,
+                start_cmd_sudo=config.MC_SERVER_START_CMD_SUDO,
+                visible=True,
+            )
+        ],
     )
     return data
 
