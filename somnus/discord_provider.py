@@ -1,9 +1,9 @@
 import discord
-from discord import app_commands
+from discord import app_commands, Status
 
 from somnus.environment import CONFIG, Config
 from somnus.logger import log
-from somnus.logic import start, stop, utils, world_selecter
+from somnus.logic import start, stop, utils, world_selector
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -13,15 +13,14 @@ tree = app_commands.CommandTree(bot)
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="booting"))
+    await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="Booting"))
     await tree.sync()
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
-    await world_selecter.check_world_selecter_json()
-    await _update_status()
+    await _update_bot_presence()
 
 
 async def _get_world_choices(interaction: discord.Interaction, current: str):
-    data = await world_selecter.get_data()
+    data = await world_selector.get_world_selector_config()
     return [app_commands.Choice(name=world["display_name"], value=world["display_name"]) for world in data["worlds"]]
 
 
@@ -38,7 +37,7 @@ async def start_server_command(ctx: discord.Interaction):
     log.info("Received start command ...")
     await ctx.response.send_message(_generate_progress_bar(1, start_steps, message))  # type: ignore
     old_presence = bot.status
-    await _update_status(discord.Status.idle, "Starting Server")
+    await _update_bot_presence(Status.idle, "Starting Server")
 
     i = 0
     try:
@@ -48,19 +47,19 @@ async def start_server_command(ctx: discord.Interaction):
     except Exception as e:
         if isinstance(e, utils.UserInputError):
             await ctx.edit_original_response(content=str(e))
-            await _update_status(old_presence)
+            await _update_bot_presence(old_presence)
             return
-        log.error(f"Could not start server | {e}")
+        log.error(f"Could not start server", exc_info=e)
         await ctx.edit_original_response(
-            content=f"Could not start server\n-# ERROR: {e}",
+            content=f"Could not start server\n-# ERROR: {str(e)[:32]}",
         )
-        await _update_status(old_presence)
+        await _update_bot_presence(old_presence)
         return
 
     log.info("Server started!")
     await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
     await ctx.channel.send("Server started!")  # type: ignore
-    await _update_status(discord.Status.online)
+    await _update_bot_presence(discord.Status.online)
     log.info("Server started Messages sent!")
 
 
@@ -77,7 +76,7 @@ async def stop_server_command(ctx: discord.Interaction):
     log.info("Received stop command ...")
     await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
     old_presence = bot.status
-    await _update_status(discord.Status.idle, "Stopping Server")
+    await _update_bot_presence(discord.Status.idle, "Stopping Server")
 
     i = 0
     try:
@@ -87,17 +86,17 @@ async def stop_server_command(ctx: discord.Interaction):
     except Exception as e:
         if isinstance(e, utils.UserInputError):
             await ctx.edit_original_response(content=str(e))
-            await _update_status(old_presence)
+            await _update_bot_presence(old_presence)
             return
         log.error(f"Could not stop server | {e}")
-        await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {e}")
-        await _update_status(old_presence)
+        await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {str(e)[:32]}")
+        await _update_bot_presence(old_presence)
         return
 
     log.info("Server stopped!")
     await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
     await ctx.channel.send("Server stopped!")  # type: ignore
-    await _update_status(discord.Status.dnd)
+    await _update_bot_presence(discord.Status.dnd)
     log.info("Server stopped Messages sent!")
 
 
@@ -105,18 +104,21 @@ async def stop_server_command(ctx: discord.Interaction):
     name="add_world", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation"
 )
 async def add_world_command(
-    ctx: discord.Interaction, display_name: str, start_cmd: str, sudo_start_cmd: bool, visible: bool
+    ctx: discord.Interaction, display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool
 ):
+    # only allow super users
     if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
         await ctx.response.send_message(
             "You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True
         )
         return
 
-    if await world_selecter.create_new_world(display_name, start_cmd, sudo_start_cmd, visible):
+    try:
+        await world_selector.create_new_world(display_name, start_cmd, start_cmd_sudo, visible)
         await ctx.response.send_message(f"The world '{display_name}' was created succesfully!", ephemeral=True)
-    else:
-        await ctx.response.send_message(f"Couldn't create the world '{display_name}'", ephemeral=True)
+    except Exception as e:
+        log.debug(f"Could not create world | {e}")
+        await ctx.response.send_message(f"Couldn't create the world '{display_name}' | {e}", ephemeral=True)
 
 
 @tree.command(
@@ -130,20 +132,22 @@ async def edit_world_command(
     sudo_start_cmd: bool = None,
     visible: bool = None,
 ):
+    # only super users
     if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
         await ctx.response.send_message(
             "You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True
         )
         return
 
-    out = await world_selecter.edit_new_world(editing_world_name, new_display_name, start_cmd, sudo_start_cmd, visible)
-    if out:
+    try:
+        world = await world_selector.edit_new_world(editing_world_name, new_display_name, start_cmd, sudo_start_cmd, visible)
         await ctx.response.send_message(
-            f"The world '{editing_world_name}' was edited succesfully! New values are:{await _get_formatted_world_info_string(out)}",
+            f"The world '{editing_world_name}' was edited succesfully! New values are:{await _get_formatted_world_info_string(world)}",
             ephemeral=True,
         )
-    else:
+    except Exception as e:
         await ctx.response.send_message(f"Couldn't edit the world '{editing_world_name}'", ephemeral=True)
+        log.warning(f"Couldn't edit world '{editing_world_name}'", exc_info=e)
 
 
 edit_world_command.autocomplete("editing_world_name")(_get_world_choices)
@@ -153,21 +157,26 @@ edit_world_command.autocomplete("editing_world_name")(_get_world_choices)
     name="delete_world", description="SUPER-USER-ONLY: Deletes a reference to an installed Minecraft installation"
 )
 async def delete_world_command(ctx: discord.Interaction, display_name: str):
+    # only allow super user to delete
     if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
         await ctx.response.send_message(
             "You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True
         )
         return
 
-    data = await world_selecter.get_data()
-    if display_name == data["current_world"]:
+    world_selector_config = await world_selector.get_world_selector_config()
+
+    # prevent deletion of the current world
+    if display_name == world_selector_config.current_world:
         await ctx.response.send_message(
             "You can't delete the current world. Change the current world with /change_world", ephemeral=True
         )
         return
 
-    world = await world_selecter.search_world(display_name, data)
-    if not world:
+    # prevent deletion of non existing worlds
+    try:
+        world = await world_selector.get_world_by_name(display_name, world_selector_config)
+    except utils.UserInputError:
         await ctx.response.send_message(f"World '{display_name}' not found.", ephemeral=True)
         return
 
@@ -177,23 +186,30 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
 
     async def confirm_callback(interaction: discord.Interaction):
         nonlocal used
+
         if used:
             await interaction.response.send_message("Button inactive, use /delete_world again", ephemeral=True)
-        elif await world_selecter.delete_world(display_name):
+            return
+
+        try:
+            await world_selector.try_delete_world(display_name)
+        except Exception:
             await interaction.response.send_message(
                 f"The world '{display_name}' was deleted successfully!", ephemeral=True
             )
-        else:
-            await interaction.response.send_message(f"Couldn't delete the world '{display_name}'.", ephemeral=True)
+            return
+
         used = True
 
     async def cancel_callback(interaction: discord.Interaction):
         nonlocal used
+
         if used:
             await interaction.response.send_message("Button inactive, use /delete_world again", ephemeral=True)
-        else:
-            used = True
-            await interaction.response.send_message("Deletion process canceled", ephemeral=True)
+            return
+
+        await interaction.response.send_message("Deletion process canceled", ephemeral=True)
+        used = True
 
     confirm_button.callback = confirm_callback
     cancel_button.callback = cancel_callback
@@ -214,14 +230,15 @@ delete_world_command.autocomplete("display_name")(_get_world_choices)
 
 @tree.command(name="change_world", description="Changes the current world into another visible world")
 async def change_world_command(ctx: discord.Interaction):
-    data = await world_selecter.get_data()
+    world_selector_config = await world_selector.get_world_selector_config()
     index = 0
     options = []
-    for world in data["worlds"]:
-        if world["visible"]:
-            if world["display_name"] == data["current_world"]:
+
+    for world in world_selector_config.worlds:
+        if world.visible:
+            if world.display_name == world_selector_config.current_world:
                 index = len(options)
-            options.append(discord.SelectOption(label=world["display_name"], value=world["display_name"]))
+            options.append(discord.SelectOption(label=world.display_name, value=world.display_name))
 
     select = discord.ui.Select(
         placeholder="Choose the world you want to play", min_values=1, max_values=1, options=options
@@ -229,21 +246,23 @@ async def change_world_command(ctx: discord.Interaction):
     select.options[index].default = True
 
     async def select_callback(select_interaction: discord.Interaction):
-        if ctx.user.id == select_interaction.user.id:
-            selected_value = select.values[0]
-            select.disabled = True
-            await select_interaction.message.edit(view=view)
-            if await world_selecter.change_world(selected_value):
-                await select_interaction.response.send_message(f"'{selected_value}' was selected succusfully!")
-                await _update_status()
-            else:
-                await select_interaction.response.send_message(
-                    f"Couldn't change the world to '{selected_value}'.", ephemeral=True
-                )
-        else:
+        if ctx.user.id != select_interaction.user.id:
             await select_interaction.response.send_message(
                 "You cannot use the menu because it was requested by someone else. Use /change_world to change the world",
                 ephemeral=True,
+            )
+            return
+
+        selected_value = select.values[0]
+        select.disabled = True
+        await select_interaction.message.edit(view=view)
+        try:
+            await world_selector.change_world(selected_value)
+            await select_interaction.response.send_message(f"'{selected_value}' was selected succusfully!")
+            await _update_bot_presence()
+        except Exception:
+            await select_interaction.response.send_message(
+                f"Couldn't change the world to '{selected_value}'.", ephemeral=True
             )
 
     select.callback = select_callback
@@ -258,65 +277,67 @@ async def change_world_command(ctx: discord.Interaction):
 @tree.command(name="show_worlds", description="Shows all available worlds")
 async def show_worlds_command(ctx: discord.Interaction):
     sudo = ctx.user.id == int(CONFIG.DISCORD_SUPER_USER_ID)
-    data = await world_selecter.get_data()
-    current_world_name = data["current_world"]
+    world_selector_config = await world_selector.get_world_selector_config()
 
-    max_name_lenght = len(data["worlds"][0]["display_name"])
-    for world in data["worlds"]:
-        if (world["visible"] or sudo) and len(world["display_name"]) > max_name_lenght:
-            max_name_lenght = len(world["display_name"])
+    max_name_length = len(world_selector_config.worlds[0].display_name)
+    for world in world_selector_config.worlds:
+        if (world.visible or sudo) and len(world.display_name) > max_name_length:
+            max_name_length = len(world.display_name)
 
     string = "## List of all available worlds \n```"
-    for world in data["worlds"]:
-        if world["visible"] or sudo:
-            if world["display_name"] == current_world_name:
+    for world in world_selector_config.worlds:
+        if world.visible or sudo:
+            if world.display_name == world_selector_config.current_world:
                 string += "\n✅ - "
             else:
                 string += "\n⬜ - "
 
-            string += world["display_name"]
+            string += world.display_name
 
             if sudo:
-                string += (3 + max_name_lenght - len(world["display_name"])) * " " + str(world["visible"])
+                string += (3 + max_name_length - len(world.display_name)) * " " + str(world.visible)
 
     await ctx.response.send_message(string + "```", ephemeral=sudo)
 
 
-async def _update_status(status=None, string=""):
-    data = await world_selecter.get_data()
-    current_world_name = data["current_world"]
+async def _update_bot_presence(status: Status | None = None, text: str | None = None):
+    world_selector_config = await world_selector.get_world_selector_config()
+    current_world_name = world_selector_config.current_world
     server_status = await utils.get_server_state(CONFIG)
-    if string == "":
+
+    if not text:
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
-            string = f"'{current_world_name}'"
+            text = f"'{current_world_name}'"
         elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
-            string = f"Current World: '{current_world_name}'"
+            text = f"World '{current_world_name}'"
         elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
-            string = f"/start to play '{current_world_name}'. /change_world to change to another world."
+            text = f"/start to play '{current_world_name}'. /change_world to change to another world."
     else:
-        string += f", current World: '{current_world_name}'"
-    if status is None:
+        text += f", current World: '{current_world_name}'"
+
+    if not status:
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
-            status = discord.Status.online
+            status = Status.online
         elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
-            status = discord.Status.idle
+            status = Status.idle
         elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
-            status = discord.Status.dnd
+            status = Status.dnd
 
-    await bot.change_presence(status=status, activity=discord.Game(name=string))
+    await bot.change_presence(status=status, activity=discord.Game(name=text))
 
 
-async def _get_formatted_world_info_string(world):
+async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWorld):
     string = "```"
-    attributes = ["display_name", "start_cmd", "sudo_start_cmd", "visible"]
+
+    attributes = ["display_name", "start_cmd", "start_cmd_sudo", "visible"]
     for attr in attributes:
-        string += "\n" + attr + ":" + ((15 - len(attr)) * " ") + str(world[attr])
+        string += "\n" + attr + ":" + ((15 - len(attr)) * " ") + str(getattr(world, attr))
     return string + "```"
 
 
 def main(config: Config = CONFIG):
     log.info("Starting bot ...")
-    bot.run(config.DISCORD_TOKEN)
+    bot.run(config.DISCORD_TOKEN, log_handler=None)
 
 
 if __name__ == "__main__":

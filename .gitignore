@@ -1,6 +1,7 @@
 # editor/os generated files
 .idea/
 .direnv/
+.venv/
 
 # python generated files
 __pycache__/
@@ -10,16 +11,10 @@ dist/
 wheels/
 *.egg-info
 
-# venv
-.venv/
-
 # secrets
 .env
 
 # program generated files
 *.log
-
-# other
+*.json
 server/
-world_selecter_data.json
-

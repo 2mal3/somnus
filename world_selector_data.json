@@ -1,0 +1,11 @@
+{
+    "current_world": "Minecraft",
+    "worlds": [
+        {
+            "display_name": "Minecraft",
+            "start_cmd": "cd /home/konrad/Code/somnus/server && java -jar server.jar -nogui",
+            "start_cmd_sudo": "",
+            "visible": true
+        }
+    ]
+}
