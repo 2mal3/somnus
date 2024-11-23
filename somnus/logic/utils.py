@@ -6,7 +6,7 @@ from mcstatus import JavaServer
 from pexpect import pxssh
 from ping3 import ping
 
-from somnus.environment import Config
+from somnus.environment import Config, CONFIG
 from somnus.logger import log
 from somnus.logic.world_selector import get_current_world
 
@@ -109,3 +109,14 @@ async def get_host_sever_state(config: Config) -> ServerState:
         return ServerState.STOPPED
 
     return ServerState.RUNNING
+
+
+async def detach_screen_session(ssh: pxssh.pxssh):
+    ssh.sendcontrol("a")
+    await asyncio.sleep(0.1)
+    ssh.sendcontrol("d")
+
+
+
+async def kill_screen(ssh: pxssh.pxssh, config: Config = CONFIG):
+    await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")

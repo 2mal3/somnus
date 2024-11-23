@@ -1,11 +1,10 @@
 import asyncio
 
-from wakeonlan import send_magic_packet
 from pexpect import pxssh
+from wakeonlan import send_magic_packet
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.world_selector import get_current_world
 from somnus.logic.utils import (
     ServerState,
     get_server_state,
@@ -13,7 +12,10 @@ from somnus.logic.utils import (
     UserInputError,
     send_possible_sudo_command,
     get_host_sever_state,
+    detach_screen_session,
+    kill_screen
 )
+from somnus.logic.world_selector import get_current_world
 
 
 async def start_server(config: Config = CONFIG):
@@ -37,27 +39,34 @@ async def start_server(config: Config = CONFIG):
     yield
 
     # Start MC server
-    log.debug("Starting MC server ...")
+    async for _ in _try_start_mc_server_with_ssh(config):
+        yield
+
+
+async def _try_start_mc_server_with_ssh(config: Config):
     ssh = await ssh_login(config)
+
+    log.debug("Starting screen session ...")
+    await send_possible_sudo_command(ssh, config, "screen -S mc-server-control")
     yield
 
     try:
-        async for _ in _start_mc_server(config, ssh):
+        async for _ in _start_mc_server(ssh):
             yield
-    # Cancel screen session if MC server could not be started so we don't open useless screens
+
+        # Exit peacefully
+        log.debug("Logging out ...")
+        await detach_screen_session(ssh)
+        ssh.prompt()
+        ssh.logout()
+
+    # Exit in error, kill screen
     except Exception as e:
-        ssh.sendline("exit")
-        await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")  # close screen
-        ssh.expect("@")
+        await detach_screen_session(ssh)
+        await kill_screen(ssh, config)
+        ssh.prompt()
         ssh.logout()
         raise RuntimeError(f"Could not start MC server | {e}")
-
-    log.debug("Logging out ...")
-    # Exit screen session
-    await _detach_screen_session(ssh)
-    ssh.prompt()
-
-    ssh.logout()
 
 
 async def _start_host_server(config: Config):
@@ -81,11 +90,7 @@ async def _start_host_server(config: Config):
     raise TimeoutError("Could not start host server")
 
 
-async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
-    log.debug("Starting screen session ...")
-    await send_possible_sudo_command(ssh, config, "screen -S mc-server-control")
-    yield
-
+async def _start_mc_server(ssh: pxssh.pxssh):
     log.debug("Send MC server start command ...")
     ssh.sendline((await get_current_world()).start_cmd)
     yield
@@ -110,12 +115,6 @@ async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
             yield
         except TimeoutError as e:
             raise TimeoutError(f"Minecraft-Server could not be startet. Timeout in starting keyword expecting {e}")
-
-
-async def _detach_screen_session(ssh: pxssh.pxssh):
-    ssh.sendcontrol("a")
-    await asyncio.sleep(0.1)
-    ssh.sendcontrol("d")
 
 
 async def main():

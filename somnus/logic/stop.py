@@ -11,6 +11,7 @@ from somnus.logic.utils import (
     UserInputError,
     send_possible_sudo_command,
     send_sudo_command,
+    detach_screen_session, kill_screen
 )
 
 
@@ -27,19 +28,8 @@ async def stop_server(config: Config = CONFIG):
 
     # Stop MC server
     if mc_server_state == ServerState.RUNNING:
-        try:
-            async for _ in _stop_mc_server(ssh, config):
-                yield
-        except Exception as e:
-            raise RuntimeError(f"Could not stop MC server | {e}")
-    yield
-
-    # Exit screen session
-    log.debug("Exiting screen session ...")
-
-    ssh.sendline("exit")
-    ssh.expect("@")
-
+        async for _ in _stop_mc_server(ssh, config):
+            yield
     yield
 
     # Stop host server
@@ -51,6 +41,22 @@ async def stop_server(config: Config = CONFIG):
             raise RuntimeError(f"Could not stop host server | {e}")
 
     ssh.logout()
+
+
+async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config):
+    await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
+    yield
+
+    try:
+        async for _ in _stop_mc_server(ssh, config):
+            yield
+    except Exception as e:
+        raise RuntimeError(f"Could not stop MC server | {e}")
+    finally:
+        log.debug("Exiting screen session ...")
+        await detach_screen_session(ssh)
+        await kill_screen(ssh, config)
+
 
 
 async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
