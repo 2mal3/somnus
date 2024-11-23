@@ -100,9 +100,11 @@ async def _start_mc_server(config: Config, ssh: pxssh.pxssh):
     ]
     for i, message in enumerate(messages):
         try:
-            index = ssh.expect(["Done"] + message, timeout=150)
-            if index == 0:
-                for j in range(i, len(messages)):
+            found_element_index = ssh.expect(["Done"] + message, timeout=150)
+            log.debug(f"Stage '{message}' completed")
+
+            if found_element_index == 0:    # if finished earlier, animate the progress bar to its end
+                for _ in range(i, len(messages)):
                     yield
                 return
             yield

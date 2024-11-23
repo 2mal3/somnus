@@ -50,8 +50,10 @@ async def start_server_command(ctx: discord.Interaction):
             await _update_bot_presence(old_presence)
             return
         log.error(f"Could not start server", exc_info=e)
+
+        shortened_error = str(e).replace("\n", "")[:32]
         await ctx.edit_original_response(
-            content=f"Could not start server\n-# ERROR: {str(e)[:32]}",
+            content=f"Could not start server\n-# ERROR: {shortened_error}",
         )
         await _update_bot_presence(old_presence)
         return
