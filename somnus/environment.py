@@ -41,7 +41,6 @@ load_dotenv()
 
 try:
     CONFIG = Config(**environ)  # type: ignore
-    print(CONFIG)
 except ValidationError as errors:
     for error in errors.errors():
         log.fatal(f"Missing environment variable: {error['loc'][0]}")
