@@ -46,7 +46,22 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
             raise TimeoutError("Could not establish SSH connection to host server")
         await asyncio.sleep(5)
 
+    if not _screen_is_installed(ssh):
+        log.fatal("Screen is not installed on host server")
+
     return ssh
+
+
+def _screen_is_installed(ssh: pxssh.pxssh) -> bool:
+    ssh.sendline("command -v screen")
+    ssh.prompt()
+    ssh.sendline("echo $?")
+    ssh.prompt()
+
+    exit_status = int(ssh.before.splitlines()[-2])
+    if exit_status != 0:
+        return False
+    return True
 
 
 async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
