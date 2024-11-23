@@ -50,10 +50,8 @@ async def start_server_command(ctx: discord.Interaction):
             await _update_bot_presence(old_presence)
             return
         log.error(f"Could not start server", exc_info=e)
-
-        shortened_error = str(e).replace("\n", "")[:32]
         await ctx.edit_original_response(
-            content=f"Could not start server\n-# ERROR: {shortened_error}",
+            content=f"Could not start server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}",
         )
         await _update_bot_presence(old_presence)
         return
@@ -91,7 +89,7 @@ async def stop_server_command(ctx: discord.Interaction):
             await _update_bot_presence(old_presence)
             return
         log.error(f"Could not stop server | {e}")
-        await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {str(e)[:32]}")
+        await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}")
         await _update_bot_presence(old_presence)
         return
 
@@ -100,6 +98,11 @@ async def stop_server_command(ctx: discord.Interaction):
     await ctx.channel.send("Server stopped!")  # type: ignore
     await _update_bot_presence(discord.Status.dnd)
     log.info("Server stopped Messages sent!")
+
+
+
+def _trim_text_for_discord_subtitle(text: any) -> str:
+    return str(text).replace("\n", " ")[:32]
 
 
 @tree.command(
