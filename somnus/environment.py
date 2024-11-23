@@ -8,6 +8,7 @@ class Config(BaseModel):
     DISCORD_TOKEN: str
     HOST_SERVER_HOST: str
     HOST_SERVER_USER: str
+    HOST_SERVER_SSH_PORT: int
     HOST_SERVER_PASSWORD: str
     HOST_SERVER_MAC: str
     MC_SERVER_START_CMD: str

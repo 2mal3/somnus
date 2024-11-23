@@ -35,6 +35,7 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
                 config.HOST_SERVER_HOST,
                 config.HOST_SERVER_USER,
                 config.HOST_SERVER_PASSWORD,
+                port=config.HOST_SERVER_SSH_PORT,
                 login_timeout=5,
             )
             break
