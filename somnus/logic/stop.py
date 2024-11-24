@@ -32,16 +32,17 @@ async def stop_server(config: Config = CONFIG):
             yield
     yield
 
+
     # Stop host server
-    if host_server_state == ServerState.RUNNING and config.DEBUG:
+    if host_server_state == ServerState.RUNNING and not config.DEBUG:
         try:
             await send_sudo_command(ssh, config, "shutdown -h now")
             yield
         except Exception as e:
             raise RuntimeError(f"Could not stop host server | {e}")
 
+    ssh.sendline('exit')
     ssh.logout()
-
 
 async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config):
     await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
@@ -69,14 +70,19 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
     log.debug("Sending stop command ...")
 
     ssh.sendline("stop")
-    ssh.expect("@", timeout=server_shutdown_maximum_time)
 
-    # Es folgt: Alt oder nur zum Testen
+    messages = ["overworld", "nether", "end", "@"]
+    for i, message in enumerate(messages):
+        found_element_index = ssh.expect(["@", message], timeout=server_shutdown_maximum_time)
+        log.debug(f"Stage '{message}' completed")
 
-    messages = ["overworld", "nether", "end"]
-    for message in messages:
-        ssh.expect(message, timeout=120)
+        if found_element_index == 0:
+            for _ in range(i, len(messages)):
+                yield
+            return
         yield
+    
+
 
 
 async def main():
