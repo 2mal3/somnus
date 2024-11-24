@@ -21,7 +21,7 @@ class Config(BaseModel):
     DEBUG: bool
 
     @field_validator("DEBUG", "MC_SERVER_START_CMD_SUDO", mode="before")
-    def convert_str_to_bool(cls, value: str):
+    def convert_str_to_bool(cls, value: str):   # noqa: N805
         return text_is_true(value)
 
 

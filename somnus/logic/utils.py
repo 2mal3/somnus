@@ -59,9 +59,7 @@ def _screen_is_installed(ssh: pxssh.pxssh) -> bool:
     ssh.prompt()
 
     exit_status = int(ssh.before.splitlines()[-2])
-    if exit_status != 0:
-        return False
-    return True
+    return exit_status == 0
 
 
 async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):

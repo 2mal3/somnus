@@ -21,11 +21,8 @@ class WorldSelectorWorld(BaseModel):
     visible: bool
 
     @field_validator("start_cmd_sudo", mode="before")
-    def convert_str_to_bool(cls, value: str) -> bool:
-        if value in ("", "true", "True", True, "1"):
-            return True
-
-        return False
+    def convert_str_to_bool(cls, value: str) -> bool:   # noqa: N805
+        return value in ("", "true", "True", True, "1")
 
 
 class WorldSelectorConfig(BaseModel):

@@ -49,7 +49,7 @@ async def start_server_command(ctx: discord.Interaction):
             await ctx.edit_original_response(content=str(e))
             await _update_bot_presence(old_presence)
             return
-        log.error(f"Could not start server", exc_info=e)
+        log.error("Could not start server", exc_info=e)
         await ctx.edit_original_response(
             content=f"Could not start server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}",
         )
@@ -129,7 +129,7 @@ async def add_world_command(
 @tree.command(
     name="edit_world", description="SUPER-USER-ONLY: Edits a reference to an installed Minecraft installation"
 )
-async def edit_world_command(
+async def edit_world_command(   # noqa: PLR0913
     ctx: discord.Interaction,
     editing_world_name: str,
     new_display_name: str = None,
