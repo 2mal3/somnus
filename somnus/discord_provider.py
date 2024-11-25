@@ -21,7 +21,7 @@ async def on_ready():
 
 async def _get_world_choices(interaction: discord.Interaction, current: str):
     data = await world_selector.get_world_selector_config()
-    return [app_commands.Choice(name=world["display_name"], value=world["display_name"]) for world in data["worlds"]]
+    return [app_commands.Choice(name=world.display_name, value=world.display_name) for world in data.worlds]
 
 
 @tree.command(name="ping", description="Replies with Pong!")
