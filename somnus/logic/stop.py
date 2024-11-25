@@ -71,6 +71,8 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
 
     ssh.sendline("stop")
 
+    log.debug("Checking for keywords ...")
+
     messages = ["overworld", "nether", "end", "@"]
     for i, message in enumerate(messages):
         found_element_index = ssh.expect(["@", message], timeout=server_shutdown_maximum_time)
