@@ -36,31 +36,9 @@ async def start_server_command(ctx: discord.Interaction):
 
     log.info("Received start command ...")
     await ctx.response.send_message(_generate_progress_bar(1, start_steps, message))  # type: ignore
-    old_presence = bot.status
-    await _update_bot_presence(Status.idle, "Starting Server")
-
-    i = 0
-    try:
-        async for _ in start.start_server():
-            i += 2
-            await ctx.edit_original_response(content=_generate_progress_bar(i, start_steps, message))
-    except Exception as e:
-        if isinstance(e, utils.UserInputError):
-            await ctx.edit_original_response(content=str(e))
-            await _update_bot_presence(old_presence)
-            return
-        log.error("Could not start server", exc_info=e)
-        await ctx.edit_original_response(
-            content=f"Could not start server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}",
-        )
-        await _update_bot_presence(old_presence)
-        return
-
-    log.info("Server started!")
-    await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
-    await ctx.channel.send("Server started!")  # type: ignore
-    await _update_bot_presence(discord.Status.online)
-    log.info("Server started Messages sent!")
+    
+    if (await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message)):
+        await ctx.channel.send("Server started!")  # type: ignore
 
 
 def _generate_progress_bar(value: int, max_value: int, message: str) -> str:
@@ -75,39 +53,16 @@ async def stop_server_command(ctx: discord.Interaction):
 
     log.info("Received stop command ...")
     await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
-    old_presence = bot.status
-    await _update_bot_presence(discord.Status.idle, "Stopping Server")
 
-    i = 0
-    try:
-        async for _ in stop.stop_server():
-            i += 2
-            await ctx.edit_original_response(content=_generate_progress_bar(i, stop_steps, message))
-    except Exception as e:
-        if isinstance(e, utils.UserInputError):
-            await ctx.edit_original_response(content=str(e))
-            await _update_bot_presence(old_presence)
-            return
-        log.error(f"Could not stop server | {e}")
-        await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}")
-        await _update_bot_presence(old_presence)
-        return
-
-    log.info("Server stopped!")
-    await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
-    await ctx.channel.send("Server stopped!")  # type: ignore
-    await _update_bot_presence(discord.Status.dnd)
-    log.info("Server stopped Messages sent!")
-
+    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=True)):
+        await ctx.channel.send("Server stopped!")  # type: ignore
 
 
 def _trim_text_for_discord_subtitle(text: any) -> str:
     return str(text).replace("\n", " ")[:32]
 
 
-@tree.command(
-    name="add_world", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation"
-)
+@tree.command(name="add_world", description="SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation")
 async def add_world_command(
     ctx: discord.Interaction, display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool
 ):
@@ -305,6 +260,89 @@ async def show_worlds_command(ctx: discord.Interaction):
                 string += (3 + max_name_length - len(world.display_name)) * " " + str(world.visible)
 
     await ctx.response.send_message(string + "```", ephemeral=sudo)
+
+@tree.command(name="stop_without_shutdown", description="SUPER-USER-ONLY: Stops the Minecraft server, but doesn't shut off the host server.")
+async def stop_without_shutdown_server_command(ctx: discord.Interaction):
+    stop_steps = 10
+    message = "Stopping Server without shutdown ..."
+
+    log.info("Received stop command without shutdown ...")
+    await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
+
+    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=False)):
+        await ctx.channel.send("Server stopped without shutdown!")  # type: ignore
+
+
+@tree.command(name="restart", description="Restarts just the Minecraft server process, not the hole server")
+async def stop_without_shutdown_server_command(ctx: discord.Interaction):
+    stop_steps = 10
+    start_steps = 20
+    message = "**Restarting Server** ... "
+
+    log.info("Received restart command ...")
+    await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
+
+    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message + "Stopping", shutdown=False, message_on_full_progressbar=True)):
+        if (await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message + "Starting")):
+            await ctx.channel.send("Server restarted!")  # type: ignore
+
+
+async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:str, message_on_full_progressbar: bool = False) -> bool:
+    old_presence = bot.status
+    await _update_bot_presence(Status.idle, "Starting Server")
+    
+    i = 0
+    try:
+        async for _ in start.start_server():
+            i += 2
+            await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
+    except Exception as e:
+        if isinstance(e, utils.UserInputError):
+            await ctx.edit_original_response(content=str(e))
+            await _update_bot_presence(old_presence)
+            return False
+        log.error("Could not start server", exc_info=e)
+        await ctx.edit_original_response(
+            content=f"Could not start server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}",
+        )
+        await _update_bot_presence(old_presence)
+        return False
+
+    log.info("Server started!")
+    if not message_on_full_progressbar:
+        message = ""
+    await ctx.edit_original_response(content=_generate_progress_bar(steps, steps, message))
+    await _update_bot_presence()
+    log.info("Server started Messages sent!")
+    return True
+
+
+async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:str, shutdown: bool, message_on_full_progressbar: bool = False) -> bool:
+    old_presence = bot.status
+    await _update_bot_presence(discord.Status.idle, "Stopping Server")
+
+    i = 0
+    try:
+        async for _ in stop.stop_server(shutdown):
+            i += 2
+            await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
+    except Exception as e:
+        if isinstance(e, utils.UserInputError):
+            await ctx.edit_original_response(content=str(e))
+            await _update_bot_presence(old_presence)
+            return False
+        log.error(f"Could not stop server | {e}")
+        await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}")
+        await _update_bot_presence(old_presence)
+        return False
+
+    log.info("Server stopped!")
+    if not message_on_full_progressbar:
+        message = ""
+    await ctx.edit_original_response(content=_generate_progress_bar(steps, steps, message))
+    await _update_bot_presence()
+    log.info("Server stopped Messages sent!")
+    return True
 
 
 async def _update_bot_presence(status: Status | None = None, text: str = ""):

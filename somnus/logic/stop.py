@@ -15,7 +15,7 @@ from somnus.logic.utils import (
 )
 
 
-async def stop_server(config: Config = CONFIG):
+async def stop_server(shutdown: bool, config: Config = CONFIG):
     host_server_state, mc_server_state = await get_server_state(config)
     log.debug(f"Host server state: {host_server_state.value} | MC server state: {mc_server_state.value}")
 
@@ -34,7 +34,7 @@ async def stop_server(config: Config = CONFIG):
 
 
     # Stop host server
-    if host_server_state == ServerState.RUNNING and not config.DEBUG:
+    if host_server_state == ServerState.RUNNING and shutdown and not config.DEBUG:
         try:
             await send_sudo_command(ssh, config, "shutdown -h now")
             yield
