@@ -97,12 +97,12 @@ async def _get_mc_server_state(config: Config) -> ServerState:
 
 async def get_host_sever_state(config: Config) -> ServerState:
     #if config.HOST_SERVER_HOST == "localhost":
-    #host_server_running = True
+    host_server_running = True
     #else:
     #    host_server_running = ping(config.HOST_SERVER_HOST)
         
-    #if not host_server_running:
-    #    return ServerState.STOPPED
+    if not host_server_running:
+        return ServerState.STOPPED
 
     try:
         ssh = await ssh_login(config)
