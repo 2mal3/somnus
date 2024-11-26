@@ -71,8 +71,9 @@ async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: 
 
 async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
     ssh.sendline(f"sudo {command}")
-    ssh.expect("sudo")
-    ssh.sendline(config.HOST_SERVER_PASSWORD)
+    choice = ssh.expect(["sudo", "@"])
+    if choice == 0:
+        ssh.sendline(config.HOST_SERVER_PASSWORD)
 
 
 async def get_server_state(config: Config) -> tuple[ServerState, ServerState]:
