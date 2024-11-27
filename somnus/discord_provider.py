@@ -10,7 +10,6 @@ intents.message_content = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
-current_world_name = ""
 isBusy = False
 
 
@@ -76,10 +75,7 @@ async def add_world_command(
     ctx: discord.Interaction, display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool
 ):
     # only allow super users
-    if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
-        await ctx.response.send_message(
-            "You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True
-        )
+    if not await _is_super_user(ctx):
         return
 
     try:
@@ -101,10 +97,7 @@ async def edit_world_command(   # noqa: PLR0913
     visible: bool = None,
 ):
     # only super users
-    if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
-        await ctx.response.send_message(
-            "You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True
-        )
+    if not await _is_super_user(ctx):
         return
 
     try:
@@ -127,10 +120,7 @@ edit_world_command.autocomplete("editing_world_name")(_get_world_choices)
 )
 async def delete_world_command(ctx: discord.Interaction, display_name: str):
     # only allow super user to delete
-    if ctx.user.id != int(CONFIG.DISCORD_SUPER_USER_ID):
-        await ctx.response.send_message(
-            "You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True
-        )
+    if not await _is_super_user(ctx):
         return
 
     world_selector_config = await world_selector.get_world_selector_config()
@@ -199,7 +189,6 @@ delete_world_command.autocomplete("display_name")(_get_world_choices)
 
 @tree.command(name="change_world", description="Changes the current world into another visible world")
 async def change_world_command(ctx: discord.Interaction):
-    global current_world_name
     world_selector_config = await world_selector.get_world_selector_config()
     index = 0
     options = []
@@ -216,7 +205,6 @@ async def change_world_command(ctx: discord.Interaction):
     select.options[index].default = True
 
     async def select_callback(select_interaction: discord.Interaction):
-        global current_world_name
         if ctx.user.id != select_interaction.user.id:
             await select_interaction.response.send_message(
                 "You cannot use the menu because it was requested by someone else. Use /change_world to change the world",
@@ -228,9 +216,15 @@ async def change_world_command(ctx: discord.Interaction):
         select.disabled = True
         await select_interaction.message.edit(view=view)
         try:
-            current_world_name = await world_selector.change_world(selected_value)
-            await select_interaction.response.send_message(f"'{selected_value}' was selected succusfully!")
+            await world_selector.select_new_world(selected_value)
             await _update_bot_presence()
+            if await utils.get_server_state(CONFIG) == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
+                await utils.get_mcstatus(CONFIG)
+                return
+                
+            
+            else:
+                await select_interaction.response.send_message(f"'{selected_value}' was selected succusfully!")
         except Exception:
             await select_interaction.response.send_message(
                 f"Couldn't change the world to '{selected_value}'.", ephemeral=True
@@ -247,9 +241,7 @@ async def change_world_command(ctx: discord.Interaction):
 
 @tree.command(name="show_worlds", description="Shows all available worlds")
 async def show_worlds_command(ctx: discord.Interaction):
-    print(current_world_name)
-
-    sudo = ctx.user.id == int(CONFIG.DISCORD_SUPER_USER_ID)
+    sudo = await _is_super_user(ctx, False)
     world_selector_config = await world_selector.get_world_selector_config()
 
     max_name_length = len(world_selector_config.worlds[0].display_name)
@@ -274,7 +266,7 @@ async def show_worlds_command(ctx: discord.Interaction):
 
 @tree.command(name="stop_without_shutdown", description="SUPER-USER-ONLY: Stops the Minecraft server, but doesn't shut off the host server.")
 async def stop_without_shutdown_server_command(ctx: discord.Interaction):
-    if not await _check_if_busy(ctx):
+    if not await _check_if_busy(ctx) or not await _is_super_user(ctx):
         return
     stop_steps = 10
     message = "Stopping Server without shutdown ..."
@@ -291,59 +283,50 @@ async def stop_without_shutdown_server_command(ctx: discord.Interaction):
 async def restart_command(ctx: discord.Interaction):
     if not await _check_if_busy(ctx):
         return
-    stop_steps = 10
-    start_steps = 20
-    message = "**Restarting Server** ... "
-
-    log.info("Received restart command ...")
-    await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
-
-    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message + "Stopping", shutdown=False)):
-        await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, message))
-        if (await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message + "Starting")):
-            await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
-            await ctx.channel.send("Server restarted!")  # type: ignore
-
-@tree.command(
-    name="reset_busy_state", description="If the message that the bot is busy is sent by mistake, this command can reset the incorrect busy state.", guild=discord.Object(id=910195152490999881))
-async def reset_busy_state_command(ctx: discord.Interaction):
-    global isBusy
-    if not isBusy:
-        ctx.response.send_message("The bot is not busy. Errors cannot be corrected", ephemeral=True)  # type: ignore
-        return
+    await _restart_minecraft_server(ctx)
 
 
-    confirm_button = discord.ui.Button(label="Reset", style=discord.ButtonStyle.red)
-    cancel_button = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.green)
+# @tree.command(name="test", description="If the message that the bot is busy is sent by mistake, this command can reset the incorrect busy state.")
+# async def test_command(ctx: discord.Interaction):
+    # global isBusy
+    # if isBusy:
+    #     await ctx.response.send_message("The bot is not busy. Errors cannot be corrected", ephemeral=True)  # type: ignore
+    #     return False
+    
+    # print("ok")
 
-    async def confirm_callback(interaction: discord.Interaction):
-        await _no_longer_busy()
-        confirm_button.disabled = True  # Deactivate button
-        cancel_button.disabled = True  # Deactivate button
-        await interaction.response.edit_message(
-            content="Reset of Busy state was successfully completed.",
-            view=view
-        )
 
-    async def cancel_callback(interaction: discord.Interaction):
-        confirm_button.disabled = True  # Deactivate button
-        cancel_button.disabled = True  # Deactivate button
-        await interaction.response.edit_message(
-            content="Busy state reset was successfully canceled.",
-            view=view
-        )
+    # confirm_button = discord.ui.Button(label="Reset", style=discord.ButtonStyle.red)
+    # cancel_button = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.green)
 
-    confirm_button.callback = confirm_callback
-    cancel_button.callback = cancel_callback
+    # async def confirm_callback(interaction: discord.Interaction):
+    #     await _no_longer_busy()
+    #     confirm_button.disabled = True  # Deactivate button
+    #     cancel_button.disabled = True  # Deactivate button
+    #     await interaction.response.edit_message(
+    #         content="Reset of Busy state was successfully completed.",
+    #         view=view
+    #     )
 
-    view = discord.ui.View()
-    view.add_item(confirm_button)
-    view.add_item(cancel_button)
+    # async def cancel_callback(interaction: discord.Interaction):
+    #     confirm_button.disabled = True  # Deactivate button
+    #     cancel_button.disabled = True  # Deactivate button
+    #     await interaction.response.edit_message(
+    #         content="Busy state reset was successfully canceled.",
+    #         view=view
+    #     )
 
-    await ctx.response.send_message(
-        f"Do you really want to reset the bot's busy state? If so, errors may occur that can cause the bot to crash!",
-        view=view
-    )
+    # confirm_button.callback = confirm_callback
+    # cancel_button.callback = cancel_callback
+
+    # view = discord.ui.View()
+    # view.add_item(confirm_button)
+    # view.add_item(cancel_button)
+
+    # await ctx.response.send_message(
+    #     f"Do you really want to reset the bot's busy state? If so, errors may occur that can cause the bot to crash!",
+    #     view=view
+    # )
 
 
 async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:str, message_on_full_progressbar: bool = False) -> bool:
@@ -369,15 +352,13 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         return False
 
     log.info("Server started!")
-    await ctx.channel.send("Server started!")  # type: ignore
     await _update_bot_presence()
-    log.info("Server started Messages sent!")
+    log.info("Bot presence updated!")
     await _no_longer_busy()
     return True
 
 
 async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:str, shutdown: bool) -> bool:
-    global current_world_name
     await _update_bot_presence(discord.Status.idle, "Stopping Server")
 
     i = 0
@@ -389,37 +370,49 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:s
         if isinstance(e, utils.UserInputError):
             await ctx.edit_original_response(content=str(e))
             await _update_bot_presence()
+            await _no_longer_busy()
             return False
         log.error(f"Could not stop server | {e}")
         await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}")
         await _update_bot_presence()
+        await _no_longer_busy()
         return False
 
-    log.info("Server stopped!")
+    log.debug("Change current world in JSON file to selected world (if necessary)")
+    await world_selector.change_world()
     await _update_bot_presence()
-    log.info("Server stopped Messages sent!")
-    current_world_name = ""
+    log.info("Bot presence updated!")
+    await _no_longer_busy()
     return True
+
+async def _restart_minecraft_server(ctx: discord.Interaction):
+    stop_steps = 10
+    start_steps = 20
+    message = "**Restarting Server** ... "
+
+    log.info("Received restart command ...")
+    await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
+
+    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message + "Stopping", shutdown=False)):
+        await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, message))
+        if (await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message + "Starting")):
+            await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
+            await ctx.channel.send("Server restarted!")  # type: ignore
 
 
 async def _update_bot_presence(status: Status | None = None, text: str = ""):
     world_selector_config = await world_selector.get_world_selector_config()
-    global current_world_name
-    if current_world_name == "":
-        world_name = world_selector_config.current_world
-    else:
-        world_name = current_world_name
     server_status = await utils.get_server_state(CONFIG)
 
     if not text:
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
-            text = f"'{world_name}'"
+            text = f"'{world_selector_config.current_world}'"
         elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
-            text = f"World '{world_name}'"
+            text = f"World '{world_selector_config.current_world}'"
         elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
-            text = f"/start to play '{world_name}'. /change_world to change to another world."
+            text = f"/start to play '{world_selector_config.current_world}'. /change_world to change to another world."
     else:
-        text += f", current World: '{world_name}'"
+        text += f", current World: '{world_selector_config.current_world}'"
 
     if not status:
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
@@ -452,6 +445,15 @@ async def _check_if_busy(ctx: discord.Interaction) -> bool:
 async def _no_longer_busy():
     global isBusy
     isBusy = False
+
+async def _is_super_user(ctx: discord.Interaction, message: bool = True):
+    if ctx.user.id in CONFIG.DISCORD_SUPER_USER_ID:
+        return True
+    else:
+        if message:
+            await ctx.response.send_message(
+                "You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True)
+        return False
 
 
 

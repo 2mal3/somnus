@@ -8,6 +8,7 @@ from somnus.environment import CONFIG, Config
 from somnus.logger import log
 
 WORLD_SELECTOR_CONFIG_FILE_PATH = "world_selector_data.json"
+new_selected_world = ""
 
 
 class UserInputError(Exception):
@@ -64,15 +65,20 @@ async def _world_exists(display_name: str, world_selector_config: WorldSelectorC
         return False
 
 
-async def change_world(new_world) -> str:
+async def change_world():
     world_selector_config = await get_world_selector_config()
-    old_world_name = world_selector_config.current_world
+    global new_selected_world
+    
+    if world_selector_config.current_world != new_selected_world:
+        for world in world_selector_config.worlds:
+            if world.display_name == new_selected_world and world.visible:
+                world_selector_config.current_world = new_selected_world
+                await _save_world_selector_config(world_selector_config)
+                return
 
-    for world in world_selector_config.worlds:
-        if world.display_name == new_world and world.visible:
-            world_selector_config.current_world = new_world
-            await _save_world_selector_config(world_selector_config)
-            return old_world_name
+async def select_new_world(new_world_name):
+    global new_selected_world
+    new_selected_world = new_world_name
 
 
 async def edit_new_world(

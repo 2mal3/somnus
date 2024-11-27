@@ -19,6 +19,10 @@ class ServerState(Enum):
 class UserInputError(Exception):
     pass
 
+async def get_mcstatus(config: Config) -> JavaServer.status:
+    server = JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
+    return await server.status()
+
 
 async def ssh_login(config: Config) -> pxssh.pxssh:
     """
