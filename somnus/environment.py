@@ -17,6 +17,7 @@ class Config(BaseModel):
     MC_SERVER_START_CMD: str
     MC_SERVER_START_CMD_SUDO: bool = False
     MC_SERVER_ADDRESS: str
+    LANGUAGE: str
     DISCORD_SUPER_USER_ID: int
     DEBUG: bool
 

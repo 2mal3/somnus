@@ -21,6 +21,8 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
 
     if ServerState.RUNNING not in (host_server_state, mc_server_state):
         raise UserInputError("Server already stopped")
+    if shutdown == False and mc_server_state == ServerState.STOPPED:
+        raise UserInputError("Minecraft-Server already stopped")
     yield
 
     ssh = await ssh_login(config)
