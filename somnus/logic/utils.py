@@ -20,7 +20,7 @@ class UserInputError(Exception):
     pass
 
 async def get_mcstatus(config: Config) -> JavaServer.status:
-    server = JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
+    server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
     return await server.status()
 
 

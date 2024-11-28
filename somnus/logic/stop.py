@@ -4,6 +4,7 @@ from pexpect import pxssh
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
+from somnus.language_handler import t
 from somnus.logic.utils import (
     ServerState,
     get_server_state,
@@ -20,9 +21,9 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
     log.debug(f"Host server state: {host_server_state.value} | MC server state: {mc_server_state.value}")
 
     if ServerState.RUNNING not in (host_server_state, mc_server_state):
-        raise UserInputError("Server already stopped")
+        raise UserInputError(t("commands.stop.error.already_stopped"))
     if shutdown == False and mc_server_state == ServerState.STOPPED:
-        raise UserInputError("Minecraft-Server already stopped")
+        raise UserInputError(t("commands.stop.error.mc_already_stopped"))
     yield
 
     ssh = await ssh_login(config)

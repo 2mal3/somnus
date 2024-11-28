@@ -1,5 +1,6 @@
 import discord
 from discord import app_commands, Status
+from typing import Union
 
 from somnus.environment import CONFIG, Config
 from somnus.logger import log
@@ -130,7 +131,7 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
     world_selector_config = await world_selector.get_world_selector_config()
 
     # prevent deletion of the current world
-    if display_name == world_selector_config.current_world:
+    if display_name == world_selector_config.current_world or display_name == world_selector.new_selected_world:
         await ctx.response.send_message(t("commands.delete_world.error.current_world"), ephemeral=True
         )
         return
@@ -251,20 +252,20 @@ async def show_worlds_command(ctx: discord.Interaction):
         if (world.visible or sudo) and len(world.display_name) > max_name_length:
             max_name_length = len(world.display_name)
 
-    string = t("commands.show_worlds.format.title")
+    string = t("formatting.show_worlds.title")
     for world in world_selector_config.worlds:
         if world.visible or sudo:
             if world.display_name == world_selector_config.current_world:
-                string += t("commands.show_worlds.format.selected_world")
+                string += t("formatting.show_worlds.selected_world")
             else:
-                string += t("commands.show_worlds.format.not_selecetd_world")
+                string += t("formatting.show_worlds.not_selecetd_world")
 
             string += world.display_name
 
             if sudo:
                 string += (3 + max_name_length - len(world.display_name)) * " " + str(world.visible)
 
-    await ctx.response.send_message(string + t("commands.show_worlds.format.end"), ephemeral=sudo)
+    await ctx.response.send_message(string + t("formatting.show_worlds.end"), ephemeral=sudo)
 
 @tree.command(name="stop_without_shutdown", description=t("commands.stop_without_shutdown.description"))
 async def stop_without_shutdown_server_command(ctx: discord.Interaction):
@@ -328,8 +329,9 @@ async def reset_busy_command(ctx: discord.Interaction):
 async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:str) -> bool:
     if not await _check_if_busy(ctx):
         return
-    await _update_bot_presence(Status.idle, "Starting Server")
-    
+    world_config = await world_selector.get_world_selector_config()
+    await _update_bot_presence(Status.idle, await _get_discord_activity("starting", t("status.text.starting", world_name=world_config.current_world)))
+
     i = 0
     try:
         async for _ in start.start_server():
@@ -343,7 +345,7 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
             return False
         log.error("Could not start server", exc_info=e)
         await ctx.edit_original_response(
-            content=f"Could not start server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}",
+            content=t("commands.start.error", e=_trim_text_for_discord_subtitle(e)),
         )
         await _update_bot_presence()
         await _no_longer_busy()
@@ -359,7 +361,8 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
 async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:str, shutdown: bool) -> bool:
     if not await _check_if_busy(ctx):
         return
-    await _update_bot_presence(discord.Status.idle, "Stopping Server")
+    world_config = await world_selector.get_world_selector_config()
+    await _update_bot_presence(discord.Status.idle, await _get_discord_activity("stopping", t("status.text.stopping", world_name=world_config.current_world)))
 
     i = 0
     try:
@@ -373,7 +376,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:s
             await _no_longer_busy()
             return False
         log.error(f"Could not stop server | {e}")
-        await ctx.edit_original_response(content=f"Could not stop server\n-# ERROR: {_trim_text_for_discord_subtitle(e)}")
+        await ctx.edit_original_response(content=t("commands.stop.error.general", e=_trim_text_for_discord_subtitle(e)))
         await _update_bot_presence()
         await _no_longer_busy()
         return False
@@ -387,35 +390,37 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:s
 
 async def _restart_minecraft_server(ctx: discord.Interaction):
     if (await utils.get_server_state(CONFIG))[1] == utils.ServerState.STOPPED:
-        await ctx.response.send_message("The Server is stopped. Use /start to start the server")  # type: ignore
+        await ctx.response.send_message(t("command.restart.error.general"))  # type: ignore
         return
     stop_steps = 10
     start_steps = 20
-    message = "**Restarting Server** ... "
+    message = t("command.restart.above_process_bar.msg")
 
     log.info("Received restart command ...")
     await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
 
-    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message + "Stopping", shutdown=False)):
+    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message + t("command.restart.above_process_bar.stopping_addon"), shutdown=False)):
         await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, message))
-        if (await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message + "Starting")):
+        if (await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message + t("command.restart.above_process_bar.starting_addon"))):
             await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
-            await ctx.channel.send("Server restarted!")  # type: ignore
+            await ctx.channel.send(t("command.restart.finished_msg"))  # type: ignore
 
 
-async def _update_bot_presence(status: Status | None = None, text: str = ""):
+async def _update_bot_presence(status: Status | None = None, activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None):
     world_selector_config = await world_selector.get_world_selector_config()
     server_status = await utils.get_server_state(CONFIG)
 
-    if not text:
+    if not activity:
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
-            text = f"'{world_selector_config.current_world}'"
+            mc_status = await utils.get_mcstatus(CONFIG)
+            text = t("status.text.online", world_name=world_selector_config.current_world, players_online=mc_status.players.online, max_players=mc_status.players.max)
+            activity = await _get_discord_activity("online", text)
         elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
-            text = f"World '{world_selector_config.current_world}'"
+            text = t("status.text.only_host_online", world_name=world_selector_config.current_world)
+            activity = await _get_discord_activity("only_host_online", text)
         elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
-            text = f"/start to play '{world_selector_config.current_world}'. /change_world to change to another world."
-    else:
-        text += f", current World: '{world_selector_config.current_world}'"
+            text = t("status.text.offline", world_name=world_selector_config.current_world)
+            activity = await _get_discord_activity("offline", text)
 
     if not status:
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
@@ -424,23 +429,37 @@ async def _update_bot_presence(status: Status | None = None, text: str = ""):
             status = Status.idle
         elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
             status = Status.dnd
+    
+    await bot.change_presence(status=status, activity=activity)
 
-    await bot.change_presence(status=status, activity=discord.Game(name=text))
+
+async def _get_discord_activity(server_status_str: str, text:str) -> Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity]:
+    activity_str = t("status.activity."+server_status_str)
+    if activity_str == "Game":
+        return discord.Game(name=text)
+    elif activity_str == "Streaming":
+        return discord.Streaming(name=text)
+    elif activity_str == "Listening":
+        return discord.Activity(type=discord.ActivityType.listening, name=text)
+    elif activity_str == "Watching":
+        return discord.Activity(type=discord.ActivityType.watching, name=text)
+    else:
+        raise TypeError(f"Wrong Discord Activity choosen. Use 'Game', 'Streaming', 'Listening' or 'Watching'. Not '{activity_str}'")
+
 
 
 async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWorld):
-    string = "```"
+    string = t("formatting.sudo_world_info.start")
 
     attributes = ["display_name", "start_cmd", "start_cmd_sudo", "visible"]
     for attr in attributes:
-        string += "\n" + attr + ":" + ((15 - len(attr)) * " ") + str(getattr(world, attr))
-    return string + "```"
+        string += t("formatting.sudo_world_info.line", attr=attr, gap_filler=((15 - len(attr)) * " "), value=str(getattr(world, attr)))
+    return string + t("formatting.sudo_world_info.end")
 
 async def _check_if_busy(ctx: discord.Interaction) -> bool:
     global isBusy
     if isBusy:
-        print("HALLO")
-        await ctx.edit_original_response(content="Please wait until the current operation is complete!")  # type: ignore
+        await ctx.edit_original_response(content=t("permission.busy"))  # type: ignore
         return False
     else:
         isBusy = True
@@ -456,7 +475,7 @@ async def _is_super_user(ctx: discord.Interaction, message: bool = True):
     else:
         if message:
             await ctx.response.send_message(
-                "You are not authorized to use this command. Ask your system administrator for changes.", ephemeral=True)
+                t("permission.sudo"), ephemeral=True)
         return False
 
 

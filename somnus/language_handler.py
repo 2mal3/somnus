@@ -19,6 +19,7 @@ def language_setup(language: str):
     
     log.debug(f"Language '{language}' was selecetd succesfully")
 
+
 def _get_available_languages(path: str) -> str:
     out = []
     for file in os.listdir(path):
