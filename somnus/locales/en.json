@@ -1,0 +1,116 @@
+{
+    "commands": {
+        "ping": {
+            "description": "Replies with Pong!",
+            "response": "Pong!"
+        },
+        "start": {
+            "description": "Starts the server",
+            "msg_above_process_bar": "Starting Server ...",
+            "finished_msg": "Server started!",
+            "error": {
+                "general": "Could not start server\n-# ERROR: {e}",
+                "already_running": "Server is already running"
+            }
+        },
+        "stop": {
+            "description": "Stops the server",
+            "msg_above_process_bar": "Stopping Server ...",
+            "finished_msg": "Server stopped!",
+            "error": {
+                "general": "Could not stop server\n-# ERROR: {e}",
+                "already_stopped": "Server already stopped",
+                "mc_already_stopped": "Minecraft-Server already stopped"
+            } 
+        },
+        "add_world": {
+            "description": "SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation",
+            "success": "The world '{display_name}' was created succesfully!",
+            "error": "Couldn't create the world '{display_name}' | {e}"
+        },
+        "edit_world": {
+            "description": "SUPER-USER-ONLY: Edits the reference to an installed Minecraft installation",
+            "success": "The world '{editing_world_name}' was edited succesfully! New values are:{values}",
+            "edit_error": "Couldn't edit the world '{editing_world_name}' | {e}"
+        },
+        "delete_world": {
+            "description": "SUPER-USER-ONLY: Deletes a reference to an installed Minecraft installation",
+            "success": "The reference to the world '{display_name}' was deleted successfully!",
+            "canceled": "Deletion process canceled",
+            "verification": "Are you shure to delete the world '{display_name}'?{values}",
+            "error": {
+                "current_world": "You can't delete the current world. Change the current world with /change_world and restart the server",
+                "not_found": "World '{display_name}' not found.",
+                "button_inactive": "Button inactive, use /delete_world again"
+            }   
+        },
+        "change_world": {
+            "description": "Changes the current world into another available world",
+            "placeholder": "Choose the world you want to play",
+            "response": "Choose the world you want to play:",
+            "success": "'{selected_value}' was selected succusfully!",
+            "error": {
+                "wrong_user": "You cannot use the menu because it was requested by someone else. Use /change_world to change the world",
+                "general": "Couldn't change the world to '{selected_value}'. | {e}"
+            }
+        },
+        "show_worlds": {
+            "description": "Shows all available worlds"
+        },
+        "stop_without_shutdown": {
+            "description": "SUPER-USER-ONLY: Stops the Minecraft server, but doesn't shut off the host server.",
+            "msg_above_process_bar": "Stopping Server without shutdown ...",
+            "finished_msg": "Server stopped without shutdown!"
+        },
+        "restart": {
+            "description": "Restarts just the Minecraft server process, not the hole server",
+            "error": "The Server is stopped. Use /start to start the server",
+            "finished_msg": "Server restarted!",
+            "above_process_bar": {
+                "msg": "**Restarting Server** ... ",
+                "starting_addon": "Starting",
+                "stopping_addon": "Stopping"
+            }
+        },
+        "reset_busy": {
+            "description": "If the message that the bot is busy is sent by mistake, this command can reset the incorrect busy state.",
+            "verification": "Do you really want to reset the bot's busy state? If so, errors may occur that can cause the bot to crash!",
+            "success": "Reset of Busy state was successfully completed.",
+            "canceled": "Busy state reset was successfully canceled.",
+            "error": "The bot is not busy. Errors cannot be corrected"
+        }
+    },
+    "permission": {
+        "busy": "Please wait until the current operation is complete!",
+        "sudo": "You are not authorized to use this command. Ask your system administrator for changes."
+    },
+    "status": {
+        "text": {
+            "online": "'{world_name}' ({players_online}/{max_players} Players online)",
+            "starting": "'{world_name}' soon",
+            "stopping": "of '{world_name}' was stopped",
+            "offline": "to /start to play '{world_name}'",
+            "only_host_online": "to /start to play '{world_name}'"
+        },
+        "activity": {
+            "online": "Game",
+            "starting": "Game",
+            "stopping": "Game",
+            "offline": "Listening",
+            "only_host_online": "Listening"
+        }
+    },
+    "formatting": {
+        "show_worlds": {
+            "title": "## List of all available worlds \n```", 
+            "selected_world": "\n✅ - ",
+            "not_selecetd_world": "\n⬜ - ",
+            "end": "```"
+        },
+        "sudo_world_info": {
+            "start": "```",
+            "line": "\n{attr}:{gap_filler}{value}",
+            "end": "```"
+        }
+    }
+}

@@ -1,0 +1,116 @@
+{
+    "commands": {
+        "ping": {
+            "description": "Antwortet mit Pong!",
+            "response": "Pong!"
+        },
+        "start": {
+            "description": "Startet den Server",
+            "msg_above_process_bar": "Server startet ...",
+            "finished_msg": "Server gestartet!",
+            "error": {
+                "general": "Server konnte nicht gestartet werden\n-# ERROR: {e}",
+                "already_running": "Server läuft bereits"
+            }
+        },
+        "stop": {
+            "description": "Stoppt den Server",
+            "msg_above_process_bar": "Server stoppt ...",
+            "finished_msg": "Server gestoppt!",
+            "error": {
+                "general": "Sever konnte nicht gestoppt werden\n-# ERROR: {e}",
+                "already_stopped": "Server bereits gestoppt",
+                "mc_already_stopped": "Minecraft-Server bereits gestoppt"
+            } 
+        },
+        "add_world": {
+            "description": "SUPER-USER-ONLY: Erstellt eine neue Referenz auf eine bereits installierte Minecraft-Installation",
+            "success": "Die Welt '{display_name}' wurde erfolgreich erstellt!",
+            "error": "Die Welt '{display_name}' konnte nicht erstellt werden! | {e}"
+        },
+        "edit_world": {
+            "description": "SUPER-USER-ONLY: Ändert die Referenz auf eine bereits installierte Minecraft-Installation",
+            "success": "Die Welt '{editing_world_name}' wurde erfolgreich verändert! Die neuen Werte sind:{values}",
+            "edit_error": "Die Welt '{editing_world_name}' konnte nicht verändert werden | {e}"
+        },
+        "delete_world": {
+            "description": "SUPER-USER-ONLY: Löscht eine Referenz auf eine bereits installierte Minecraft-Installation",
+            "success": "Die Referenz auf die Welt '{display_name}' wurde erfolgreich gelöscht!",
+            "canceled": "Löschprozess abgebrochen",
+            "verification": "Bist du dir sicher, dass du die Referenz auf die Welt '{display_name}' läschen willst?{values}",
+            "error": {
+                "current_world": "Du kannst die aktuell ausgewählte Welt nicht löschen. Wechsle die Welt mit /change_world und starte den Server neu",
+                "not_found": "Welt '{display_name}' wurde nicht gefunden.",
+                "button_inactive": "Button inaktiv, nutze /delete_world erneut"
+            }   
+        },
+        "change_world": {
+            "description": "Ändert die aktuelle Welt in eine andere verfügbare Welt",
+            "placeholder": "Wähle die Welt aus, die du spielen möchtest",
+            "response": "Wähle die Welt aus, die du spielen möchtest:",
+            "success": "'{selected_value}' wurde erfolgreich ausgewählt!",
+            "error": {
+                "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze /change_world um die Welt zu ändern",
+                "general": "Die Welt konnte nicht zu '{selected_value}' gewechselt werden. | {e}"
+            }
+        },
+        "show_worlds": {
+            "description": "Zeigt alle verfügbaren Welten an"
+        },
+        "stop_without_shutdown": {
+            "description": "SUPER-USER-ONLY: Stoppt den Minecraft-Server, allerdings nicht den Host-Server.",
+            "msg_above_process_bar": "Server stoppt ohne herunterzufahren ...",
+            "finished_msg": "Server ohne herunterfahren gestoppt!"
+        },
+        "restart": {
+            "description": "Startet den Minecraft-Server neu, nicht den gesamten Server",
+            "error": "Der Server ist gestoppt. Nutze /start um ihn zu starten!",
+            "finished_msg": "Server wurde neugestartet!",
+            "above_process_bar": {
+                "msg": "**Server neustarten** ... ",
+                "starting_addon": "Startet",
+                "stopping_addon": "Stoppt"
+            }
+        },
+        "reset_busy": {
+            "description": "Falls der Bot fälschlicherweise beschäftigt ist, kann dieser Befehl den falschen Busy-State zurücksetzen.",
+            "verification": "Möchtest du wirklich den Busy-State zurücksetzen? Dadurch können Fehler entstehen, die bis zum Absturz des Bots führen können",
+            "success": "Der Busy-State wurde erfolgreich zurückgesetzt",
+            "canceled": "Das Zurücksetzen des Busy-States wurde abgebrochen",
+            "error": "Der Bot ist aktuell nicht beschäftigt. Fehler können nicht behoben werden"
+        }
+    },
+    "permission": {
+        "busy": "Bitte warte bis die aktuelle Aktion beendet wurde",
+        "sudo": "Du bist nicht dazu berechtigt diesen Befehl zu nutzen. Frage deinen System-Administrator für Änderungen."
+    },
+    "status": {
+        "text": {
+            "online": "'{world_name}' ({players_online}/{max_players} Spieler online)",
+            "starting": "gleich '{world_name}'",
+            "stopping": "nicht mehr '{world_name}'",
+            "offline": "auf /start, um '{world_name}' zu spielen",
+            "only_host_online": "auf /start, um '{world_name}' zu spielen"
+        },
+        "activity": {
+            "online": "Game",
+            "starting": "Game",
+            "stopping": "Game",
+            "offline": "Listening",
+            "only_host_online": "Listening"
+        }
+    },
+    "formatting": {
+        "show_worlds": {
+            "title": "## Liste aller verfügbaren Welten \n```", 
+            "selected_world": "\n✅ - ",
+            "not_selecetd_world": "\n⬜ - ",
+            "end": "```"
+        },
+        "sudo_world_info": {
+            "start": "```",
+            "line": "\n{attr}:{gap_filler}{value}",
+            "end": "```"
+        }
+    }
+}
