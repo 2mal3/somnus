@@ -20,7 +20,16 @@
             "error": {
                 "general": "Could not stop server\n-# ERROR: {e}",
                 "already_stopped": "Server already stopped",
-                "mc_already_stopped": "Minecraft-Server already stopped"
+                "mc_already_stopped": "Minecraft-Server already stopped",
+                "players_online": {
+                    "stop_anyway": "Stop Anyway",
+                    "cancel": "Cancel",
+                    "wrong_user": "You cannot use the menu because it was requested by someone else. Use /stop to stop the server.",
+                    "canceled": "Canceled succesfully!",
+                    "question_singular": "There is still one player online: {player_name}\n**Would you still like to stop the server?**",
+                    "question_plural": "There are still {player_count} players online:{player_names}\n**Would you still like to stop the server?**",
+                    "player_name_line": "`{player_name}`"
+                }
             } 
         },
         "add_world": {
@@ -48,11 +57,14 @@
             "description": "Changes the current world into another available world",
             "placeholder": "Choose the world you want to play",
             "response": "Choose the world you want to play:",
-            "success": "'{selected_value}' was selected succusfully!",
+            "success_offline": "'{selected_value}' was selected successfully!",
+            "success_online": "'{selected_value}' was successfully selected and will be started at the next start.\nWould you like to restart now?",
             "error": {
-                "wrong_user": "You cannot use the menu because it was requested by someone else. Use /change_world to change the world",
+                "wrong_user": "You cannot use the menu because it was requested by someone else. Use /change_world to change the world.",
                 "general": "Couldn't change the world to '{selected_value}'. | {e}"
-            }
+            },
+            "restart_now": "Restart Now",
+            "cancel": "Cancel"
         },
         "show_worlds": {
             "description": "Shows all available worlds"
@@ -77,7 +89,12 @@
             "verification": "Do you really want to reset the bot's busy state? If so, errors may occur that can cause the bot to crash!",
             "success": "Reset of Busy state was successfully completed.",
             "canceled": "Busy state reset was successfully canceled.",
-            "error": "The bot is not busy. Errors cannot be corrected"
+            "reset": "Reset",
+            "cancel": "Cancel",
+            "error": {
+                "general": "The bot is not busy. Errors cannot be corrected",
+                "wrong_user": "You cannot use the menu because it was requested by someone else. Use /reset_busy to reset the busy state."
+            }
         }
     },
     "permission": {

@@ -20,8 +20,13 @@ class UserInputError(Exception):
     pass
 
 async def get_mcstatus(config: Config) -> JavaServer.status:
-    server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
-    return await server.status()
+    try:
+        server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
+        return server.status()
+    except Exception as e:
+        log.error(f"Couldn't get mcstatus: {e}")
+        return None
+
 
 
 async def ssh_login(config: Config) -> pxssh.pxssh:

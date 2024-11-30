@@ -78,7 +78,14 @@ async def change_world():
 
 async def select_new_world(new_world_name):
     global new_selected_world
-    new_selected_world = new_world_name
+    world_selector_config = await get_world_selector_config()
+
+    if world_selector_config.current_world == new_world_name:
+        new_selected_world = ""
+        return True
+    else:
+        new_selected_world = new_world_name
+        return False
 
 
 async def edit_new_world(

@@ -20,7 +20,16 @@
             "error": {
                 "general": "Sever konnte nicht gestoppt werden\n-# ERROR: {e}",
                 "already_stopped": "Server bereits gestoppt",
-                "mc_already_stopped": "Minecraft-Server bereits gestoppt"
+                "mc_already_stopped": "Minecraft-Server bereits gestoppt",
+                "players_online": {
+                    "stop_anyway": "Stoppe trotzdem",
+                    "cancel": "Abbruch",
+                    "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /stop um den Server zu stoppen.",
+                    "canceled": "Erfolgreich abgebrochen!",
+                    "question_singular": "Es ist noch ein Spieler online: {player_name}\n**Möchtest du den Server trotzdem stoppen?**",
+                    "question_plural": "Es sind noch {player_count} Spieler online:{player_names}\n**Möchtest du den Server trotzdem stoppen?**",
+                    "player_name_line": "`{player_name}`"
+                }
             } 
         },
         "add_world": {
@@ -48,11 +57,14 @@
             "description": "Ändert die aktuelle Welt in eine andere verfügbare Welt",
             "placeholder": "Wähle die Welt aus, die du spielen möchtest",
             "response": "Wähle die Welt aus, die du spielen möchtest:",
-            "success": "'{selected_value}' wurde erfolgreich ausgewählt!",
+            "success_offline": "'{selected_value}' wurde erfolgreich ausgewählt!",
+            "success_online": "'{selected_value}' wurde erfolgreich ausgewählt und wird beim nächsten Start gestartet.\nMöchtest du jetzt neustarten?",
             "error": {
-                "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze /change_world um die Welt zu ändern",
+                "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /change_world um die Welt zu ändern.",
                 "general": "Die Welt konnte nicht zu '{selected_value}' gewechselt werden. | {e}"
-            }
+            },
+            "restart_now": "Jetzt Neustarten",
+            "cancel": "Abbruch"
         },
         "show_worlds": {
             "description": "Zeigt alle verfügbaren Welten an"
@@ -77,7 +89,12 @@
             "verification": "Möchtest du wirklich den Busy-State zurücksetzen? Dadurch können Fehler entstehen, die bis zum Absturz des Bots führen können",
             "success": "Der Busy-State wurde erfolgreich zurückgesetzt",
             "canceled": "Das Zurücksetzen des Busy-States wurde abgebrochen",
-            "error": "Der Bot ist aktuell nicht beschäftigt. Fehler können nicht behoben werden"
+            "reset": "Reset",
+            "cancel": "Abrruch",
+            "error": {
+                "general": "Der Bot ist aktuell nicht beschäftigt. Fehler können nicht behoben werden",
+                "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /reset_busy um Busy-State  zurückzusetzen."
+            }
         }
     },
     "permission": {
