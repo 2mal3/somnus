@@ -54,10 +54,15 @@ pydantic-core==2.20.1
 python-dotenv==1.0.1
 setuptools==70.3.0
     # via asyncio-dgram
+snakeviz==2.2.2
+    # via whyslow
+tornado==6.4.2
+    # via snakeviz
 typing-extensions==4.12.2
     # via aiogram
     # via pydantic
     # via pydantic-core
 wakeonlan==3.1.0
+whyslow==0.1.7
 yarl==1.9.4
     # via aiohttp

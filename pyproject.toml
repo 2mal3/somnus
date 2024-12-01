@@ -14,7 +14,8 @@ dependencies = [
     "mcstatus==11.*",
     "pydantic==2.*",
     "aiofiles==24.*",
-    "aiogram_i18n==1.*"
+    "aiogram_i18n==1.*",
+    "whyslow>=0.1.7",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

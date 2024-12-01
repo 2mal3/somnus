@@ -18,7 +18,7 @@ class Config(BaseModel):
     MC_SERVER_START_CMD_SUDO: bool = False
     MC_SERVER_ADDRESS: str
     LANGUAGE: str
-    DISCORD_SUPER_USER_ID: int
+    DISCORD_SUPER_USER_ID: str
     DEBUG: bool
 
     @field_validator("DEBUG", "MC_SERVER_START_CMD_SUDO", mode="before")
