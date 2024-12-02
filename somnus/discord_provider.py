@@ -14,7 +14,7 @@ intents.message_content = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
-isBusy = False
+is_busy = False
 
 
 
@@ -134,7 +134,7 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
     world_selector_config = await world_selector.get_world_selector_config()
 
     # prevent deletion of the current world
-    if display_name == world_selector_config.current_world or display_name == world_selector.new_selected_world:
+    if display_name in {world_selector_config.current_world, world_selector.new_selected_world}:
         await ctx.response.send_message(t("commands.delete_world.error.current_world"), ephemeral=True
         )
         return
@@ -327,7 +327,7 @@ async def restart_command(ctx: discord.Interaction):
 
 @tree.command(name="reset_busy", description=t("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction):
-    if not isBusy:
+    if not is_busy:
         await ctx.response.send_message(t("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return False
 
@@ -417,7 +417,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:s
     
 
     mc_status = await utils.get_mcstatus(CONFIG)
-    if mc_status != None and mc_status.players.online != 0:
+    if mc_status is not None and mc_status.players.online != 0:
         if not await _players_online_verification(ctx, message, mc_status):
             return
         
@@ -574,7 +574,7 @@ async def _update_bot_presence(status: Status | None = None, activity: Union[dis
     if not activity:
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
             mc_status = await utils.get_mcstatus(CONFIG)
-            if mc_status == None:
+            if mc_status is None:
                 text = t("status.text.online", world_name=world_selector_config.current_world, players_online="X", max_players="Y")
             else:
                 text = t("status.text.online", world_name=world_selector_config.current_world, players_online=mc_status.players.online, max_players=mc_status.players.max)
@@ -620,16 +620,16 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
     return string + t("formatting.sudo_world_info.end")
 
 async def _check_if_busy(ctx: discord.Interaction) -> bool:
-    if isBusy:
+    if is_busy:
         await ctx.edit_original_response(content=t("permission.busy"))  # type: ignore
         return False
     else:
-        isBusy = True
+        is_busy = True
         return True
 
 async def _no_longer_busy():
-    global isBusy
-    isBusy = False
+    global is_busy
+    is_busy = False
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True):
     super_users = CONFIG.DISCORD_SUPER_USER_ID.split(";")
