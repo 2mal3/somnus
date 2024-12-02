@@ -59,10 +59,8 @@
             "response": "Choose the world you want to play:",
             "success_offline": "'{selected_value}' was selected successfully!",
             "success_online": "'{selected_value}' was successfully selected and will be started at the next start.\nWould you like to restart now?",
-            "error": {
-                "wrong_user": "You cannot use the menu because it was requested by someone else. Use /change_world to change the world.",
-                "general": "Couldn't change the world to '{selected_value}'. | {e}"
-            },
+            "wrong_user_error": "You cannot use the menu because it was requested by someone else. Use /change_world to change the world.",
+
             "restart_now": "Restart Now",
             "cancel": "Cancel"
         },

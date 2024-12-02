@@ -8,7 +8,6 @@ from somnus.environment import CONFIG, Config
 from somnus.logger import log
 
 WORLD_SELECTOR_CONFIG_FILE_PATH = "world_selector_data.json"
-new_selected_world = ""
 
 
 class UserInputError(Exception):
@@ -27,6 +26,7 @@ class WorldSelectorWorld(BaseModel):
 
 
 class WorldSelectorConfig(BaseModel):
+    new_selected_world: str
     current_world: str
     worlds: list[WorldSelectorWorld]
 
@@ -68,23 +68,23 @@ async def _world_exists(display_name: str, world_selector_config: WorldSelectorC
 async def change_world():
     world_selector_config = await get_world_selector_config()
     
-    if world_selector_config.current_world != new_selected_world:
+    if world_selector_config.current_world != world_selector_config.new_selected_world:
         for world in world_selector_config.worlds:
-            if world.display_name == new_selected_world and world.visible:
-                world_selector_config.current_world = new_selected_world
+            if world.display_name == world_selector_config.new_selected_world and world.visible:
+                world_selector_config.current_world = world_selector_config.new_selected_world
                 await _save_world_selector_config(world_selector_config)
                 return
 
 async def select_new_world(new_world_name):
     world_selector_config = await get_world_selector_config()
-
     if world_selector_config.current_world == new_world_name:
-        global new_selected_world
-        new_selected_world = ""
+        
+        world_selector_config.new_selected_world = ""
+        await _save_world_selector_config(world_selector_config)
         return True
     else:
-        global new_selected_world
-        new_selected_world = new_world_name
+        world_selector_config.new_selected_world = new_world_name
+        await _save_world_selector_config(world_selector_config)
         return False
 
 
@@ -162,6 +162,7 @@ def _get_default_world_selector_config(config: Config = CONFIG) -> WorldSelector
         current_world="Minecraft",
         worlds=[
             WorldSelectorWorld(
+                new_selected_world="",
                 display_name="Minecraft",
                 start_cmd=config.MC_SERVER_START_CMD,
                 start_cmd_sudo=config.MC_SERVER_START_CMD_SUDO,

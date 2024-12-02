@@ -4,8 +4,8 @@ from pexpect import pxssh
 from wakeonlan import send_magic_packet
 
 from somnus.environment import Config, CONFIG
-from somnus.language_handler import t
 from somnus.logger import log
+from somnus.language_handler import LH
 from somnus.logic.utils import (
     ServerState,
     get_server_state,
@@ -24,7 +24,7 @@ async def start_server(config: Config = CONFIG):
     log.debug(f"Host server state: {host_server_state.value} | MC server state: {mc_server_state.value}")
 
     if ServerState.STOPPED not in (host_server_state, mc_server_state):
-        raise UserInputError(t("commands.start.error.already_running"))
+        raise UserInputError(LH.t("commands.start.error.already_running"))
     yield
 
     # Start host server
