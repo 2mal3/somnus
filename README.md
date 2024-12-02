@@ -31,10 +31,24 @@ Discord bot to remotely control and manage multiple Minecraft servers.
 - `/stop_without_shutdown`: Stops the Minecraft server, but doesn't shut it off
 
 ## Setup
-
+### Installaton
 1. [install Rye](https://rye.astral.sh/guide/installation/)
 2. install Python dependencies with `rye sync`
 3. start bot with `python3 -m somnus.__main__` or `rye run dev`!
+
+### Fill in .env (with .env.example)
+- DISCORD_TOKEN: your discord bot token
+- HOST_SERVER_HOST: ip adress of your host server on which the Minecraft server process should be started
+- HOST_SERVER_SSH_PORT: ssh port of the host server (standard = "22")
+- HOST_SERVER_USER: username on host server
+- HOST_SERVER_PASSWORD: password for the user on host server
+- HOST_SERVER_MAC: mac adress of host server (only necessary if Wake On Lan is activated)
+- MC_SERVER_START_CMD: start command for minecraft server (use absolute path if possible)
+- MC_SERVER_START_CMD_SUDO: bool ("true"/"false") if the minecraft server should start with sudo rights
+- MC_SERVER_ADDRESS: minecraft server adress WITH PORT
+- LANGUAGE: display language for the discord bot ("en" -> english, "de" -> deutsch/german are included)
+- DISCORD_SUPER_USER_ID: discord user id's separated with “;” from discord users who should have access to superuser commands
+- DEBUG; bool ("true"/"false"): standard = "false"; debug messages are displayed and server does not shut down if set to “true”
 
 ## License
 
