@@ -5,22 +5,22 @@
             "response": "Pong!"
         },
         "start": {
-            "description": "Starts the server",
+            "description": "Starts the server.",
             "msg_above_process_bar": "Starting Server ...",
             "finished_msg": "Server started!",
             "error": {
                 "general": "Could not start server\n-# ERROR: {e}",
-                "already_running": "Server is already running"
+                "already_running": "Server is already running."
             }
         },
         "stop": {
-            "description": "Stops the server",
+            "description": "Stops the server.",
             "msg_above_process_bar": "Stopping Server ...",
             "finished_msg": "Server stopped!",
             "error": {
                 "general": "Could not stop server\n-# ERROR: {e}",
-                "already_stopped": "Server already stopped",
-                "mc_already_stopped": "Minecraft-Server already stopped",
+                "already_stopped": "Server already stopped.",
+                "mc_already_stopped": "Minecraft-Server already stopped.",
                 "players_online": {
                     "stop_anyway": "Stop Anyway",
                     "cancel": "Cancel",
@@ -33,28 +33,28 @@
             } 
         },
         "add_world": {
-            "description": "SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation",
+            "description": "SUPER-USER-ONLY: Creates a new reference to an installed Minecraft installation.",
             "success": "The world '{display_name}' was created succesfully!",
             "error": "Couldn't create the world '{display_name}' | {e}"
         },
         "edit_world": {
-            "description": "SUPER-USER-ONLY: Edits the reference to an installed Minecraft installation",
+            "description": "SUPER-USER-ONLY: Edits the reference to an installed Minecraft installation.",
             "success": "The world '{editing_world_name}' was edited succesfully! New values are:{values}",
             "edit_error": "Couldn't edit the world '{editing_world_name}' | {e}"
         },
         "delete_world": {
-            "description": "SUPER-USER-ONLY: Deletes a reference to an installed Minecraft installation",
+            "description": "SUPER-USER-ONLY: Deletes a reference to an installed Minecraft installation.",
             "success": "The reference to the world '{display_name}' was deleted successfully!",
-            "canceled": "Deletion process canceled",
+            "canceled": "Deletion process canceled.",
             "verification": "Are you shure to delete the world '{display_name}'?{values}",
             "error": {
-                "current_world": "You can't delete the current world. Change the current world with /change_world and restart the server",
+                "current_world": "You can't delete the current world. Change the current world with /change_world and restart the server.",
                 "not_found": "World '{display_name}' not found.",
-                "button_inactive": "Button inactive, use /delete_world again"
+                "button_inactive": "Button inactive, use /delete_world again."
             }   
         },
         "change_world": {
-            "description": "Changes the current world into another available world",
+            "description": "Changes the current world into another available world.",
             "placeholder": "Choose the world you want to play",
             "response": "Choose the world you want to play:",
             "success_offline": "'{selected_value}' was selected successfully!",
@@ -67,7 +67,7 @@
             "cancel": "Cancel"
         },
         "show_worlds": {
-            "description": "Shows all available worlds"
+            "description": "Shows all available worlds."
         },
         "stop_without_shutdown": {
             "description": "SUPER-USER-ONLY: Stops the Minecraft server, but doesn't shut off the host server.",
@@ -75,8 +75,8 @@
             "finished_msg": "Server stopped without shutdown!"
         },
         "restart": {
-            "description": "Restarts just the Minecraft server process, not the hole server",
-            "error": "The Server is stopped. Use /start to start the server",
+            "description": "Restarts just the Minecraft server process, not the hole server.",
+            "error": "The Server is stopped. Use /start to start the server.",
             "finished_msg": "Server restarted!",
             "above_process_bar": {
                 "msg": "**Restarting Server** ... ",
@@ -92,13 +92,15 @@
             "reset": "Reset",
             "cancel": "Cancel",
             "error": {
-                "general": "The bot is not busy. Errors cannot be corrected",
+                "general": "The bot is not busy. Errors cannot be corrected.",
                 "wrong_user": "You cannot use the menu because it was requested by someone else. Use /reset_busy to reset the busy state."
             }
         },
         "help": {
             "description": "Displays all relevant commands from this bot with an explanation.",
-            "title": "Relevant Commands" 
+            "title": "Relevant Commands",
+            "user_subtitle": ":baby: User-Commands",
+            "admin_subtitle": ":man_technologist: Admin-Commands"
         }
     },
     "permission": {
@@ -134,9 +136,10 @@
             "end": "```"
         },
         "help": {
-            "command": "`/{command_name}`:",
+            "command": "`/{command_name}`",
             "command_description": "{description}",
-            "subtitle": "{subtitle}"
+            "subtitle": "{subtitle}",
+            "admin_prefix_to_remove": "SUPER-USER-ONLY: "
         }
     }
 }

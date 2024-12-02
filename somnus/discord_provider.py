@@ -226,13 +226,10 @@ async def change_world_command(ctx: discord.Interaction):
         select.disabled = True
         await select_interaction.message.edit(view=select_view)
         try:
-            print("01")
             current_world_is_selected = await world_selector.select_new_world(selected_value)
-            print("1.5")
+            mc_server_online = await utils.get_mc_server_state(CONFIG)
             await select_interaction.response.send_message(t("commands.change_world.success_offline", selected_value=selected_value))
-            print("02", current_world_is_selected)
-            if (not current_world_is_selected) and (await utils.get_mc_server_state(CONFIG) == utils.ServerState.RUNNING):
-                print("03a")
+            if (not current_world_is_selected) and (mc_server_online == utils.ServerState.RUNNING):
                 confirm_button = discord.ui.Button(label=t("commands.change_world.restart_now"), style=discord.ButtonStyle.green)
                 cancel_button = discord.ui.Button(label=t("commands.change_world.cancel"), style=discord.ButtonStyle.gray)
 
@@ -276,9 +273,12 @@ async def change_world_command(ctx: discord.Interaction):
                 #     view=button_view
                 # )
             
-            else:
-                print("03b")
+            #else:
                 #await select_interaction.response.send_message(t("commands.change_world.success_offline", selected_value=selected_value))
+            if mc_server_online == utils.ServerState.STOPPED:
+                await world_selector.change_world()
+                await _update_bot_presence()
+
         except Exception as e:
             await select_interaction.response.send_message(
                 t("commands.change_world.error.general", selected_value=selected_value, e=e), ephemeral=True
@@ -344,16 +344,17 @@ async def help_command(ctx: discord.Interaction):
         color=discord.Color.blue()
     )
     if sudo:
-        embed.add_field(name= t("formatting.help.subtitle", subtitle=":baby: User-Commands"), value="", inline=False)
+        embed.add_field(name= t("formatting.help.subtitle", subtitle=t("commands.help.user_subtitle")), value="", inline=False)
 
     for user_command in user_commands:
         embed.add_field(name=t("formatting.help.command", command_name=user_command), value=t("formatting.help.command_description", description=t(f"commands.{user_command}.description")), inline=False)
     
     if sudo:
-        embed.add_field(name= t("formatting.help.subtitle", subtitle=":man_technologist: Admin-Commands"), value="", inline=False)
+        embed.add_field(name="", value="", inline=False)
+        embed.add_field(name= t("formatting.help.subtitle", subtitle=t("commands.help.admin_subtitle")), value="", inline=False)
         admin_commands = ["add_world", "edit_world", "delete_world", "stop_without_shutdown"]
         for admin_command in admin_commands:
-            description = t(f"commands.{admin_command}.description").replace("SUPER-USER-ONLY: ", "")
+            description = t(f"commands.{admin_command}.description").replace(t("formatting.help.admin_prefix_to_remove"), "")
             embed.add_field(name=t("formatting.help.command", command_name=admin_command), value=t("formatting.help.command_description", description=description), inline=False)
     
     await ctx.response.send_message(embed=embed, ephemeral=True)

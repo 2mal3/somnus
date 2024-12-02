@@ -20,14 +20,12 @@ class UserInputError(Exception):
     pass
 
 async def get_mcstatus(config: Config) -> JavaServer.status:
-    if await get_mc_server_state(config) == ServerState.RUNNING:
-        try:
-            server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
-            return server.status()
-        except Exception as e:
+    try:
+        server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
+        return server.status()
+    except Exception as e:
+        if (not isinstance(e, OSError)) and (not isinstance(e, TimeoutError)):
             log.error(f"Couldn't get mcstatus: {e}")
-            return None
-    else:
         return None
 
 
