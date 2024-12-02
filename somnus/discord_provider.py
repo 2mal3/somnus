@@ -317,7 +317,6 @@ async def restart_command(ctx: discord.Interaction):
 
 @tree.command(name="reset_busy", description=LH.t("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction):
-    global is_busy # noqa: PLW0603
     if not is_busy:
         await ctx.response.send_message(LH.t("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return False
