@@ -31,7 +31,7 @@ Discord bot to remotely control and manage multiple Minecraft servers.
 - `/stop_without_shutdown`: Stops the Minecraft server, but doesn't shut it off
 
 ## Setup
-### Installaton
+### Installation
 1. [install Rye](https://rye.astral.sh/guide/installation/)
 2. install Python dependencies with `rye sync`
 3. start bot with `python3 -m somnus.__main__` or `rye run dev`!
