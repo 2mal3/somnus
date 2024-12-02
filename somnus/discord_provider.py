@@ -620,10 +620,12 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
     return string + t("formatting.sudo_world_info.end")
 
 async def _check_if_busy(ctx: discord.Interaction) -> bool:
+    global is_busy
     if is_busy:
         await ctx.edit_original_response(content=t("permission.busy"))  # type: ignore
         return False
     else:
+        global is_busy
         is_busy = True
         return True
 
