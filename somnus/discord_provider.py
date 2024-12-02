@@ -16,15 +16,14 @@ tree = app_commands.CommandTree(bot)
 
 isBusy = False
 
-guild_id = 910195152490999878
 
 
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="Booting"))
     try:
-        synced = await tree.sync(guild=discord.Object(id=guild_id))
-        log.info(f"Successfully synced commands: {[cmd.name for cmd in synced]}")
+        synced = await tree.sync()
+        log.debug(f"Successfully synced commands: {[cmd.name for cmd in synced]}")
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
@@ -334,7 +333,7 @@ async def stop_without_shutdown_server_command(ctx: discord.Interaction):
         await ctx.channel.send(t("commands.stop_without_shutdown.finished_msg"))  # type: ignore
 
 
-@tree.command(name="help", description=t("commands.help.description"), guild=discord.Object(id=guild_id))
+@tree.command(name="help", description=t("commands.help.description"))
 async def help_command(ctx: discord.Interaction):
     sudo = await _is_super_user(ctx, False)
     user_commands = ["start", "stop", "change_world", "restart", "show_worlds", "ping", "reset_busy", "help"]
@@ -369,7 +368,7 @@ async def restart_command(ctx: discord.Interaction):
     await _restart_minecraft_server(ctx, message)
 
 
-@tree.command(name="reset_busy", description=t("commands.reset_busy.description"), guild=discord.Object(id=guild_id))
+@tree.command(name="reset_busy", description=t("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction):
     global isBusy
     if not isBusy:
