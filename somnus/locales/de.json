@@ -95,6 +95,10 @@
                 "general": "Der Bot ist aktuell nicht beschäftigt. Fehler können nicht behoben werden",
                 "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /reset_busy um Busy-State  zurückzusetzen."
             }
+        },
+        "help": {
+            "description": "Zeigt alle relevanten Befehle von diesem Bot mit Erklärung an.",
+            "title": "Relevante Befehle"
         }
     },
     "permission": {
@@ -128,6 +132,11 @@
             "start": "```",
             "line": "\n{attr}:{gap_filler}{value}",
             "end": "```"
+        },
+        "help": {
+            "command": "`/{command_name}`:",
+            "command_description": "{description}",
+            "subtitle": "{subtitle}"
         }
     }
 }

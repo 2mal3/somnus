@@ -95,6 +95,10 @@
                 "general": "The bot is not busy. Errors cannot be corrected",
                 "wrong_user": "You cannot use the menu because it was requested by someone else. Use /reset_busy to reset the busy state."
             }
+        },
+        "help": {
+            "description": "Displays all relevant commands from this bot with an explanation.",
+            "title": "Relevant Commands" 
         }
     },
     "permission": {
@@ -128,6 +132,11 @@
             "start": "```",
             "line": "\n{attr}:{gap_filler}{value}",
             "end": "```"
+        },
+        "help": {
+            "command": "`/{command_name}`:",
+            "command_description": "{description}",
+            "subtitle": "{subtitle}"
         }
     }
 }

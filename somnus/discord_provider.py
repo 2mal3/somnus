@@ -321,6 +321,8 @@ async def show_worlds_command(ctx: discord.Interaction):
 
 @tree.command(name="stop_without_shutdown", description=t("commands.stop_without_shutdown.description"))
 async def stop_without_shutdown_server_command(ctx: discord.Interaction):
+    if not await _is_super_user(ctx):
+        return
     stop_steps = 10
     message = t("commands.stop_without_shutdown.msg_above_process_bar")
 
@@ -332,9 +334,31 @@ async def stop_without_shutdown_server_command(ctx: discord.Interaction):
         await ctx.channel.send(t("commands.stop_without_shutdown.finished_msg"))  # type: ignore
 
 
-@tree.command(name="help", description="Noch gibts hier keine Hilfe, aber bald")
+@tree.command(name="help", description=t("commands.help.description"), guild=discord.Object(id=guild_id))
 async def help_command(ctx: discord.Interaction):
-    await ctx.response.send_message("Hilfe kriegst du später. Bis dahin, kannste ja weinen!")
+    sudo = await _is_super_user(ctx, False)
+    user_commands = ["start", "stop", "change_world", "restart", "show_worlds", "ping", "reset_busy", "help"]
+
+    embed = discord.Embed(
+        title=t("commands.help.title"),
+        color=discord.Color.blue()
+    )
+    if sudo:
+        embed.add_field(name= t("formatting.help.subtitle", subtitle=":baby: User-Commands"), value="", inline=False)
+
+    for user_command in user_commands:
+        embed.add_field(name=t("formatting.help.command", command_name=user_command), value=t("formatting.help.command_description", description=t(f"commands.{user_command}.description")), inline=False)
+    
+    if sudo:
+        embed.add_field(name= t("formatting.help.subtitle", subtitle=":man_technologist: Admin-Commands"), value="", inline=False)
+        admin_commands = ["add_world", "edit_world", "delete_world", "stop_without_shutdown"]
+        for admin_command in admin_commands:
+            description = t(f"commands.{admin_command}.description").replace("SUPER-USER-ONLY: ", "")
+            embed.add_field(name=t("formatting.help.command", command_name=admin_command), value=t("formatting.help.command_description", description=description), inline=False)
+    
+    await ctx.response.send_message(embed=embed, ephemeral=True)
+
+
 
 
 @tree.command(name="restart", description=t("commands.restart.description"))
@@ -344,7 +368,7 @@ async def restart_command(ctx: discord.Interaction):
     await _restart_minecraft_server(ctx, message)
 
 
-@tree.command(name="reset_busy", description=t("commands.reset_busy.description"))
+@tree.command(name="reset_busy", description=t("commands.reset_busy.description"), guild=discord.Object(id=guild_id))
 async def reset_busy_command(ctx: discord.Interaction):
     global isBusy
     if not isBusy:
