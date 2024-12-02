@@ -4,6 +4,7 @@ from pexpect import pxssh
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
+from somnus.language_handler import LH
 from somnus.logic.utils import (
     ServerState,
     get_server_state,
@@ -15,34 +16,40 @@ from somnus.logic.utils import (
 )
 
 
-async def stop_server(config: Config = CONFIG):
+async def stop_server(shutdown: bool, config: Config = CONFIG):
+    ssh = await ssh_login(config)
     host_server_state, mc_server_state = await get_server_state(config)
     log.debug(f"Host server state: {host_server_state.value} | MC server state: {mc_server_state.value}")
 
     if ServerState.RUNNING not in (host_server_state, mc_server_state):
-        raise UserInputError("Server already stopped")
-    yield
+        raise UserInputError(LH.LH.t("commands.stop.error.already_stopped"))
+    elif not shutdown and mc_server_state == ServerState.STOPPED:
+        raise UserInputError(LH.LH.t("commands.stop.error.mc_already_stopped"))
 
-    ssh = await ssh_login(config)
     yield
 
     # Stop MC server
     if mc_server_state == ServerState.RUNNING:
         async for _ in _stop_mc_server(ssh, config):
             yield
+    else:
+        for _ in range(5):
+            yield
     yield
 
 
     # Stop host server
-    if host_server_state == ServerState.RUNNING and not config.DEBUG:
+    if host_server_state == ServerState.RUNNING and shutdown and not config.DEBUG:
         try:
             await send_sudo_command(ssh, config, "shutdown -h now")
-            yield
         except Exception as e:
             raise RuntimeError(f"Could not stop host server | {e}")
+    yield
 
     ssh.sendline('exit')
     ssh.logout()
+    yield
+   
 
 async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config):
     await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")

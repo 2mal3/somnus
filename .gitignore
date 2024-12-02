@@ -16,5 +16,5 @@ wheels/
 
 # program generated files
 *.log
-*.json
+world_selector_data.json
 server/

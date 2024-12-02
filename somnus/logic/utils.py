@@ -19,6 +19,16 @@ class ServerState(Enum):
 class UserInputError(Exception):
     pass
 
+async def get_mcstatus(config: Config) -> JavaServer.status:
+    try:
+        server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
+        return server.status()
+    except Exception as e:
+        if (not isinstance(e, OSError)) and (not isinstance(e, TimeoutError)):
+            log.error(f"Couldn't get mcstatus: {e}")
+        return None
+
+
 
 async def ssh_login(config: Config) -> pxssh.pxssh:
     """
@@ -81,12 +91,12 @@ async def get_server_state(config: Config) -> tuple[ServerState, ServerState]:
     if host_server_state == ServerState.STOPPED:
         return ServerState.STOPPED, ServerState.STOPPED
 
-    mc_server_state = await _get_mc_server_state(config)
+    mc_server_state = await get_mc_server_state(config)
 
     return host_server_state, mc_server_state
 
 
-async def _get_mc_server_state(config: Config) -> ServerState:
+async def get_mc_server_state(config: Config) -> ServerState:
     try:
         server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS, timeout=5)
         await server.async_status()
@@ -97,10 +107,7 @@ async def _get_mc_server_state(config: Config) -> ServerState:
 
 
 async def get_host_sever_state(config: Config) -> ServerState:
-    if config.HOST_SERVER_HOST == "localhost":
-        host_server_running = True
-    else:
-        host_server_running = ping(config.HOST_SERVER_HOST)
+    host_server_running = True if config.HOST_SERVER_HOST == "localhost" else ping(config.HOST_SERVER_HOST)
         
     if not host_server_running:
         return ServerState.STOPPED

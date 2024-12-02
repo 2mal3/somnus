@@ -5,6 +5,7 @@ from wakeonlan import send_magic_packet
 
 from somnus.environment import Config, CONFIG
 from somnus.logger import log
+from somnus.language_handler import LH
 from somnus.logic.utils import (
     ServerState,
     get_server_state,
@@ -23,7 +24,7 @@ async def start_server(config: Config = CONFIG):
     log.debug(f"Host server state: {host_server_state.value} | MC server state: {mc_server_state.value}")
 
     if ServerState.STOPPED not in (host_server_state, mc_server_state):
-        raise UserInputError("Server is already running")
+        raise UserInputError(LH.t("commands.start.error.already_running"))
     yield
 
     # Start host server
@@ -36,6 +37,9 @@ async def start_server(config: Config = CONFIG):
 
         except Exception as e:
             raise RuntimeError(f"Could not start host server | {e}")
+    else:
+        for _ in range(9):
+            yield
     yield
 
     # Start MC server
@@ -59,6 +63,7 @@ async def _try_start_mc_server_with_ssh(config: Config):
         await detach_screen_session(ssh)
         ssh.prompt()
         ssh.logout()
+        yield
 
     # Exit in error, kill screen
     except Exception as e:
@@ -78,13 +83,17 @@ async def _start_host_server(config: Config):
         await asyncio.sleep(wol_speed)
     yield
 
-    for _ in range(ping_speed):
+    for i in range(ping_speed):
         await asyncio.sleep(300 // ping_speed)
 
         host_server_state = await get_host_sever_state(config)
         if host_server_state == ServerState.RUNNING:
+            for j in range(i, ping_speed):
+                if j%2:
+                    yield
             return
-
+        if i%2:
+            yield
         log.warning("Could not connect to host server, trying again...")
 
     raise TimeoutError("Could not start host server")
