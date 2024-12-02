@@ -317,6 +317,7 @@ async def restart_command(ctx: discord.Interaction):
 
 @tree.command(name="reset_busy", description=LH.t("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction):
+    global is_busy # noqa: PLW0603
     if not is_busy:
         await ctx.response.send_message(LH.t("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return False
@@ -608,7 +609,7 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
     return string + LH.t("formatting.sudo_world_info.end")
 
 async def _check_if_busy(ctx: discord.Interaction) -> bool:
-    global is_busy
+    global is_busy # noqa: PLW0603
     if is_busy:
         await ctx.edit_original_response(content=LH.t("permission.busy"))  # type: ignore
         return False
@@ -617,7 +618,7 @@ async def _check_if_busy(ctx: discord.Interaction) -> bool:
         return True
 
 async def _no_longer_busy():
-    global is_busy
+    global is_busy # noqa: PLW0603
     is_busy = False
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True):

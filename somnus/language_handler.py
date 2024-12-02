@@ -2,7 +2,7 @@ import json
 import os
 from somnus.logger import log
 
-class language_handler:
+class LanguageHandler:
     dictionary = {}
 
     def language_setup(self, language: str):
@@ -42,4 +42,4 @@ class language_handler:
         except KeyError:
             return template
         
-LH = language_handler()
+LH = LanguageHandler()
