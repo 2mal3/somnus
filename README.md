@@ -16,9 +16,12 @@ Discord bot to remotely control and manage multiple Minecraft servers.
 
 - `/start`: Starts the Minecraft server (and if necessary the server via Wake On Lan before)
 - `/stop`: Stops the Minecraft server and then shuts down the server (unless debug=“true” is set in the .env)
-- `/change_world`: Creates a drop-down menu in which the world to be switched to can be selected. The next time the server is started (with `/start`), the selected world is started.
+- `/change_world`: Creates a drop-down menu in which the world to be switched to can be selected. The next time the server is started (with `/start` or `/restart`), the selected world is started.
+- `/restart`: Restarts the Minecraft server process, not the hole server.
 - `/show_worlds`: Shows all available worlds. (Super users are shown all worlds, including those not currently visible, and are also shown whether the respective world is visible)
 - `/ping`: Replies with "Pong"
+- `/reset_busy`: If the message that the bot is busy is sent by mistake, this command can reset the incorrect busy state.
+- `/help`: Displays all relevant commands from this bot with an explanation.
 
 ### Commands for the Super User
 
