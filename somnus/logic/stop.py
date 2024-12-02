@@ -23,7 +23,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
 
     if ServerState.RUNNING not in (host_server_state, mc_server_state):
         raise UserInputError(t("commands.stop.error.already_stopped"))
-    if shutdown == False and mc_server_state == ServerState.STOPPED:
+    elif not shutdown and mc_server_state == ServerState.STOPPED:
         raise UserInputError(t("commands.stop.error.mc_already_stopped"))
 
     yield

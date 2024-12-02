@@ -67,7 +67,6 @@ async def _world_exists(display_name: str, world_selector_config: WorldSelectorC
 
 async def change_world():
     world_selector_config = await get_world_selector_config()
-    global new_selected_world
     
     if world_selector_config.current_world != new_selected_world:
         for world in world_selector_config.worlds:
@@ -77,13 +76,14 @@ async def change_world():
                 return
 
 async def select_new_world(new_world_name):
-    global new_selected_world
     world_selector_config = await get_world_selector_config()
 
     if world_selector_config.current_world == new_world_name:
+        global new_selected_world
         new_selected_world = ""
         return True
     else:
+        global new_selected_world
         new_selected_world = new_world_name
         return False
 

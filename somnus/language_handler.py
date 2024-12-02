@@ -1,6 +1,5 @@
 import json
 import os
-import asyncio
 from somnus.logger import log
 
 dictionary = {}
@@ -37,9 +36,8 @@ def _get_nested_value(data: dict, key_path: str) -> str:
     return data
 
 def t(key_path: str, **kwargs) -> str:
-    global dictionary
     try:
         template = _get_nested_value(dictionary, key_path)
         return template.format(**kwargs)
-    except KeyError as e:
+    except KeyError:
         return template
