@@ -63,7 +63,7 @@ def _generate_progress_bar(value: int, max_value: int, message: str) -> str:
 
 @tree.command(name="stop", description=LH.t("commands.stop.description"))
 async def stop_server_command(ctx: discord.Interaction):
-    stop_steps = 10
+    stop_steps = 20
     message = LH.t("commands.stop.msg_above_process_bar")
 
     log.info("Received stop command ...")
@@ -271,7 +271,7 @@ async def show_worlds_command(ctx: discord.Interaction):
 async def stop_without_shutdown_server_command(ctx: discord.Interaction):
     if not await _is_super_user(ctx):
         return
-    stop_steps = 10
+    stop_steps = 20
     message = LH.t("commands.stop_without_shutdown.msg_above_process_bar")
 
     log.info("Received stop command without shutdown ...")
@@ -417,7 +417,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:s
     i = 0
     try:
         async for _ in stop.stop_server(shutdown):
-            i += 1
+            i += 2
             await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
     except Exception as e:
         if isinstance(e, utils.UserInputError):
@@ -442,7 +442,7 @@ async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
     if (await utils.get_mc_server_state(CONFIG)) == utils.ServerState.STOPPED:
         await ctx.edit_original_response(content=LH.t("commands.restart.error"))  # type: ignore
         return
-    stop_steps = 10
+    stop_steps = 20
     start_steps = 20
 
     log.info("Received restart command ...")
