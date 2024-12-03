@@ -22,9 +22,9 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
     log.debug(f"Host server state: {host_server_state.value} | MC server state: {mc_server_state.value}")
 
     if ServerState.RUNNING not in (host_server_state, mc_server_state):
-        raise UserInputError(LH.LH.t("commands.stop.error.already_stopped"))
+        raise UserInputError(LH.t("commands.stop.error.already_stopped"))
     elif not shutdown and mc_server_state == ServerState.STOPPED:
-        raise UserInputError(LH.LH.t("commands.stop.error.mc_already_stopped"))
+        raise UserInputError(LH.t("commands.stop.error.mc_already_stopped"))
 
     yield
 
@@ -77,8 +77,6 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
     log.debug("Sending stop command ...")
 
     ssh.sendline("stop")
-
-    log.debug("Checking for keywords ...")
 
     messages = ["overworld", "nether", "end", "@"]
     for i, message in enumerate(messages):
