@@ -16,14 +16,12 @@ tree = app_commands.CommandTree(bot)
 
 is_busy = False # noqa: PLW0603
 
-guild_id = 910195152490999878
-
 
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="Booting"))
     try:
-        synced = await tree.sync(guild=discord.Object(id=guild_id))
+        synced = await tree.sync()
         log.debug(f"Successfully synced commands: {[cmd.name for cmd in synced]}")
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
