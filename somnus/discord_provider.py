@@ -23,7 +23,7 @@ is_busy = False # noqa: PLW0603
 async def on_ready():
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="Booting"))
     try:
-        synced = await tree.sync(guild=discord.Object(id=910195152490999878))
+        synced = await tree.sync()
         log.debug(f"Successfully synced commands: {[cmd.name for cmd in synced]}")
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
@@ -40,7 +40,7 @@ async def _get_world_choices(interaction: discord.Interaction, current: str):
     return [app_commands.Choice(name=world.display_name, value=world.display_name) for world in data.worlds]
 
 
-@tree.command(name="ping", description=LH.t("commands.ping.description"), guild=discord.Object(id=910195152490999878))
+@tree.command(name="ping", description=LH.t("commands.ping.description"))
 async def ping_command(ctx: discord.Interaction):
     await ctx.response.send_message(LH.t("commands.ping.response"))  # type: ignore
 
