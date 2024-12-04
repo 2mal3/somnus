@@ -17,6 +17,7 @@ class LanguageHandler:
             raise FileNotFoundError(f"Language does '{language}' not exist. Change LANGUAGE in .env to {self._get_available_languages(locales_path)}!")
         
         log.debug(f"Language '{language}' was selecetd succesfully")
+        print(self.t("commands.restart.description"))
 
 
     def _get_available_languages(self, path: str) -> str:

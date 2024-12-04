@@ -9,6 +9,8 @@ from somnus.logger import log
 from somnus.language_handler import LH
 from somnus.logic import start, stop, utils, world_selector
 
+LH.language_setup(CONFIG.LANGUAGE)
+
 intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
@@ -21,7 +23,7 @@ is_busy = False # noqa: PLW0603
 async def on_ready():
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="Booting"))
     try:
-        synced = await tree.sync()
+        synced = await tree.sync(guild=discord.Object(id=910195152490999878))
         log.debug(f"Successfully synced commands: {[cmd.name for cmd in synced]}")
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
@@ -38,7 +40,7 @@ async def _get_world_choices(interaction: discord.Interaction, current: str):
     return [app_commands.Choice(name=world.display_name, value=world.display_name) for world in data.worlds]
 
 
-@tree.command(name="ping", description=LH.t("commands.ping.description"))
+@tree.command(name="ping", description=LH.t("commands.ping.description"), guild=discord.Object(id=910195152490999878))
 async def ping_command(ctx: discord.Interaction):
     await ctx.response.send_message(LH.t("commands.ping.response"))  # type: ignore
 
@@ -636,7 +638,6 @@ async def update_players_online_status():
 
 
 def main(config: Config = CONFIG):
-    LH.language_setup(config.LANGUAGE)
     log.info("Starting bot ...")
     bot.run(config.DISCORD_TOKEN, log_handler=None)
 
