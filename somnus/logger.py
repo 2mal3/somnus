@@ -15,7 +15,8 @@ _console_handler.setLevel(_LEVEL)
 _console_handler.setFormatter(_formatter)
 log.addHandler(_console_handler)
 
-_LOG_FILE_PATH = Path.cwd() / "somnus.log"
+_LOG_FILE_PATH = Path.cwd() / "data" / "somnus.log"
+_LOG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
 open(_LOG_FILE_PATH, "w").close()
 _file_handler = logging.FileHandler(_LOG_FILE_PATH)
 _file_handler.setLevel(_LEVEL)
