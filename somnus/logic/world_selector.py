@@ -21,7 +21,7 @@ class WorldSelectorWorld(BaseModel):
     visible: bool
 
     @field_validator("start_cmd_sudo", mode="before")
-    def convert_str_to_bool(cls, value: str) -> bool:   # noqa: N805
+    def convert_str_to_bool(cls, value: str) -> bool:  # noqa: N805
         return value in ("", "true", "True", True, "1")
 
 
@@ -67,7 +67,7 @@ async def _world_exists(display_name: str, world_selector_config: WorldSelectorC
 
 async def change_world():
     world_selector_config = await get_world_selector_config()
-    
+
     if world_selector_config.current_world != world_selector_config.new_selected_world:
         for world in world_selector_config.worlds:
             if world.display_name == world_selector_config.new_selected_world and world.visible:
@@ -75,10 +75,10 @@ async def change_world():
                 await _save_world_selector_config(world_selector_config)
                 return
 
+
 async def select_new_world(new_world_name):
     world_selector_config = await get_world_selector_config()
     if world_selector_config.current_world == new_world_name:
-        
         world_selector_config.new_selected_world = ""
         await _save_world_selector_config(world_selector_config)
         return True

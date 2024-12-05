@@ -14,7 +14,7 @@ from somnus.logic.utils import (
     send_possible_sudo_command,
     get_host_sever_state,
     detach_screen_session,
-    kill_screen
+    kill_screen,
 )
 from somnus.logic.world_selector import get_current_world
 
@@ -89,10 +89,10 @@ async def _start_host_server(config: Config):
         host_server_state = await get_host_sever_state(config)
         if host_server_state == ServerState.RUNNING:
             for j in range(i, ping_speed):
-                if j%2:
+                if j % 2:
                     yield
             return
-        if i%2:
+        if i % 2:
             yield
         log.warning("Could not connect to host server, trying again...")
 
@@ -117,7 +117,7 @@ async def _start_mc_server(ssh: pxssh.pxssh):
             found_element_index = ssh.expect(["Done"] + message, timeout=150)
             log.debug(f"Stage '{message}' completed")
 
-            if found_element_index == 0:    # if finished earlier, animate the progress bar to its end
+            if found_element_index == 0:  # if finished earlier, animate the progress bar to its end
                 for _ in range(i, len(messages)):
                     yield
                 return
