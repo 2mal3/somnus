@@ -1,7 +1,9 @@
 import logging
 from pathlib import Path
 
-_LEVEL = logging.DEBUG
+from somnus.environment import CONFIG
+
+_LEVEL = logging.DEBUG if CONFIG.DEBUG else logging.INFO
 
 log = logging.getLogger("mc-server-control")
 

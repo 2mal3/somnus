@@ -4,8 +4,6 @@ from os import environ
 from dotenv import load_dotenv
 from pydantic import BaseModel, field_validator, ValidationError
 
-from somnus.logger import log
-
 
 class Config(BaseModel):
     DISCORD_TOKEN: str
@@ -44,5 +42,5 @@ try:
     CONFIG = Config(**environ)  # type: ignore
 except ValidationError as errors:
     for error in errors.errors():
-        log.fatal(f"Missing environment variable: {error['loc'][0]}")
+        print(f"FATAL: Missing environment variable: {error['loc'][0]}")
     sys.exit(1)
