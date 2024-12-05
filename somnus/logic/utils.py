@@ -19,6 +19,7 @@ class ServerState(Enum):
 class UserInputError(Exception):
     pass
 
+
 async def get_mcstatus(config: Config) -> JavaServer.status:
     try:
         server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
@@ -27,7 +28,6 @@ async def get_mcstatus(config: Config) -> JavaServer.status:
         if (not isinstance(e, OSError)) and (not isinstance(e, TimeoutError)):
             log.error(f"Couldn't get mcstatus: {e}")
         return None
-
 
 
 async def ssh_login(config: Config) -> pxssh.pxssh:
@@ -108,7 +108,7 @@ async def get_mc_server_state(config: Config) -> ServerState:
 
 async def get_host_sever_state(config: Config) -> ServerState:
     host_server_running = True if config.HOST_SERVER_HOST == "localhost" else ping(config.HOST_SERVER_HOST)
-        
+
     if not host_server_running:
         return ServerState.STOPPED
 
@@ -125,7 +125,6 @@ async def detach_screen_session(ssh: pxssh.pxssh):
     ssh.sendcontrol("a")
     await asyncio.sleep(0.1)
     ssh.sendcontrol("d")
-
 
 
 async def kill_screen(ssh: pxssh.pxssh, config: Config = CONFIG):

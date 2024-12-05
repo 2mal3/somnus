@@ -16,7 +16,7 @@ intents.message_content = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
-is_busy = False # noqa: PLW0603
+is_busy = False  # noqa: PLW0603
 
 
 @bot.event
@@ -32,7 +32,6 @@ async def on_ready():
     if await utils.get_server_state(CONFIG) == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
         update_players_online_status.start()
     await _update_bot_presence()
-
 
 
 async def _get_world_choices(interaction: discord.Interaction, current: str):
@@ -52,8 +51,8 @@ async def start_server_command(ctx: discord.Interaction):
 
     log.info("Received start command ...")
     await ctx.response.send_message(_generate_progress_bar(1, start_steps, message))  # type: ignore
-    
-    if (await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message)):
+
+    if await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message):
         await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
         await ctx.channel.send(LH.t("commands.start.finished_msg"))  # type: ignore
 
@@ -71,7 +70,7 @@ async def stop_server_command(ctx: discord.Interaction):
     log.info("Received stop command ...")
     await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
 
-    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=True)):
+    if await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=True):
         await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
         await ctx.channel.send(LH.t("commands.stop.finished_msg"))  # type: ignore
 
@@ -93,12 +92,13 @@ async def add_world_command(
         await ctx.response.send_message(LH.t("commands.add_world.success", display_name=display_name), ephemeral=True)
     except Exception as e:
         log.debug(f"Could not create world | {e}")
-        await ctx.response.send_message(LH.t("commands.add_world.error", display_name=display_name, e=e), ephemeral=True)
+        await ctx.response.send_message(
+            LH.t("commands.add_world.error", display_name=display_name, e=e), ephemeral=True
+        )
 
 
-@tree.command(
-    name="edit_world", description=LH.t("commands.edit_world.description"))
-async def edit_world_command(   # noqa: PLR0913
+@tree.command(name="edit_world", description=LH.t("commands.edit_world.description"))
+async def edit_world_command(  # noqa: PLR0913
     ctx: discord.Interaction,
     editing_world_name: str,
     new_display_name: str = None,
@@ -114,20 +114,25 @@ async def edit_world_command(   # noqa: PLR0913
         world = await world_selector.edit_new_world(
             editing_world_name, new_display_name, start_cmd, sudo_start_cmd, visible
         )
-        await ctx.response.send_message(LH.t("commands.edit_world.success", editing_world_name=editing_world_name, values=await _get_formatted_world_info_string(world))
-            ,
+        await ctx.response.send_message(
+            LH.t(
+                "commands.edit_world.success",
+                editing_world_name=editing_world_name,
+                values=await _get_formatted_world_info_string(world),
+            ),
             ephemeral=True,
         )
     except Exception as e:
-        await ctx.response.send_message(LH.t("commands.edit_world.error", editing_world_name=editing_world_name, e=e), ephemeral=True)
+        await ctx.response.send_message(
+            LH.t("commands.edit_world.error", editing_world_name=editing_world_name, e=e), ephemeral=True
+        )
         log.warning(f"Couldn't edit world '{editing_world_name}' | {e}", exc_info=e)
+
 
 edit_world_command.autocomplete("editing_world_name")(_get_world_choices)
 
 
-@tree.command(
-    name="delete_world", description=LH.t("commands.delete_world.description")
-)
+@tree.command(name="delete_world", description=LH.t("commands.delete_world.description"))
 async def delete_world_command(ctx: discord.Interaction, display_name: str):
     # only allow super user to delete
     if not await _is_super_user(ctx):
@@ -136,15 +141,16 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
 
     # prevent deletion of the current world
     if display_name in {world_selector_config.current_world, world_selector.new_selected_world}:
-        await ctx.response.send_message(LH.t("commands.delete_world.error.current_world"), ephemeral=True
-        )
+        await ctx.response.send_message(LH.t("commands.delete_world.error.current_world"), ephemeral=True)
         return
 
     # prevent deletion of non existing worlds
     try:
         world = await world_selector.get_world_by_name(display_name, world_selector_config)
     except utils.UserInputError:
-        await ctx.response.send_message(LH.t("commands.delete_world.error.not_found", display_name=display_name), ephemeral=True)
+        await ctx.response.send_message(
+            LH.t("commands.delete_world.error.not_found", display_name=display_name), ephemeral=True
+        )
         return
 
     confirm_button = discord.ui.Button(label="Delete", style=discord.ButtonStyle.red)
@@ -161,9 +167,7 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
         try:
             await world_selector.try_delete_world(display_name)
         except Exception:
-            await interaction.response.send_message(
-                LH.t("commands.delete_world.success"), ephemeral=True
-            )
+            await interaction.response.send_message(LH.t("commands.delete_world.success"), ephemeral=True)
             return
 
         used = True
@@ -186,10 +190,15 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
     view.add_item(cancel_button)
 
     await ctx.response.send_message(
-        LH.t("commands.delete_world.verification", display_name=display_name, values=await _get_formatted_world_info_string(world)),
+        LH.t(
+            "commands.delete_world.verification",
+            display_name=display_name,
+            values=await _get_formatted_world_info_string(world),
+        ),
         view=view,
         ephemeral=True,
     )
+
 
 delete_world_command.autocomplete("display_name")(_get_world_choices)
 
@@ -227,12 +236,14 @@ async def change_world_command(ctx: discord.Interaction):
         await select_interaction.message.edit(view=select_view)
         current_world_is_selected = await world_selector.select_new_world(selected_value)
         mc_server_online = await utils.get_mc_server_state(CONFIG)
-        await select_interaction.response.send_message(LH.t("commands.change_world.success_offline", selected_value=selected_value))
+        await select_interaction.response.send_message(
+            LH.t("commands.change_world.success_offline", selected_value=selected_value)
+        )
 
         if mc_server_online == utils.ServerState.STOPPED:
             await world_selector.change_world()
             await _update_bot_presence()
-        elif (not current_world_is_selected):
+        elif not current_world_is_selected:
             await _change_world_now_message(select_interaction, selected_value)
 
     select.callback = select_callback
@@ -269,6 +280,7 @@ async def show_worlds_command(ctx: discord.Interaction):
 
     await ctx.response.send_message(string + LH.t("formatting.show_worlds.end"), ephemeral=sudo)
 
+
 @tree.command(name="stop_without_shutdown", description=LH.t("commands.stop_without_shutdown.description"))
 async def stop_without_shutdown_server_command(ctx: discord.Interaction):
     if not await _is_super_user(ctx):
@@ -279,7 +291,7 @@ async def stop_without_shutdown_server_command(ctx: discord.Interaction):
     log.info("Received stop command without shutdown ...")
     await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
 
-    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=False)):
+    if await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=False):
         await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
         await ctx.channel.send(LH.t("commands.stop_without_shutdown.finished_msg"))  # type: ignore
 
@@ -288,24 +300,33 @@ async def stop_without_shutdown_server_command(ctx: discord.Interaction):
 async def help_command(ctx: discord.Interaction):
     sudo = await _is_super_user(ctx, False)
     user_commands = ["start", "stop", "change_world", "restart", "show_worlds", "ping", "reset_busy", "help"]
-    embed = discord.Embed(
-        title=LH.t("commands.help.title"),
-        color=discord.Color.blue()
-    )
+    embed = discord.Embed(title=LH.t("commands.help.title"), color=discord.Color.blue())
     if sudo:
-        embed.add_field(name=LH.t("formatting.help.subtitle", subtitle=LH.t("commands.help.user_subtitle")), value="", inline=False)
+        embed.add_field(
+            name=LH.t("formatting.help.subtitle", subtitle=LH.t("commands.help.user_subtitle")), value="", inline=False
+        )
     for user_command in user_commands:
-        embed.add_field(name=LH.t("formatting.help.command", command_name=user_command), value=LH.t("formatting.help.command_description", description=LH.t(f"commands.{user_command}.description")), inline=False)
+        embed.add_field(
+            name=LH.t("formatting.help.command", command_name=user_command),
+            value=LH.t("formatting.help.command_description", description=LH.t(f"commands.{user_command}.description")),
+            inline=False,
+        )
     if sudo:
         embed.add_field(name="", value="", inline=False)
-        embed.add_field(name= LH.t("formatting.help.subtitle", subtitle=LH.t("commands.help.admin_subtitle")), value="", inline=False)
+        embed.add_field(
+            name=LH.t("formatting.help.subtitle", subtitle=LH.t("commands.help.admin_subtitle")), value="", inline=False
+        )
         admin_commands = ["add_world", "edit_world", "delete_world", "stop_without_shutdown"]
         for admin_command in admin_commands:
-            description = LH.t(f"commands.{admin_command}.description").replace(LH.t("formatting.help.admin_prefix_to_remove"), "")
-            embed.add_field(name=LH.t("formatting.help.command", command_name=admin_command), value=LH.t("formatting.help.command_description", description=description), inline=False)
+            description = LH.t(f"commands.{admin_command}.description").replace(
+                LH.t("formatting.help.admin_prefix_to_remove"), ""
+            )
+            embed.add_field(
+                name=LH.t("formatting.help.command", command_name=admin_command),
+                value=LH.t("formatting.help.command_description", description=description),
+                inline=False,
+            )
     await ctx.response.send_message(embed=embed, ephemeral=True)
-
-
 
 
 @tree.command(name="restart", description=LH.t("commands.restart.description"))
@@ -321,7 +342,6 @@ async def reset_busy_command(ctx: discord.Interaction):
         await ctx.response.send_message(LH.t("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return False
 
-
     confirm_button = discord.ui.Button(label=LH.t("commands.reset_busy.reset"), style=discord.ButtonStyle.red)
     cancel_button = discord.ui.Button(label=LH.t("commands.reset_busy.cancel"), style=discord.ButtonStyle.green)
 
@@ -334,11 +354,8 @@ async def reset_busy_command(ctx: discord.Interaction):
             return
         await _no_longer_busy()
         confirm_button.disabled = True
-        cancel_button.disabled = True 
-        await interaction.response.edit_message(
-            content=LH.t("commands.reset_busy.success"),
-            view=view
-        )
+        cancel_button.disabled = True
+        await interaction.response.edit_message(content=LH.t("commands.reset_busy.success"), view=view)
 
     async def cancel_callback(interaction: discord.Interaction):
         if ctx.user.id != interaction.user.id:
@@ -349,10 +366,7 @@ async def reset_busy_command(ctx: discord.Interaction):
             return
         confirm_button.disabled = True
         cancel_button.disabled = True
-        await interaction.response.edit_message(
-            content=LH.t("commands.reset_busy.canceled"),
-            view=view
-        )
+        await interaction.response.edit_message(content=LH.t("commands.reset_busy.canceled"), view=view)
 
     confirm_button.callback = confirm_callback
     cancel_button.callback = cancel_callback
@@ -361,17 +375,17 @@ async def reset_busy_command(ctx: discord.Interaction):
     view.add_item(confirm_button)
     view.add_item(cancel_button)
 
-    await ctx.response.send_message(
-        LH.t("commands.reset_busy.verification"),
-        view=view
-    )
+    await ctx.response.send_message(LH.t("commands.reset_busy.verification"), view=view)
 
 
-async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:str) -> bool:
+async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message: str) -> bool:
     if not await _check_if_busy(ctx):
         return
     world_config = await world_selector.get_world_selector_config()
-    await _update_bot_presence(Status.idle, await _get_discord_activity("starting", LH.t("status.text.starting", world_name=world_config.current_world)))
+    await _update_bot_presence(
+        Status.idle,
+        await _get_discord_activity("starting", LH.t("status.text.starting", world_name=world_config.current_world)),
+    )
     i = 0
     try:
         async for _ in start.start_server():
@@ -392,29 +406,31 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         return False
 
     log.info("Server started!")
-    #await _update_bot_presence()
+    # await _update_bot_presence()
     update_players_online_status.start()
     log.info("Bot presence updated!")
     await _no_longer_busy()
     return True
 
 
-async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:str, shutdown: bool) -> bool:
+async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: str, shutdown: bool) -> bool:
     if not await _check_if_busy(ctx):
         return False
-    
 
     mc_status = await utils.get_mcstatus(CONFIG)
     if mc_status is not None and mc_status.players.online != 0:
         if not await _players_online_verification(ctx, message, mc_status):
             return
-        
+
         if not await _check_if_busy(ctx):
             return False
-    
+
     world_config = await world_selector.get_world_selector_config()
     update_players_online_status.stop()
-    await _update_bot_presence(discord.Status.idle, await _get_discord_activity("stopping", LH.t("status.text.stopping", world_name=world_config.current_world)))
+    await _update_bot_presence(
+        discord.Status.idle,
+        await _get_discord_activity("stopping", LH.t("status.text.stopping", world_name=world_config.current_world)),
+    )
 
     i = 0
     try:
@@ -428,7 +444,9 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:s
             await _no_longer_busy()
             return False
         log.error(f"Could not stop server | {e}")
-        await ctx.edit_original_response(content=LH.t("commands.stop.error.general", e=_trim_text_for_discord_subtitle(e)))
+        await ctx.edit_original_response(
+            content=LH.t("commands.stop.error.general", e=_trim_text_for_discord_subtitle(e))
+        )
         await _update_bot_presence()
         await _no_longer_busy()
         return False
@@ -440,6 +458,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message:s
     await _no_longer_busy()
     return True
 
+
 async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
     if (await utils.get_mc_server_state(CONFIG)) == utils.ServerState.STOPPED:
         await ctx.edit_original_response(content=LH.t("commands.restart.error"))  # type: ignore
@@ -450,20 +469,31 @@ async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
     log.info("Received restart command ...")
     await ctx.edit_original_response(content=_generate_progress_bar(1, stop_steps, message))  # type: ignore
 
-    if (await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message + LH.t("commands.restart.above_process_bar.stopping_addon"), shutdown=False)):
+    if await _stop_minecraft_server(
+        ctx=ctx,
+        steps=stop_steps,
+        message=message + LH.t("commands.restart.above_process_bar.stopping_addon"),
+        shutdown=False,
+    ):
         await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, message))
-        if (await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message + LH.t("commands.restart.above_process_bar.starting_addon"))):
+        if await _start_minecraft_server(
+            ctx=ctx, steps=start_steps, message=message + LH.t("commands.restart.above_process_bar.starting_addon")
+        ):
             await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
             await ctx.channel.send(LH.t("commands.restart.finished_msg"))  # type: ignore
 
 
-async def _players_online_verification(ctx: discord.Interaction, message:str, mcstatus: utils.JavaServer.status):
+async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: utils.JavaServer.status):
     await _no_longer_busy()
 
     result_future = asyncio.Future()
 
-    confirm_button = discord.ui.Button(label=LH.t("commands.stop.error.players_online.stop_anyway"), style=discord.ButtonStyle.red)
-    cancel_button = discord.ui.Button(label=LH.t("commands.stop.error.players_online.cancel"), style=discord.ButtonStyle.green)
+    confirm_button = discord.ui.Button(
+        label=LH.t("commands.stop.error.players_online.stop_anyway"), style=discord.ButtonStyle.red
+    )
+    cancel_button = discord.ui.Button(
+        label=LH.t("commands.stop.error.players_online.cancel"), style=discord.ButtonStyle.green
+    )
 
     async def confirm_callback(interaction: discord.Interaction):
         if ctx.user.id != interaction.user.id:
@@ -475,7 +505,7 @@ async def _players_online_verification(ctx: discord.Interaction, message:str, mc
         await interaction.response.defer()
         view.remove_item(confirm_button)
         view.remove_item(cancel_button)
-        await ctx.edit_original_response(content=message, view=view) 
+        await ctx.edit_original_response(content=message, view=view)
         result_future.set_result(True)
 
     async def cancel_callback(interaction: discord.Interaction):
@@ -499,21 +529,32 @@ async def _players_online_verification(ctx: discord.Interaction, message:str, mc
     view.add_item(cancel_button)
 
     if mcstatus.players.online == 1:
-        player_name = LH.t("commands.stop.error.players_online.player_name_line", player_name=mcstatus.players.sample[0].name)
-        content = message+"\n\n"+LH.t("commands.stop.error.players_online.question_singular", player_name=player_name)
+        player_name = LH.t(
+            "commands.stop.error.players_online.player_name_line", player_name=mcstatus.players.sample[0].name
+        )
+        content = (
+            message + "\n\n" + LH.t("commands.stop.error.players_online.question_singular", player_name=player_name)
+        )
     else:
         player_names = ""
         for player in mcstatus.players.sample:
             player_names += "\n" + LH.t("commands.stop.error.players_online.player_name_line", player_name=player.name)
-        
-        content = message+"\n\n"+LH.t("commands.stop.error.players_online.question_plural", player_count=mcstatus.players.online, player_names=player_names)
- 
-    await ctx.edit_original_response(
-        content=content,
-        view=view)
+
+        content = (
+            message
+            + "\n\n"
+            + LH.t(
+                "commands.stop.error.players_online.question_plural",
+                player_count=mcstatus.players.online,
+                player_names=player_names,
+            )
+        )
+
+    await ctx.edit_original_response(content=content, view=view)
 
     result = await result_future
     return result
+
 
 async def _change_world_now_message(select_interaction: discord.Interaction, selected_value: str):
     confirm_button = discord.ui.Button(label=LH.t("commands.change_world.restart_now"), style=discord.ButtonStyle.green)
@@ -528,7 +569,11 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
             return
         button_view.remove_item(confirm_button)
         button_view.remove_item(cancel_button)
-        message = LH.t("commands.change_world.success_offline", selected_value=selected_value)+"\n"+LH.t("commands.restart.above_process_bar.msg")
+        message = (
+            LH.t("commands.change_world.success_offline", selected_value=selected_value)
+            + "\n"
+            + LH.t("commands.restart.above_process_bar.msg")
+        )
         await interaction.response.edit_message(content=message, view=button_view)
         await _restart_minecraft_server(interaction, message)
 
@@ -541,7 +586,9 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
             return
         button_view.remove_item(confirm_button)
         button_view.remove_item(cancel_button)
-        await interaction.response.edit_message(content=LH.t("commands.change_world.success_offline", selected_value=selected_value), view=button_view)
+        await interaction.response.edit_message(
+            content=LH.t("commands.change_world.success_offline", selected_value=selected_value), view=button_view
+        )
 
     confirm_button.callback = confirm_callback
     cancel_button.callback = cancel_callback
@@ -551,21 +598,33 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
     button_view.add_item(cancel_button)
 
     await select_interaction.edit_original_response(
-        content=LH.t("commands.change_world.success_online", selected_value=selected_value),
-        view=button_view
+        content=LH.t("commands.change_world.success_online", selected_value=selected_value), view=button_view
     )
 
 
-async def _update_bot_presence(status: Status | None = None, activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None):
+async def _update_bot_presence(
+    status: Status | None = None,
+    activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None,
+):
     world_selector_config = await world_selector.get_world_selector_config()
     server_status = await utils.get_server_state(CONFIG)
     if not activity:
         if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
             mc_status = await utils.get_mcstatus(CONFIG)
             if mc_status is None:
-                text = LH.t("status.text.online", world_name=world_selector_config.current_world, players_online="X", max_players="Y")
+                text = LH.t(
+                    "status.text.online",
+                    world_name=world_selector_config.current_world,
+                    players_online="X",
+                    max_players="Y",
+                )
             else:
-                text = LH.t("status.text.online", world_name=world_selector_config.current_world, players_online=mc_status.players.online, max_players=mc_status.players.max)
+                text = LH.t(
+                    "status.text.online",
+                    world_name=world_selector_config.current_world,
+                    players_online=mc_status.players.online,
+                    max_players=mc_status.players.max,
+                )
             activity = await _get_discord_activity("online", text)
         elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
             text = LH.t("status.text.only_host_online", world_name=world_selector_config.current_world)
@@ -580,12 +639,14 @@ async def _update_bot_presence(status: Status | None = None, activity: Union[dis
             status = Status.idle
         elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
             status = Status.dnd
-    
+
     await bot.change_presence(status=status, activity=activity)
 
 
-async def _get_discord_activity(server_status_str: str, text:str) -> Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity]:
-    activity_str = LH.t("status.activity."+server_status_str)
+async def _get_discord_activity(
+    server_status_str: str, text: str
+) -> Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity]:
+    activity_str = LH.t("status.activity." + server_status_str)
     if activity_str == "Game":
         return discord.Game(name=text)
     elif activity_str == "Streaming":
@@ -595,8 +656,9 @@ async def _get_discord_activity(server_status_str: str, text:str) -> Union[disco
     elif activity_str == "Watching":
         return discord.Activity(type=discord.ActivityType.watching, name=text)
     else:
-        raise TypeError(f"Wrong Discord Activity choosen. Use 'Game', 'Streaming', 'Listening' or 'Watching'. Not '{activity_str}'")
-
+        raise TypeError(
+            f"Wrong Discord Activity choosen. Use 'Game', 'Streaming', 'Listening' or 'Watching'. Not '{activity_str}'"
+        )
 
 
 async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWorld):
@@ -604,11 +666,17 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
 
     attributes = ["display_name", "start_cmd", "start_cmd_sudo", "visible"]
     for attr in attributes:
-        string += LH.t("formatting.sudo_world_info.line", attr=attr, gap_filler=((15 - len(attr)) * " "), value=str(getattr(world, attr)))
+        string += LH.t(
+            "formatting.sudo_world_info.line",
+            attr=attr,
+            gap_filler=((15 - len(attr)) * " "),
+            value=str(getattr(world, attr)),
+        )
     return string + LH.t("formatting.sudo_world_info.end")
 
+
 async def _check_if_busy(ctx: discord.Interaction) -> bool:
-    global is_busy # noqa: PLW0603
+    global is_busy  # noqa: PLW0603
     if is_busy:
         await ctx.edit_original_response(content=LH.t("permission.busy"))  # type: ignore
         return False
@@ -616,9 +684,11 @@ async def _check_if_busy(ctx: discord.Interaction) -> bool:
         is_busy = True
         return True
 
+
 async def _no_longer_busy():
-    global is_busy # noqa: PLW0603
+    global is_busy  # noqa: PLW0603
     is_busy = False
+
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True):
     super_users = CONFIG.DISCORD_SUPER_USER_ID.split(";")
@@ -627,8 +697,7 @@ async def _is_super_user(ctx: discord.Interaction, message: bool = True):
             return True
 
     if message:
-        await ctx.response.send_message(
-            LH.t("permission.sudo"), ephemeral=True)
+        await ctx.response.send_message(LH.t("permission.sudo"), ephemeral=True)
     return False
 
 
