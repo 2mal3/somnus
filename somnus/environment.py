@@ -15,9 +15,11 @@ class Config(BaseModel):
     MC_SERVER_START_CMD: str
     MC_SERVER_START_CMD_SUDO: bool = False
     MC_SERVER_ADDRESS: str
+    INACTIVITY_SHUTDOWN_MINUTES: int | None = None
+    DISCORD_STATUS_CHANNEL_ID: int | None = None
     LANGUAGE: str = "en"
     DISCORD_SUPER_USER_ID: str
-    DEBUG: bool
+    DEBUG: bool = False
 
     @field_validator("DEBUG", "MC_SERVER_START_CMD_SUDO", mode="before")
     def convert_str_to_bool(cls, value: str):  # noqa: N805
@@ -39,6 +41,7 @@ def text_is_true(text: str) -> bool:
 load_dotenv()
 
 try:
+    environ = {key: value for key, value in environ.items() if value.strip() != ""}
     CONFIG = Config(**environ)  # type: ignore
 except ValidationError as errors:
     for error in errors.errors():

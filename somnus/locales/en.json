@@ -83,7 +83,7 @@
             }
         },
         "reset_busy": {
-            "description": "If the message that the bot is busy is sent by mistake, this command can reset the incorrect busy state.",
+            "description": "If the bot is busy message was sent by mistake, this command can reset the incorrect busy state.",
             "verification": "Do you really want to reset the bot's busy state? If so, errors may occur that can cause the bot to crash!",
             "success": "Reset of Busy state was successfully completed.",
             "canceled": "Busy state reset was successfully canceled.",
@@ -101,9 +101,21 @@
             "admin_subtitle": ":man_technologist: Admin-Commands"
         }
     },
-    "permission": {
+    "other": {
         "busy": "Please wait until the current operation is complete!",
-        "sudo": "You are not authorized to use this command. Ask your system administrator for changes."
+        "sudo": "You are not authorized to use this command. Ask your system administrator for changes.",
+        "inactivity_shutdown": {
+            "verification": "The Minecraft-Server has been online without players for {inactivity_shutdown_minutes} minutes. \n**Therefore the server will be stopped in 30 seconds!**",
+            "cancel": "Cancel, keep Server online",
+            "canceled": "Automatic stop canceled. If there are still no players online for the next {inactivity_shutdown_minutes} minutes, an attempt is made to stop the server again.",
+            "stopping": "**Stopping due to inactivity**",
+            "finished_msg": "**Server stopped due to inactivity!**",
+            "error": {
+                "is_busy": "Server not stopped because an operation is currently running.",
+                "players_online": "Server not stopped because players are now online.",
+                "offline": "Minecraft-Server not stopped, because it's offline already."
+            }
+        }
     },
     "status": {
         "text": {

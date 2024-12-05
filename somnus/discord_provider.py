@@ -17,6 +17,7 @@ bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
 is_busy = False  # noqa: PLW0603
+inactvity_seconds = 0  # noqa: PLW0603
 
 
 @bot.event
@@ -30,6 +31,9 @@ async def on_ready():
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
     if await utils.get_server_state(CONFIG) == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
+        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES is not None:
+            global inactvity_seconds  # noqa: PLW0603
+            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
     await _update_bot_presence()
 
@@ -407,6 +411,8 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
 
     log.info("Server started!")
     # await _update_bot_presence()
+    global inactvity_seconds  # noqa: PLW0603
+    inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
     update_players_online_status.start()
     log.info("Bot presence updated!")
     await _no_longer_busy()
@@ -485,7 +491,6 @@ async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
 
 async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: utils.JavaServer.status):
     await _no_longer_busy()
-
     result_future = asyncio.Future()
 
     confirm_button = discord.ui.Button(
@@ -494,7 +499,6 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
     cancel_button = discord.ui.Button(
         label=LH.t("commands.stop.error.players_online.cancel"), style=discord.ButtonStyle.green
     )
-
     async def confirm_callback(interaction: discord.Interaction):
         if ctx.user.id != interaction.user.id:
             await interaction.response.send_message(
@@ -549,7 +553,6 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
                 player_names=player_names,
             )
         )
-
     await ctx.edit_original_response(content=content, view=view)
 
     result = await result_future
@@ -625,6 +628,8 @@ async def _update_bot_presence(
                     players_online=mc_status.players.online,
                     max_players=mc_status.players.max,
                 )
+                if await _check_for_inactivity_shutdown(mc_status.players.online):
+                    return
             activity = await _get_discord_activity("online", text)
         elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
             text = LH.t("status.text.only_host_online", world_name=world_selector_config.current_world)
@@ -660,6 +665,100 @@ async def _get_discord_activity(
             f"Wrong Discord Activity choosen. Use 'Game', 'Streaming', 'Listening' or 'Watching'. Not '{activity_str}'"
         )
 
+async def _check_for_inactivity_shutdown(players_online: int):
+    if CONFIG.INACTIVITY_SHUTDOWN_MINUTES is not None:
+        global inactvity_seconds  # noqa: PLW0603
+        if players_online == 0:
+            if inactvity_seconds >= 0:
+                if inactvity_seconds == 0:
+                    await _stop_inactivity()
+                    return True
+                inactvity_seconds -= 10
+        else:
+            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+    return False
+
+async def _stop_inactivity():
+    channel = bot.get_channel(CONFIG.DISCORD_STATUS_CHANNEL_ID)
+    if not isinstance(channel, discord.TextChannel):
+        log.error("DISCORD_STATUS_CHANNEL_ID in .env not correct. Automatic shutdown due to inactivity not possible!")
+        return False
+    
+    log.info("Send information message for shutdown due to inactivity ...")
+    message = await _inactivity_shutdown_verification(channel)
+    if message is not False:         
+        global inactvity_seconds  # noqa: PLW0603
+        log.info("Stopping due to inactivity ...")
+        if not await _check_if_busy():
+            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            await message.edit(content=LH.t("other.inactivity_shutdown.error.is_busy"))
+            return
+        mcstatus = await utils.get_mcstatus(CONFIG)
+        if mcstatus is None:
+            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            await message.edit(content=LH.t("other.inactivity_shutdown.error.offline"))
+            return
+        if mcstatus.players.online != 0:
+            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            await message.edit(content=LH.t("other.inactivity_shutdown.error.players_online"))
+            return
+
+        inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+
+        world_config = await world_selector.get_world_selector_config()
+        update_players_online_status.stop()
+        await _update_bot_presence(
+            discord.Status.idle,
+            await _get_discord_activity("stopping", LH.t("status.text.stopping", world_name=world_config.current_world))
+        )
+
+        async for _ in stop.stop_server(True):
+            pass
+        await _update_bot_presence()
+        await message.edit(content=LH.t("other.inactivity_shutdown.finished_msg"))  # type: ignore
+        await _no_longer_busy()
+
+
+async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> discord.Message | bool:
+    result_future = asyncio.Future()
+
+    cancel_button = discord.ui.Button(
+        label=LH.t("other.inactivity_shutdown.cancel"), style=discord.ButtonStyle.green
+    )
+
+    async def cancel_callback(interaction: discord.Interaction):
+        await interaction.response.defer()
+        cancel_button.disabled = True
+        global inactvity_seconds  # noqa: PLW0603
+        inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+        await message.edit(content=LH.t("other.inactivity_shutdown.canceled", inactivity_shutdown_minutes=CONFIG.INACTIVITY_SHUTDOWN_MINUTES), view=view)
+        result_future.set_result(False)
+        view.stop()
+
+    cancel_button.callback = cancel_callback
+
+    view = discord.ui.View()
+    view.add_item(cancel_button)
+
+
+    message = await channel.send(content=LH.t("other.inactivity_shutdown.verification", inactivity_shutdown_minutes=CONFIG.INACTIVITY_SHUTDOWN_MINUTES), view=view)
+
+    try:
+        await asyncio.wait_for(view.wait(), timeout=30.0)
+    except asyncio.TimeoutError:
+        if not result_future.done():
+            result_future.set_result(True)
+            cancel_button.disabled = True
+            await message.edit(content=LH.t("other.inactivity_shutdown.stopping"), view=view)
+    finally:
+        result = await result_future
+        if result:
+            return message
+        else:
+            return False
+
+
+
 
 async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWorld):
     string = LH.t("formatting.sudo_world_info.start")
@@ -675,10 +774,11 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
     return string + LH.t("formatting.sudo_world_info.end")
 
 
-async def _check_if_busy(ctx: discord.Interaction) -> bool:
+async def _check_if_busy(ctx: discord.Interaction | None = None) -> bool:
     global is_busy  # noqa: PLW0603
     if is_busy:
-        await ctx.edit_original_response(content=LH.t("permission.busy"))  # type: ignore
+        if ctx is not None:
+            await ctx.edit_original_response(content=LH.t("other.busy"))  # type: ignore
         return False
     else:
         is_busy = True
@@ -697,7 +797,7 @@ async def _is_super_user(ctx: discord.Interaction, message: bool = True):
             return True
 
     if message:
-        await ctx.response.send_message(LH.t("permission.sudo"), ephemeral=True)
+        await ctx.response.send_message(LH.t("other.sudo"), ephemeral=True)
     return False
 
 

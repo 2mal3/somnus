@@ -103,9 +103,21 @@
             "admin_subtitle": ":man_technologist: Admin-Befehle"
         }
     },
-    "permission": {
+    "other": {
         "busy": "Bitte warte bis die aktuelle Aktion beendet wurde!",
-        "sudo": "Du bist nicht dazu berechtigt diesen Befehl zu nutzen. Frage deinen System-Administrator für Änderungen."
+        "sudo": "Du bist nicht dazu berechtigt diesen Befehl zu nutzen. Frage deinen System-Administrator für Änderungen.",
+        "inactivity_shutdown": {
+            "verification": "Der Minecraft-Server ist nun {inactivity_shutdown_minutes} Minuten lang ohne Spieler online. \n**Daher wird der Server in 30s automatisch gestoppt!**",
+            "cancel": "Abbruch, Server online lassen",
+            "canceled": "Automatisches Stoppen abgebrochen. Wenn weiterhin die nächsten 5 Minuten keine Spieler online sind, wird wieder versucht den Server zu stoppen",
+            "stopping": "**Server stoppt wegen Inaktivität**",
+            "finished_msg": "**Server wegen Inaktivität gestoppt!**",
+            "error": {
+                "is_busy": "Server nicht gestoppt, da aktuell eine Aktion läuft.",
+                "players_online": "Server nicht gestoppt, da nun wieder Spieler online sind.",
+                "offline": "Minecraft-Server nicht gestoppt, da er schon offline ist."
+            }
+        }
     },
     "status": {
         "text": {
