@@ -6,7 +6,6 @@ from somnus.environment import Config, CONFIG
 from somnus.logger import log
 from somnus.language_handler import LH
 from somnus.logic.utils import (
-    ServerState,
     get_server_state,
     ssh_login,
     UserInputError,
@@ -17,7 +16,7 @@ from somnus.logic.utils import (
 )
 
 
-async def stop_server(shutdown: ServerState, config: Config = CONFIG):
+async def stop_server(shutdown: bool, config: Config = CONFIG):
     ssh = await ssh_login(config)
     server_state = await get_server_state(config)
     log.debug(
