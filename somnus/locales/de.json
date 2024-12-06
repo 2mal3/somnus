@@ -109,7 +109,7 @@
         "inactivity_shutdown": {
             "verification": "Der Minecraft-Server ist nun {inactivity_shutdown_minutes} Minuten lang ohne Spieler online. \n**Daher wird der Server in 30s automatisch gestoppt!**",
             "cancel": "Abbruch, Server online lassen",
-            "canceled": "Automatisches Stoppen abgebrochen. Wenn weiterhin die nächsten 5 Minuten keine Spieler online sind, wird wieder versucht den Server zu stoppen",
+            "canceled": "Automatisches Stoppen abgebrochen. Wenn weiterhin die nächsten {inactivity_shutdown_minutes} Minuten keine Spieler online sind, wird wieder versucht den Server zu stoppen",
             "stopping": "**Server stoppt wegen Inaktivität**",
             "finished_msg": "**Server wegen Inaktivität gestoppt!**",
             "error": {
@@ -138,7 +138,8 @@
     "formatting": {
         "show_worlds": {
             "title": "## Liste aller verfügbaren Welten \n```", 
-            "selected_world": "\n✅ - ",
+            "current_world": "\n✅ - ",
+            "new_selected_world": "\n⏩ - ",
             "not_selecetd_world": "\n⬜ - ",
             "end": "```"
         },

@@ -28,7 +28,6 @@ async def on_ready():
         log.debug(f"Successfully synced commands: {[cmd.name for cmd in synced]}")
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
-    log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
     if (await utils.get_server_state(CONFIG)).mc_server_running:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES is not None:
@@ -139,43 +138,46 @@ edit_world_command.autocomplete("editing_world_name")(_get_world_choices)
 
 @tree.command(name="delete_world", description=LH.t("commands.delete_world.description"))
 async def delete_world_command(ctx: discord.Interaction, display_name: str):
-    # only allow super user to delete
-    if not await _is_super_user(ctx):
-        return
-    world_selector_config = await world_selector.get_world_selector_config()
-
-    # prevent deletion of the current world
-    if display_name in {world_selector_config.current_world, world_selector.new_selected_world}:
-        await ctx.response.send_message(LH.t("commands.delete_world.error.current_world"), ephemeral=True)
-        return
-
-    # prevent deletion of non existing worlds
     try:
-        world = await world_selector.get_world_by_name(display_name, world_selector_config)
-    except utils.UserInputError:
-        await ctx.response.send_message(
-            LH.t("commands.delete_world.error.not_found", display_name=display_name), ephemeral=True
-        )
-        return
+        # only allow super user to delete
+        if not await _is_super_user(ctx):
+            return
+        world_selector_config = await world_selector.get_world_selector_config()
 
-    confirm_button = discord.ui.Button(label="Delete", style=discord.ButtonStyle.red)
-    cancel_button = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.green)
-    used = False
-
-    async def confirm_callback(interaction: discord.Interaction):
-        nonlocal used
-
-        if used:
-            await interaction.response.send_message(LH.t("commands.delete_world.error.button_inactive"), ephemeral=True)
+        # prevent deletion of the current world
+        if display_name in {world_selector_config.current_world, world_selector_config.new_selected_world}:
+            await ctx.response.send_message(LH.t("commands.delete_world.error.current_world"), ephemeral=True)
             return
 
+        # prevent deletion of non existing worlds
         try:
-            await world_selector.try_delete_world(display_name)
-        except Exception:
-            await interaction.response.send_message(LH.t("commands.delete_world.success"), ephemeral=True)
+            world = await world_selector.get_world_by_name(display_name, world_selector_config)
+        except utils.UserInputError:
+            await ctx.response.send_message(
+                LH.t("commands.delete_world.error.not_found", display_name=display_name), ephemeral=True
+            )
             return
 
-        used = True
+        confirm_button = discord.ui.Button(label="Delete", style=discord.ButtonStyle.red)
+        cancel_button = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.green)
+        used = False
+
+        async def confirm_callback(interaction: discord.Interaction):
+            nonlocal used
+
+            if used:
+                await interaction.response.send_message(LH.t("commands.delete_world.error.button_inactive"), ephemeral=True)
+                return
+
+            try:
+                await world_selector.try_delete_world(display_name)
+            except Exception:
+                await interaction.response.send_message(LH.t("commands.delete_world.success"), ephemeral=True)
+                return
+
+            used = True
+    except Exception as e:
+        print (e)
 
     async def cancel_callback(interaction: discord.Interaction):
         nonlocal used
@@ -211,7 +213,7 @@ delete_world_command.autocomplete("display_name")(_get_world_choices)
 @tree.command(name="change_world", description=LH.t("commands.change_world.description"))
 async def change_world_command(ctx: discord.Interaction):
     world_selector_config = await world_selector.get_world_selector_config()
-    index = 0
+    index = None
     options = []
 
     for world in world_selector_config.worlds:
@@ -226,7 +228,8 @@ async def change_world_command(ctx: discord.Interaction):
     select = discord.ui.Select(
         placeholder=LH.t("commands.change_world.placeholder"), min_values=1, max_values=1, options=options
     )
-    select.options[index].default = True
+    if index is not None:
+        select.options[index].default = True
 
     async def select_callback(select_interaction: discord.Interaction):
         if ctx.user.id != select_interaction.user.id:
@@ -245,10 +248,11 @@ async def change_world_command(ctx: discord.Interaction):
         )
 
         if not (await utils.get_server_state(CONFIG)).mc_server_running:
-            await _change_world_now_message(select_interaction, selected_value)
-        elif not current_world_is_selected:
             await world_selector.change_world()
             await _update_bot_presence()
+        elif not current_world_is_selected:
+            await _change_world_now_message(select_interaction, selected_value)
+
 
     select.callback = select_callback
 
@@ -264,6 +268,8 @@ async def show_worlds_command(ctx: discord.Interaction):
     sudo = await _is_super_user(ctx, False)
     world_selector_config = await world_selector.get_world_selector_config()
 
+    print("current:", world_selector_config.current_world, "selected:", world_selector_config.new_selected_world)
+
     max_name_length = len(world_selector_config.worlds[0].display_name)
     for world in world_selector_config.worlds:
         if (world.visible or sudo) and len(world.display_name) > max_name_length:
@@ -273,7 +279,9 @@ async def show_worlds_command(ctx: discord.Interaction):
     for world in world_selector_config.worlds:
         if world.visible or sudo:
             if world.display_name == world_selector_config.current_world:
-                string += LH.t("formatting.show_worlds.selected_world")
+                string += LH.t("formatting.show_worlds.current_world")
+            elif world.display_name == world_selector_config.new_selected_world:
+                string += LH.t("formatting.show_worlds.new_selected_world")
             else:
                 string += LH.t("formatting.show_worlds.not_selecetd_world")
 
@@ -388,7 +396,7 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
     world_config = await world_selector.get_world_selector_config()
 
     activity = (
-        await _get_discord_activity("starting", LH.t("status.text.starting", world_name=world_config.current_world)),
+        await _get_discord_activity("starting", LH.t("status.text.starting", world_name=world_config.current_world))
     )
     await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
     i = 0
@@ -414,7 +422,7 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
     global inactvity_seconds  # noqa: PLW0603
     inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
     update_players_online_status.start()
-    log.info("Bot presence updated!")
+    log.info("Status Updater started!")
     await _no_longer_busy()
     return True
 
@@ -701,10 +709,12 @@ async def _stop_inactivity():
             return
         mcstatus = await utils.get_mcstatus(CONFIG)
         if mcstatus is None:
+            await _no_longer_busy()
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH.t("other.inactivity_shutdown.error.offline"))
             return
         if mcstatus.players.online != 0:
+            await _no_longer_busy()
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH.t("other.inactivity_shutdown.error.players_online"))
             return
@@ -803,7 +813,7 @@ async def _no_longer_busy():
 
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True):
-    super_users = CONFIG.DISCORD_SUPER_USER_ID.split(";")
+    super_users = [user.strip() for user in CONFIG.DISCORD_SUPER_USER_ID.split(";") if user.strip()] 
     for super_user in super_users:
         if ctx.user.id == int(super_user):
             return True
