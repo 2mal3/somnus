@@ -7,7 +7,7 @@ from pydantic import BaseModel, field_validator
 from somnus.environment import CONFIG, Config
 from somnus.logger import log
 
-WORLD_SELECTOR_CONFIG_FILE_PATH = "world_selector_data.json"
+WORLD_SELECTOR_CONFIG_FILE_PATH = "data/world_selector_data.json"
 
 
 class UserInputError(Exception):
@@ -174,5 +174,6 @@ def _get_default_world_selector_config(config: Config = CONFIG) -> WorldSelector
 
 
 async def _save_world_selector_config(data: WorldSelectorConfig):
+    os.makedirs("data", exist_ok=True)
     async with aiofiles.open(WORLD_SELECTOR_CONFIG_FILE_PATH, "w", encoding="utf-8") as file:
         await file.write(json.dumps(data.model_dump(), indent=4))
