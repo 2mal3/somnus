@@ -386,7 +386,6 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         return
     world_config = await world_selector.get_world_selector_config()
     await _update_bot_presence(
-        Status.idle,
         await _get_discord_activity("starting", LH.t("status.text.starting", world_name=world_config.current_world)),
     )
     i = 0
@@ -409,7 +408,6 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         return False
 
     log.info("Server started!")
-    # await _update_bot_presence()
     global inactvity_seconds  # noqa: PLW0603
     inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
     update_players_online_status.start()
@@ -433,7 +431,6 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
     world_config = await world_selector.get_world_selector_config()
     update_players_online_status.stop()
     await _update_bot_presence(
-        discord.Status.idle,
         await _get_discord_activity("stopping", LH.t("status.text.stopping", world_name=world_config.current_world)),
     )
 
@@ -606,7 +603,6 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
 
 
 async def _update_bot_presence(
-    status: Status | None = None,
     activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None
     ):
     world_selector_config = await world_selector.get_world_selector_config()
@@ -637,13 +633,13 @@ async def _update_bot_presence(
         elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
             text = LH.t("status.text.offline", world_name=world_selector_config.current_world)
             activity = await _get_discord_activity("offline", text)
-    if not status:
-        if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
-            status = Status.online
-        elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
-            status = Status.idle
-        elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
-            status = Status.dnd
+
+    if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
+        status = Status.online
+    elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
+        status = Status.idle
+    elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
+        status = Status.dnd
 
     await bot.change_presence(status=status, activity=activity)
 
@@ -710,7 +706,6 @@ async def _stop_inactivity():
         world_config = await world_selector.get_world_selector_config()
         update_players_online_status.stop()
         await _update_bot_presence(
-            discord.Status.idle,
             await _get_discord_activity(
                 "stopping", LH.t("status.text.stopping", world_name=world_config.current_world)
             ),
