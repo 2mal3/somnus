@@ -603,8 +603,8 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
 
 
 async def _update_bot_presence(
-    activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None
-    ):
+    activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None,
+):
     world_selector_config = await world_selector.get_world_selector_config()
     server_status = await utils.get_server_state(CONFIG)
     if not activity:
