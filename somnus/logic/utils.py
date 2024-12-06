@@ -1,5 +1,4 @@
 import asyncio
-from typing import Literal
 
 from mcstatus import JavaServer
 from pexpect import pxssh

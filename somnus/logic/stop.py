@@ -20,7 +20,9 @@ from somnus.logic.utils import (
 async def stop_server(shutdown: ServerState, config: Config = CONFIG):
     ssh = await ssh_login(config)
     server_state = await get_server_state(config)
-    log.debug(f"Host server running: {server_state.host_server_running} | MC server running: {server_state.mc_server_running}")
+    log.debug(
+        f"Host server running: {server_state.host_server_running} | MC server running: {server_state.mc_server_running}"
+    )
 
     if not (server_state.host_server_running or server_state.mc_server_running):
         raise UserInputError(LH.t("commands.stop.error.already_stopped"))

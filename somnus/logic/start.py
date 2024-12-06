@@ -19,7 +19,9 @@ from somnus.logic.world_selector import get_current_world
 
 async def start_server(config: Config = CONFIG):
     server_state = await get_server_state(config)
-    log.debug(f"Host server running: {server_state.host_server_running} | MC server running: {server_state.mc_server_running}")
+    log.debug(
+        f"Host server running: {server_state.host_server_running} | MC server running: {server_state.mc_server_running}"
+    )
 
     if server_state.host_server_running and server_state.mc_server_running:
         raise UserInputError(LH.t("commands.start.error.already_running"))
