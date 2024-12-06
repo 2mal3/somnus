@@ -239,14 +239,13 @@ async def change_world_command(ctx: discord.Interaction):
         select.disabled = True
         await select_interaction.message.edit(view=select_view)
         current_world_is_selected = await world_selector.select_new_world(selected_value)
-        mc_server_online = (await utils.get_server_state(CONFIG)).mc_server_running
         await select_interaction.response.send_message(
             LH.t("commands.change_world.success_offline", selected_value=selected_value)
         )
 
-        if mc_server_online:
+        if not (await utils.get_server_state(CONFIG)).mc_server_running:
             await _change_world_now_message(select_interaction, selected_value)
-        else:
+        elif not current_world_is_selected:
             await world_selector.change_world()
             await _update_bot_presence()
 
