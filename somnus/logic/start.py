@@ -7,12 +7,10 @@ from somnus.environment import Config, CONFIG
 from somnus.logger import log
 from somnus.language_handler import LH
 from somnus.logic.utils import (
-    ServerState,
     get_server_state,
     ssh_login,
     UserInputError,
     send_possible_sudo_command,
-    get_host_sever_state,
     detach_screen_session,
     kill_screen,
 )
@@ -20,15 +18,15 @@ from somnus.logic.world_selector import get_current_world
 
 
 async def start_server(config: Config = CONFIG):
-    host_server_state, mc_server_state = await get_server_state(config)
-    log.debug(f"Host server state: {host_server_state.value} | MC server state: {mc_server_state.value}")
+    server_state = await get_server_state(config)
+    log.debug(f"Host server running: {server_state.host_server_running} | MC server running: {server_state.mc_server_running}")
 
-    if ServerState.STOPPED not in (host_server_state, mc_server_state):
+    if server_state.host_server_running and server_state.mc_server_running:
         raise UserInputError(LH.t("commands.start.error.already_running"))
     yield
 
     # Start host server
-    if host_server_state == ServerState.STOPPED:
+    if not server_state.host_server_running:
         log.debug("Starting host server ...")
 
         try:
@@ -86,8 +84,7 @@ async def _start_host_server(config: Config):
     for i in range(ping_speed):
         await asyncio.sleep(300 // ping_speed)
 
-        host_server_state = await get_host_sever_state(config)
-        if host_server_state == ServerState.RUNNING:
+        if (await get_server_state(config)).host_server_running:
             for j in range(i, ping_speed):
                 if j % 2:
                     yield

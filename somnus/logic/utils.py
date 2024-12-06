@@ -1,19 +1,19 @@
 import asyncio
-from enum import Enum
+from typing import Literal
 
 from mcstatus import JavaServer
-
 from pexpect import pxssh
 from ping3 import ping
+from pydantic import BaseModel
 
-from somnus.environment import Config, CONFIG
+from somnus.environment import CONFIG, Config
 from somnus.logger import log
 from somnus.logic.world_selector import get_current_world
 
 
-class ServerState(Enum):
-    RUNNING = "running"
-    STOPPED = "stopped"
+class ServerState(BaseModel):
+    host_server_running: bool
+    mc_server_running: bool
 
 
 class UserInputError(Exception):
@@ -62,7 +62,7 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
     return ssh
 
 
-def _screen_is_installed(ssh: pxssh.pxssh) -> bool:
+def _screen_is_installed(ssh: pxssh.pxssh) -> ServerState:
     ssh.sendline("command -v screen")
     ssh.prompt()
     ssh.sendline("echo $?")
@@ -86,39 +86,39 @@ async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
         ssh.sendline(config.HOST_SERVER_PASSWORD)
 
 
-async def get_server_state(config: Config) -> tuple[ServerState, ServerState]:
-    host_server_state = await get_host_sever_state(config)
-    if host_server_state == ServerState.STOPPED:
-        return ServerState.STOPPED, ServerState.STOPPED
+async def get_server_state(config: Config) -> ServerState:
+    host_server_running = await _is_host_server_running(config)
+    if not host_server_running:
+        return ServerState(host_server_running=False, mc_server_running=False)
 
-    mc_server_state = await get_mc_server_state(config)
+    mc_server_running = await _is_mc_server_running(config)
 
-    return host_server_state, mc_server_state
+    return ServerState(host_server_running=host_server_running, mc_server_running=mc_server_running)
 
 
-async def get_mc_server_state(config: Config) -> ServerState:
+async def _is_mc_server_running(config: Config) -> bool:
     try:
         server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS, timeout=5)
         await server.async_status()
     except (OSError, TimeoutError):
-        return ServerState.STOPPED
+        return False
 
-    return ServerState.RUNNING
+    return True
 
 
-async def get_host_sever_state(config: Config) -> ServerState:
-    host_server_running = True if config.HOST_SERVER_HOST == "localhost" else ping(config.HOST_SERVER_HOST)
+async def _is_host_server_running(config: Config) -> bool:
+    host_server_running = ping(config.HOST_SERVER_HOST)
 
     if not host_server_running:
-        return ServerState.STOPPED
+        return False
 
     try:
         ssh = await ssh_login(config)
         ssh.logout()
     except TimeoutError:
-        return ServerState.STOPPED
+        return False
 
-    return ServerState.RUNNING
+    return True
 
 
 async def detach_screen_session(ssh: pxssh.pxssh):

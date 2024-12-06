@@ -30,7 +30,7 @@ async def on_ready():
         log.error(f"Failed to sync commands: {e}")
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
-    if await utils.get_server_state(CONFIG) == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
+    if (await utils.get_server_state(CONFIG)).mc_server_running:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES is not None:
             global inactvity_seconds  # noqa: PLW0603
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
@@ -239,16 +239,16 @@ async def change_world_command(ctx: discord.Interaction):
         select.disabled = True
         await select_interaction.message.edit(view=select_view)
         current_world_is_selected = await world_selector.select_new_world(selected_value)
-        mc_server_online = await utils.get_mc_server_state(CONFIG)
+        mc_server_online = (await utils.get_server_state(CONFIG)).mc_server_running
         await select_interaction.response.send_message(
             LH.t("commands.change_world.success_offline", selected_value=selected_value)
         )
 
-        if mc_server_online == utils.ServerState.STOPPED:
+        if mc_server_online:
+            await _change_world_now_message(select_interaction, selected_value)
+        else:
             await world_selector.change_world()
             await _update_bot_presence()
-        elif not current_world_is_selected:
-            await _change_world_now_message(select_interaction, selected_value)
 
     select.callback = select_callback
 
@@ -466,7 +466,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
 
 
 async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
-    if (await utils.get_mc_server_state(CONFIG)) == utils.ServerState.STOPPED:
+    if not (await utils.get_server_state(CONFIG)).mc_server_running:
         await ctx.edit_original_response(content=LH.t("commands.restart.error"))  # type: ignore
         return
     stop_steps = 20
@@ -606,47 +606,53 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
     )
 
 
-async def _update_bot_presence(
-    status: Status | None = None,
-    activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None,
-):
+async def _update_bot_presence():
+    """
+    Setzt die Bot-Presence auf einen bestimmten Wert, wenn dieser gegeben wird oder bestimmt die Werte selbst.
+    """
+
     world_selector_config = await world_selector.get_world_selector_config()
     server_status = await utils.get_server_state(CONFIG)
-    if not activity:
-        if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
-            mc_status = await utils.get_mcstatus(CONFIG)
-            if mc_status is None:
-                text = LH.t(
-                    "status.text.online",
-                    world_name=world_selector_config.current_world,
-                    players_online="X",
-                    max_players="Y",
-                )
-            else:
-                text = LH.t(
-                    "status.text.online",
-                    world_name=world_selector_config.current_world,
-                    players_online=mc_status.players.online,
-                    max_players=mc_status.players.max,
-                )
-                if await _check_for_inactivity_shutdown(mc_status.players.online):
-                    return
-            activity = await _get_discord_activity("online", text)
-        elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
-            text = LH.t("status.text.only_host_online", world_name=world_selector_config.current_world)
-            activity = await _get_discord_activity("only_host_online", text)
-        elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
-            text = LH.t("status.text.offline", world_name=world_selector_config.current_world)
-            activity = await _get_discord_activity("offline", text)
-    if not status:
-        if server_status == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
-            status = Status.online
-        elif server_status == (utils.ServerState.RUNNING, utils.ServerState.STOPPED):
-            status = Status.idle
-        elif server_status == (utils.ServerState.STOPPED, utils.ServerState.STOPPED):
-            status = Status.dnd
+
+    if server_status.mc_server_running:
+        mc_status = await utils.get_mcstatus(CONFIG)
+        if mc_status is None:
+            text = LH.t(
+                "status.text.online",
+                world_name=world_selector_config.current_world,
+                players_online="X",
+                max_players="Y",
+            )
+        else:
+            text = LH.t(
+                "status.text.online",
+                world_name=world_selector_config.current_world,
+                players_online=mc_status.players.online,
+                max_players=mc_status.players.max,
+            )
+            if await _check_for_inactivity_shutdown(mc_status.players.online):
+                return
+        activity = await _get_discord_activity("online", text)
+    elif server_status.host_server_running:
+        text = LH.t("status.text.only_host_online", world_name=world_selector_config.current_world)
+        activity = await _get_discord_activity("only_host_online", text)
+    else:
+        text = LH.t("status.text.offline", world_name=world_selector_config.current_world)
+        activity = await _get_discord_activity("offline", text)
+
+    status = _map_server_status_to_discord_activity(server_status)
 
     await bot.change_presence(status=status, activity=activity)
+
+
+def _map_server_status_to_discord_activity(server_status: utils.ServerState) -> discord.Status:
+    if not server_status.host_server_running:
+        return discord.Status.dnd
+    # After here the host server is running
+    elif not server_status.mc_server_running:
+        return discord.Status.idle
+    else:
+        return discord.Status.online
 
 
 async def _get_discord_activity(
