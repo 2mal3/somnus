@@ -499,6 +499,7 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
     cancel_button = discord.ui.Button(
         label=LH.t("commands.stop.error.players_online.cancel"), style=discord.ButtonStyle.green
     )
+
     async def confirm_callback(interaction: discord.Interaction):
         if ctx.user.id != interaction.user.id:
             await interaction.response.send_message(
@@ -665,6 +666,7 @@ async def _get_discord_activity(
             f"Wrong Discord Activity choosen. Use 'Game', 'Streaming', 'Listening' or 'Watching'. Not '{activity_str}'"
         )
 
+
 async def _check_for_inactivity_shutdown(players_online: int):
     if CONFIG.INACTIVITY_SHUTDOWN_MINUTES is not None:
         global inactvity_seconds  # noqa: PLW0603
@@ -678,15 +680,16 @@ async def _check_for_inactivity_shutdown(players_online: int):
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
     return False
 
+
 async def _stop_inactivity():
     channel = bot.get_channel(CONFIG.DISCORD_STATUS_CHANNEL_ID)
     if not isinstance(channel, discord.TextChannel):
         log.error("DISCORD_STATUS_CHANNEL_ID in .env not correct. Automatic shutdown due to inactivity not possible!")
         return False
-    
+
     log.info("Send information message for shutdown due to inactivity ...")
     message = await _inactivity_shutdown_verification(channel)
-    if message is not False:         
+    if message is not False:
         global inactvity_seconds  # noqa: PLW0603
         log.info("Stopping due to inactivity ...")
         if not await _check_if_busy():
@@ -709,7 +712,9 @@ async def _stop_inactivity():
         update_players_online_status.stop()
         await _update_bot_presence(
             discord.Status.idle,
-            await _get_discord_activity("stopping", LH.t("status.text.stopping", world_name=world_config.current_world))
+            await _get_discord_activity(
+                "stopping", LH.t("status.text.stopping", world_name=world_config.current_world)
+            ),
         )
 
         async for _ in stop.stop_server(True):
@@ -722,16 +727,19 @@ async def _stop_inactivity():
 async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> discord.Message | bool:
     result_future = asyncio.Future()
 
-    cancel_button = discord.ui.Button(
-        label=LH.t("other.inactivity_shutdown.cancel"), style=discord.ButtonStyle.green
-    )
+    cancel_button = discord.ui.Button(label=LH.t("other.inactivity_shutdown.cancel"), style=discord.ButtonStyle.green)
 
     async def cancel_callback(interaction: discord.Interaction):
         await interaction.response.defer()
         cancel_button.disabled = True
         global inactvity_seconds  # noqa: PLW0603
         inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-        await message.edit(content=LH.t("other.inactivity_shutdown.canceled", inactivity_shutdown_minutes=CONFIG.INACTIVITY_SHUTDOWN_MINUTES), view=view)
+        await message.edit(
+            content=LH.t(
+                "other.inactivity_shutdown.canceled", inactivity_shutdown_minutes=CONFIG.INACTIVITY_SHUTDOWN_MINUTES
+            ),
+            view=view,
+        )
         result_future.set_result(False)
         view.stop()
 
@@ -740,8 +748,12 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> dis
     view = discord.ui.View()
     view.add_item(cancel_button)
 
-
-    message = await channel.send(content=LH.t("other.inactivity_shutdown.verification", inactivity_shutdown_minutes=CONFIG.INACTIVITY_SHUTDOWN_MINUTES), view=view)
+    message = await channel.send(
+        content=LH.t(
+            "other.inactivity_shutdown.verification", inactivity_shutdown_minutes=CONFIG.INACTIVITY_SHUTDOWN_MINUTES
+        ),
+        view=view,
+    )
 
     try:
         await asyncio.wait_for(view.wait(), timeout=30.0)
@@ -756,8 +768,6 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> dis
             return message
         else:
             return False
-
-
 
 
 async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWorld):
