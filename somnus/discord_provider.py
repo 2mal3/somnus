@@ -385,10 +385,9 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
     if not await _check_if_busy(ctx):
         return
     world_config = await world_selector.get_world_selector_config()
-    await _update_bot_presence(
-        Status.idle,
-        await _get_discord_activity("starting", LH.t("status.text.starting", world_name=world_config.current_world)),
-    )
+
+    activity = await _get_discord_activity("starting", LH.t("status.text.starting", world_name=world_config.current_world)),
+    await bot.change_presence(status=Status.idle, activity=activity)    # type: ignore
     i = 0
     try:
         async for _ in start.start_server():
@@ -432,10 +431,9 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
 
     world_config = await world_selector.get_world_selector_config()
     update_players_online_status.stop()
-    await _update_bot_presence(
-        discord.Status.idle,
-        await _get_discord_activity("stopping", LH.t("status.text.stopping", world_name=world_config.current_world)),
-    )
+
+    activity = await _get_discord_activity("stopping", LH.t("status.text.stopping", world_name=world_config.current_world))
+    await bot.change_presence(status=Status.idle, activity=activity)    # type: ignore
 
     i = 0
     try:
@@ -711,12 +709,9 @@ async def _stop_inactivity():
 
         world_config = await world_selector.get_world_selector_config()
         update_players_online_status.stop()
-        await _update_bot_presence(
-            discord.Status.idle,
-            await _get_discord_activity(
-                "stopping", LH.t("status.text.stopping", world_name=world_config.current_world)
-            ),
-        )
+
+        activity = await _get_discord_activity("stopping", LH.t("status.text.stopping", world_name=world_config.current_world))
+        await bot.change_presence(status=Status.idle, activity=activity)
 
         async for _ in stop.stop_server(True):
             pass
