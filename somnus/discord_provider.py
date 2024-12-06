@@ -28,14 +28,13 @@ async def on_ready():
         log.debug(f"Successfully synced commands: {[cmd.name for cmd in synced]}")
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
-    log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
-
     if await utils.get_server_state(CONFIG) == (utils.ServerState.RUNNING, utils.ServerState.RUNNING):
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES is not None:
             global inactvity_seconds  # noqa: PLW0603
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
     await _update_bot_presence()
+    log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
 
 async def _get_world_choices(interaction: discord.Interaction, current: str):
@@ -608,8 +607,8 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
 
 async def _update_bot_presence(
     status: Status | None = None,
-    activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None,
-):
+    activity: Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity] | None = None
+    ):
     world_selector_config = await world_selector.get_world_selector_config()
     server_status = await utils.get_server_state(CONFIG)
     if not activity:
