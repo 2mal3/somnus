@@ -36,6 +36,7 @@ async def on_ready():
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
     await _update_bot_presence()
+    log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
 
 async def _get_world_choices(interaction: discord.Interaction, current: str):
@@ -408,7 +409,6 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         return False
 
     log.info("Server started!")
-    # await _update_bot_presence()
     global inactvity_seconds  # noqa: PLW0603
     inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
     update_players_online_status.start()

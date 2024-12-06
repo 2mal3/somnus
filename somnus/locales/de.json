@@ -85,7 +85,7 @@
             }
         },
         "reset_busy": {
-            "description": "Falls der Bot fälschlicherweise beschäftigt ist, kann dieser Befehl den falschen Busy-State zurücksetzen.",
+            "description": "Falls der Bot irrtümlich beschäftigt ist, kann dieser Befehl den falschen Busy-State zurücksetzen.",
             "verification": "Möchtest du wirklich den Busy-State zurücksetzen? Dadurch können Fehler entstehen, die bis zum Absturz des Bots führen können.",
             "success": "Der Busy-State wurde erfolgreich zurückgesetzt.",
             "canceled": "Das Zurücksetzen des Busy-States wurde abgebrochen.",

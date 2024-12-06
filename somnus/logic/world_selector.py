@@ -159,10 +159,10 @@ async def _get_world_selector_config_from_path(path: str) -> WorldSelectorConfig
 
 def _get_default_world_selector_config(config: Config = CONFIG) -> WorldSelectorConfig:
     data = WorldSelectorConfig(
+        new_selected_world="",
         current_world="Minecraft",
         worlds=[
             WorldSelectorWorld(
-                new_selected_world="",
                 display_name="Minecraft",
                 start_cmd=config.MC_SERVER_START_CMD,
                 start_cmd_sudo=config.MC_SERVER_START_CMD_SUDO,
