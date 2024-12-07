@@ -30,7 +30,7 @@ async def on_ready():
         log.error(f"Failed to sync commands: {e}")
 
     if (await utils.get_server_state(CONFIG)).mc_server_running:
-        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES is not None:
+        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
             global inactvity_seconds  # noqa: PLW0603
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
@@ -680,7 +680,7 @@ async def _get_discord_activity(
 
 
 async def _check_for_inactivity_shutdown(players_online: int):
-    if CONFIG.INACTIVITY_SHUTDOWN_MINUTES is not None:
+    if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
         global inactvity_seconds  # noqa: PLW0603
         if players_online == 0:
             if inactvity_seconds >= 0:

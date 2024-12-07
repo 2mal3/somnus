@@ -15,7 +15,7 @@ class Config(BaseModel):
     MC_SERVER_START_CMD: str
     MC_SERVER_START_CMD_SUDO: bool = False
     MC_SERVER_ADDRESS: str
-    INACTIVITY_SHUTDOWN_MINUTES: int | None = None
+    INACTIVITY_SHUTDOWN_MINUTES: int = 0
     DISCORD_STATUS_CHANNEL_ID: int | None = None
     LANGUAGE: str = "en"
     DISCORD_SUPER_USER_ID: str
