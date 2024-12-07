@@ -166,7 +166,9 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
             nonlocal used
 
             if used:
-                await interaction.response.send_message(LH.t("commands.delete_world.error.button_inactive"), ephemeral=True)
+                await interaction.response.send_message(
+                    LH.t("commands.delete_world.error.button_inactive"), ephemeral=True
+                )
                 return
 
             try:
@@ -177,7 +179,7 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
 
             used = True
     except Exception as e:
-        print (e)
+        print(e)
 
     async def cancel_callback(interaction: discord.Interaction):
         nonlocal used
@@ -252,7 +254,6 @@ async def change_world_command(ctx: discord.Interaction):
             await _update_bot_presence()
         elif not current_world_is_selected:
             await _change_world_now_message(select_interaction, selected_value)
-
 
     select.callback = select_callback
 
@@ -395,8 +396,8 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         return
     world_config = await world_selector.get_world_selector_config()
 
-    activity = (
-        await _get_discord_activity("starting", LH.t("status.text.starting", world_name=world_config.current_world))
+    activity = await _get_discord_activity(
+        "starting", LH.t("status.text.starting", world_name=world_config.current_world)
     )
     await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
     i = 0
@@ -813,7 +814,7 @@ async def _no_longer_busy():
 
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True):
-    super_users = [user.strip() for user in CONFIG.DISCORD_SUPER_USER_ID.split(";") if user.strip()] 
+    super_users = [user.strip() for user in CONFIG.DISCORD_SUPER_USER_ID.split(";") if user.strip()]
     for super_user in super_users:
         if ctx.user.id == int(super_user):
             return True
