@@ -219,18 +219,18 @@ async def change_world_command(ctx: discord.Interaction):
     options = []
 
     for world in world_selector_config.worlds:
-        if world.visible:
-            if world_selector_config.new_selected_world != "":
-                if world_selector_config.new_selected_world == world.display_name:
-                    index = len(options)
-            elif world_selector_config.current_world == world.display_name:
-                index = len(options)
-            options.append(discord.SelectOption(label=world.display_name, value=world.display_name))
+        if not world.visible:
+            continue
+        if (
+            world_selector_config.new_selected_world and world_selector_config.new_selected_world == world.display_name
+        ) or (world_selector_config.current_world == world.display_name):
+            index = len(options)
+        options.append(discord.SelectOption(label=world.display_name, value=world.display_name))
 
     select = discord.ui.Select(
         placeholder=LH.t("commands.change_world.placeholder"), min_values=1, max_values=1, options=options
     )
-    if index is not None:
+    if index:
         select.options[index].default = True
 
     async def select_callback(select_interaction: discord.Interaction):
