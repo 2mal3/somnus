@@ -6,7 +6,6 @@ from somnus.environment import Config, CONFIG
 from somnus.logger import log
 from somnus.language_handler import LH
 from somnus.logic.utils import (
-    ServerState,
     get_server_state,
     ssh_login,
     UserInputError,
@@ -19,18 +18,20 @@ from somnus.logic.utils import (
 
 async def stop_server(shutdown: bool, config: Config = CONFIG):
     ssh = await ssh_login(config)
-    host_server_state, mc_server_state = await get_server_state(config)
-    log.debug(f"Host server state: {host_server_state.value} | MC server state: {mc_server_state.value}")
+    server_state = await get_server_state(config)
+    log.debug(
+        f"Host server running: {server_state.host_server_running} | MC server running: {server_state.mc_server_running}"
+    )
 
-    if ServerState.RUNNING not in (host_server_state, mc_server_state):
+    if not (server_state.host_server_running or server_state.mc_server_running):
         raise UserInputError(LH.t("commands.stop.error.already_stopped"))
-    elif not shutdown and mc_server_state == ServerState.STOPPED:
+    elif not shutdown and not server_state.mc_server_running:
         raise UserInputError(LH.t("commands.stop.error.mc_already_stopped"))
 
     yield
 
     # Stop MC server
-    if mc_server_state == ServerState.RUNNING:
+    if server_state.mc_server_running:
         async for _ in _stop_mc_server(ssh, config):
             yield
     else:
@@ -39,7 +40,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
     yield
 
     # Stop host server
-    if host_server_state == ServerState.RUNNING and shutdown and not config.DEBUG:
+    if server_state.host_server_running and shutdown and not config.DEBUG:
         try:
             await send_sudo_command(ssh, config, "shutdown -h now")
         except Exception as e:

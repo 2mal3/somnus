@@ -136,7 +136,8 @@
     "formatting": {
         "show_worlds": {
             "title": "## List of all available worlds \n```", 
-            "selected_world": "\n✅ - ",
+            "current_world": "\n✅ - ",
+            "new_selected_world": "\n⏩ - ",
             "not_selecetd_world": "\n⬜ - ",
             "end": "```"
         },
