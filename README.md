@@ -50,8 +50,6 @@ Discord bot to remotely control and manage multiple Minecraft servers.
 
 ### Environment Variables (fill in .env with .env.example)
 
-### Fill in .env (with .env.example)
-
 | Env Var                     | Type    | Required | Default | Description                                                                                                           |
 | --------------------------- | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
 | DISCORD_TOKEN               | string  | yes      |         | your discord bot token                                                                                                |
