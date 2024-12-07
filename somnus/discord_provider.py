@@ -22,6 +22,8 @@ inactvity_seconds = 0  # noqa: PLW0603
 
 @bot.event
 async def on_ready():
+    global inactvity_seconds  # noqa: PLW0603
+
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="Booting"))
     try:
         synced = await tree.sync()
@@ -31,7 +33,6 @@ async def on_ready():
 
     if (await utils.get_server_state(CONFIG)).mc_server_running:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-            global inactvity_seconds  # noqa: PLW0603
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
     await _update_bot_presence()
@@ -392,6 +393,8 @@ async def reset_busy_command(ctx: discord.Interaction):
 
 
 async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message: str) -> bool:
+    global inactvity_seconds  # noqa: PLW0603
+
     if not await _check_if_busy(ctx):
         return
     world_config = await world_selector.get_world_selector_config()
@@ -420,7 +423,6 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         return False
 
     log.info("Server started!")
-    global inactvity_seconds  # noqa: PLW0603
     inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
     update_players_online_status.start()
     log.info("Status Updater started!")
@@ -680,8 +682,9 @@ async def _get_discord_activity(
 
 
 async def _check_for_inactivity_shutdown(players_online: int):
+    global inactvity_seconds  # noqa: PLW0603
+
     if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-        global inactvity_seconds  # noqa: PLW0603
         if players_online == 0:
             if inactvity_seconds >= 0:
                 if inactvity_seconds == 0:
@@ -694,6 +697,8 @@ async def _check_for_inactivity_shutdown(players_online: int):
 
 
 async def _stop_inactivity():
+    global inactvity_seconds  # noqa: PLW0603
+
     channel = bot.get_channel(CONFIG.DISCORD_STATUS_CHANNEL_ID)
     if not isinstance(channel, discord.TextChannel):
         log.error("DISCORD_STATUS_CHANNEL_ID in .env not correct. Automatic shutdown due to inactivity not possible!")
@@ -702,7 +707,6 @@ async def _stop_inactivity():
     log.info("Send information message for shutdown due to inactivity ...")
     message = await _inactivity_shutdown_verification(channel)
     if message is not False:
-        global inactvity_seconds  # noqa: PLW0603
         log.info("Stopping due to inactivity ...")
         if not await _check_if_busy():
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
@@ -743,9 +747,10 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> dis
     cancel_button = discord.ui.Button(label=LH.t("other.inactivity_shutdown.cancel"), style=discord.ButtonStyle.green)
 
     async def cancel_callback(interaction: discord.Interaction):
+        global inactvity_seconds  # noqa: PLW0603
+
         await interaction.response.defer()
         cancel_button.disabled = True
-        global inactvity_seconds  # noqa: PLW0603
         inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         await message.edit(
             content=LH.t(
@@ -799,6 +804,7 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
 
 async def _check_if_busy(ctx: discord.Interaction | None = None) -> bool:
     global is_busy  # noqa: PLW0603
+
     if is_busy:
         if ctx is not None:
             await ctx.edit_original_response(content=LH.t("other.busy"))  # type: ignore
@@ -810,6 +816,7 @@ async def _check_if_busy(ctx: discord.Interaction | None = None) -> bool:
 
 async def _no_longer_busy():
     global is_busy  # noqa: PLW0603
+
     is_busy = False
 
 
