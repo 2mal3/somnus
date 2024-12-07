@@ -80,7 +80,7 @@ async def stop_server_command(ctx: discord.Interaction):
         await ctx.channel.send(LH.t("commands.stop.finished_msg"))  # type: ignore
 
 
-def _trim_text_for_discord_subtitle(text: any) -> str:
+def _trim_text_for_discord_subtitle(text: str) -> str:
     return str(text).replace("\n", " ")[:32]
 
 
@@ -106,10 +106,10 @@ async def add_world_command(
 async def edit_world_command(  # noqa: PLR0913
     ctx: discord.Interaction,
     editing_world_name: str,
-    new_display_name: str = None,
-    start_cmd: str = None,
-    sudo_start_cmd: bool = None,
-    visible: bool = None,
+    new_display_name: str | None = None,
+    start_cmd: str | None = None,
+    sudo_start_cmd: bool | None = None,
+    visible: bool | None = None,
 ):
     # only super users
     if not await _is_super_user(ctx):
@@ -396,7 +396,7 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
     global inactvity_seconds  # noqa: PLW0603
 
     if not await _check_if_busy(ctx):
-        return
+        return False
     world_config = await world_selector.get_world_selector_config()
 
     activity = await _get_discord_activity(
@@ -416,7 +416,7 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
             return False
         log.error("Could not start server", exc_info=e)
         await ctx.edit_original_response(
-            content=LH.t("commands.start.error", e=_trim_text_for_discord_subtitle(e)),
+            content=LH.t("commands.start.error", e=_trim_text_for_discord_subtitle(str(e))),
         )
         await _update_bot_presence()
         await _no_longer_busy()
@@ -435,9 +435,9 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
         return False
 
     mc_status = await utils.get_mcstatus(CONFIG)
-    if mc_status is not None and mc_status.players.online != 0:
+    if mc_status and mc_status.players.online:
         if not await _players_online_verification(ctx, message, mc_status):
-            return
+            return False
 
         if not await _check_if_busy(ctx):
             return False
@@ -463,7 +463,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
             return False
         log.error(f"Could not stop server | {e}")
         await ctx.edit_original_response(
-            content=LH.t("commands.stop.error.general", e=_trim_text_for_discord_subtitle(e))
+            content=LH.t("commands.stop.error.general", e=_trim_text_for_discord_subtitle(str(e)))
         )
         await _update_bot_presence()
         await _no_longer_busy()
@@ -699,10 +699,10 @@ async def _check_for_inactivity_shutdown(players_online: int):
 async def _stop_inactivity():
     global inactvity_seconds  # noqa: PLW0603
 
-    channel = bot.get_channel(CONFIG.DISCORD_STATUS_CHANNEL_ID)
-    if not isinstance(channel, discord.TextChannel):
+    if not CONFIG.DISCORD_STATUS_CHANNEL_ID:
         log.error("DISCORD_STATUS_CHANNEL_ID in .env not correct. Automatic shutdown due to inactivity not possible!")
         return False
+    channel = bot.get_channel(CONFIG.DISCORD_STATUS_CHANNEL_ID)
 
     log.info("Send information message for shutdown due to inactivity ...")
     message = await _inactivity_shutdown_verification(channel)
