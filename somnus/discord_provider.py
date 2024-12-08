@@ -803,6 +803,7 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
         )
     return string + LH.t("formatting.sudo_world_info.end")
 
+
 async def _ping_user_after_error(ctx: discord.Interaction):
     user_mention = ctx.user.mention
     await ctx.followup.send(content=f"{user_mention}", ephemeral=False)
