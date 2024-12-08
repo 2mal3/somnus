@@ -418,6 +418,7 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         await ctx.edit_original_response(
             content=LH.t("commands.start.error", e=_trim_text_for_discord_subtitle(str(e))),
         )
+        await _ping_user_after_error(ctx)
         await _update_bot_presence()
         await _no_longer_busy()
         return False
@@ -465,6 +466,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
         await ctx.edit_original_response(
             content=LH.t("commands.stop.error.general", e=_trim_text_for_discord_subtitle(str(e)))
         )
+        await _ping_user_after_error(ctx)
         await _update_bot_presence()
         await _no_longer_busy()
         return False
@@ -800,6 +802,10 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
             value=str(getattr(world, attr)),
         )
     return string + LH.t("formatting.sudo_world_info.end")
+
+async def _ping_user_after_error(ctx: discord.Interaction):
+    user_mention = ctx.user.mention
+    await ctx.followup.send(content=f"{user_mention}", ephemeral=False)
 
 
 async def _check_if_busy(ctx: discord.Interaction | None = None) -> bool:
