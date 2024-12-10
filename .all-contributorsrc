@@ -1,0 +1,42 @@
+{
+  "projectName": "somnus",
+  "projectOwner": "2mal3",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitConvention": "none",
+  "contributors": [
+    {
+      "login": "2mal3",
+      "name": "2mal3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/56305732?v=4",
+      "profile": "https://github.com/2mal3",
+      "contributions": [
+        "code",
+        "doc",
+        "ideas",
+        "platform"
+      ]
+    },
+    {
+      "login": "programmer-44",
+      "name": "E44",
+      "avatar_url": "https://avatars.githubusercontent.com/u/129310925?v=4",
+      "profile": "https://github.com/programmer-44",
+      "contributions": [
+        "bug",
+        "code",
+        "doc",
+        "ideas",
+        "translation",
+        "userTesting"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "linkToUsage": false
+}

@@ -67,6 +67,34 @@ Discord bot to remotely control and manage multiple Minecraft servers.
 | DISCORD_STATUS_CHANNEL_ID   | integer | no       | none    | discord channel id of the channel in which the automatic inactivity server shutdown message is sent                   |
 | DEBUG                       | boolean | no       | false   | debug messages are displayed and server does not shut down if set to “true”                                           |
 
+## Contributors ✨
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/2mal3"><img src="https://avatars.githubusercontent.com/u/56305732?v=4?s=100" width="100px;" alt="2mal3"/><br /><sub><b>2mal3</b></sub></a><br /><a href="https://github.com/2mal3/somnus/commits?author=2mal3" title="Code">💻</a> <a href="https://github.com/2mal3/somnus/commits?author=2mal3" title="Documentation">📖</a> <a href="#ideas-2mal3" title="Ideas, Planning, & Feedback">🤔</a> <a href="#platform-2mal3" title="Packaging/porting to new platform">📦</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/programmer-44"><img src="https://avatars.githubusercontent.com/u/129310925?v=4?s=100" width="100px;" alt="E44"/><br /><sub><b>E44</b></sub></a><br /><a href="https://github.com/2mal3/somnus/issues?q=author%3Aprogrammer-44" title="Bug reports">🐛</a> <a href="https://github.com/2mal3/somnus/commits?author=programmer-44" title="Code">💻</a> <a href="https://github.com/2mal3/somnus/commits?author=programmer-44" title="Documentation">📖</a> <a href="#ideas-programmer-44" title="Ideas, Planning, & Feedback">🤔</a> <a href="#translation-programmer-44" title="Translation">🌍</a> <a href="#userTesting-programmer-44" title="User Testing">📓</a></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td align="center" size="13px" colspan="7">
+        <img src="https://raw.githubusercontent.com/all-contributors/all-contributors-cli/1b8533af435da9854653492b1327a23a4dbd0a10/assets/logo-small.svg">
+          <a href="https://all-contributors.js.org/docs/en/bot/usage">Add your contributions</a>
+        </img>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
 ## License
 
 [GPL-3.0](/LICENSE.txt)
