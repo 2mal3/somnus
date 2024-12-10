@@ -1,5 +1,10 @@
 # somnus
 
+![Python](https://img.shields.io/badge/python-3670A0?style=flat&logo=python&logoColor=ffdd54)
+[![CodeQL](https://github.com/2mal3/somnus/actions/workflows/codeql.yml/badge.svg)](https://github.com/2mal3/somnus/actions/workflows/codeql.yml)
+![GitHub License](https://img.shields.io/github/license/2mal3/somnus)
+![GitHub last commit](https://img.shields.io/github/last-commit/2mal3/somnus)
+
 Discord bot to remotely control and manage multiple Minecraft servers.
 
 ## Features
