@@ -79,15 +79,6 @@ Discord bot to remotely control and manage multiple Minecraft servers.
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/programmer-44"><img src="https://avatars.githubusercontent.com/u/129310925?v=4?s=100" width="100px;" alt="E44"/><br /><sub><b>E44</b></sub></a><br /><a href="https://github.com/2mal3/somnus/issues?q=author%3Aprogrammer-44" title="Bug reports">🐛</a> <a href="https://github.com/2mal3/somnus/commits?author=programmer-44" title="Code">💻</a> <a href="https://github.com/2mal3/somnus/commits?author=programmer-44" title="Documentation">📖</a> <a href="#ideas-programmer-44" title="Ideas, Planning, & Feedback">🤔</a> <a href="#translation-programmer-44" title="Translation">🌍</a> <a href="#userTesting-programmer-44" title="User Testing">📓</a></td>
     </tr>
   </tbody>
-  <tfoot>
-    <tr>
-      <td align="center" size="13px" colspan="7">
-        <img src="https://raw.githubusercontent.com/all-contributors/all-contributors-cli/1b8533af435da9854653492b1327a23a4dbd0a10/assets/logo-small.svg">
-          <a href="https://all-contributors.js.org/docs/en/bot/usage">Add your contributions</a>
-        </img>
-      </td>
-    </tr>
-  </tfoot>
 </table>
 
 <!-- markdownlint-restore -->
