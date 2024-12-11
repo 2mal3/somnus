@@ -32,6 +32,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
 
     # Stop MC server
     if server_state.mc_server_running:
+        log.debug("Stopping MC server ...")
         async for _ in _try_stop_mc_server(ssh, config):
             yield
     else:
@@ -41,6 +42,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
 
     # Stop host server
     if server_state.host_server_running and shutdown and config.HOST_SERVER_HOST != "localhost":
+        log.debug("Stopping host server ...")
         try:
             await send_sudo_command(ssh, config, "shutdown -h now")
         except Exception as e:
@@ -53,6 +55,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
 
 
 async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config):
+    log.debug("Connecting to screen session ...")
     await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
     yield
 
@@ -69,13 +72,8 @@ async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config):
 
 async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
     server_shutdown_maximum_time = 600
-    log.debug("Connecting to screen session ...")
-
-    await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
-    yield
 
     log.debug("Sending stop command ...")
-
     ssh.sendline("stop")
 
     messages = ["overworld", "nether", "end", "@"]
