@@ -32,7 +32,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
 
     # Stop MC server
     if server_state.mc_server_running:
-        async for _ in _stop_mc_server(ssh, config):
+        async for _ in _try_stop_mc_server(ssh, config):
             yield
     else:
         for _ in range(5):
