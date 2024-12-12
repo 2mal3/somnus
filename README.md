@@ -5,16 +5,16 @@
 ![GitHub License](https://img.shields.io/github/license/2mal3/somnus)
 ![GitHub last commit](https://img.shields.io/github/last-commit/2mal3/somnus)
 
-Discord bot to remotely control and manage multiple Minecraft servers.
+A Discord bot to remotely control and manage multiple Minecraft servers.
 
 ## Features
 
-- start and stop server via discord
-- automatic server shutdown due to inactivity possible
-- switch between different servers on the fly
-- well-thought-out user interface
-- advanced error handling
-- easy to self-host
+- easily start and stop servers via Discord Bot commands  
+- optional automatic server shutdown when server is empty to save resources  
+- switch between servers with different configurations on the fly  
+- well-thought-out user interface  
+- advanced error handling  
+- designed for easy self-hosting
 
 ## Installation
 
