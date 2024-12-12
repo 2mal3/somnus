@@ -20,7 +20,7 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 
 ### 1. Get a Discord Bot
 
-1. create an Discord Bot and note down its API key (for example using [this guide]([How to create a Discord bot and add it to your server](https://www.xda-developers.com/how-to-create-discord-bot/))
+1. create an Discord Bot and note down its API key (for example using [this guide](https://www.xda-developers.com/how-to-create-discord-bot/))
 
 ### 2. Make Host Server Ready (the server that should run the Minecraft server)
 
