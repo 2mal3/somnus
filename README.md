@@ -9,27 +9,46 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 
 ## 📋 Features
 
-- ▶️ easily start and stop servers via Discord Bot commands  
+- ▶️ easily start and stop servers via Discord Bot commands
 - 🔄 switch between servers with different configurations on the fly
-- 📊 optional automatic server shutdown when server is empty to save resources  
-- 🖥️ well-thought-out user interface  
-- 🚨 advanced error handling  
+- 📊 optional automatic server shutdown when server is empty to save resources
+- 🖥️ well-thought-out user interface
+- 🚨 advanced error handling
 - 🏡 designed for easy self-hosting
 
-## 📥 Installation
+## 📥 Setup
 
-### From Source
+### 1. Get a Discord Bot
 
-1. [install Rye](https://rye.astral.sh/guide/installation/)
-2. clone repository
-3. install Python dependencies with `rye sync`
-4. start bot with `python3 -m somnus.__main__` or `rye run dev`!
+1. create an Discord Bot and note down its API key (for example using [this guide]([How to create a Discord bot and add it to your server](https://www.xda-developers.com/how-to-create-discord-bot/))
 
-### With Docker
+### 2. Make Host Server Ready (the server that should run the Minecraft server)
+
+1. get at least one server running Linux
+
+2. make sure that  the [Special Host System Requirements](#-special-host-system-requirements) are installed and enabled
+
+3. if the control programm runs on another server, get the IP-Address of the server
+
+4. if the control programm runs on another server and you want to be able to shutdown the whole host server, get the MAC-Address of the server
+
+5. setup a Minecraft server, with an option to start it via terminal commands
+
+### 3. Install Control Program (also possible on separate Server)
+
+#### With Docker
 
 1. install Docker
-2. pull image
-3. run image with the required environment variables
+2. pull image `ghcr.io/2mal3/somnus:latest`
+3. run the image with the required [Environment Variables](#environment-variables) you got in step 1 and 2
+
+#### From Source
+
+1. [install Rye](https://rye.astral.sh/guide/installation/)
+2. clone the somnus repository onto your server
+3. install Python dependencies with `rye sync`
+4. fill the `.env` file with the required [Environment Variables](#environment-variables) you got in step 1 and 2 (you can use the `.env.example` file for reference)
+5. start Discord bot with `rye run dev`
 
 ## Reference
 
@@ -71,7 +90,9 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 
 ### 🧩 Special Host System Requirements
 
-- `bash`
+- `bash` as default shell
+
+- `ssh`
 
 - `screen`
 
