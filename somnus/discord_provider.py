@@ -407,22 +407,25 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
         "starting", LH.t("status.text.starting", world_name=world_config.current_world)
     )
     await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
+
     i = 0
     try:
         async for _ in start.start_server():
             i += 1
             await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
     except Exception as e:
+        log.error("Could not start server", exc_info=e)
+
+        # We want to give the user clear feedback if HE did something wrong but don't want
+        # to overwhelm him with the whole error message of errors that we caused
         if isinstance(e, utils.UserInputError):
             await ctx.edit_original_response(content=str(e))
-            await _update_bot_presence()
-            await _no_longer_busy()
-            return False
-        log.error("Could not start server", exc_info=e)
-        await ctx.edit_original_response(
-            content=LH.t("commands.start.error", e=_trim_text_for_discord_subtitle(str(e))),
-        )
-        await _ping_user_after_error(ctx)
+        else:
+            await ctx.edit_original_response(
+                content=LH.t("commands.start.error", e=_trim_text_for_discord_subtitle(str(e))),
+            )
+            await _ping_user_after_error(ctx)
+
         await _update_bot_presence()
         await _no_longer_busy()
         return False
