@@ -41,7 +41,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
     yield
 
     # Stop host server
-    if server_state.host_server_running and shutdown and config.HOST_SERVER_HOST != "localhost":
+    if server_state.host_server_running and shutdown and config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"]:
         log.debug("Stopping host server ...")
         try:
             await send_sudo_command(ssh, config, "shutdown -h now")
