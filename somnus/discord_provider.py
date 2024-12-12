@@ -24,6 +24,8 @@ inactvity_seconds = 0  # noqa: PLW0603
 async def on_ready():
     global inactvity_seconds  # noqa: PLW0603
 
+    log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
+
     await bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="Booting"))
     try:
         synced = await tree.sync()
@@ -35,8 +37,10 @@ async def on_ready():
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
+
+    log.debug("Updating bot presence ...")
     await _update_bot_presence()
-    log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    log.debug("Initial bot presence updated!")
 
 
 async def _get_world_choices(interaction: discord.Interaction, current: str):

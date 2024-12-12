@@ -19,7 +19,7 @@ from somnus.logic.utils import (
 async def stop_server(shutdown: bool, config: Config = CONFIG):
     ssh = await ssh_login(config)
     server_state = await get_server_state(config)
-    log.debug(
+    log.info(
         f"Host server running: {server_state.host_server_running} | MC server running: {server_state.mc_server_running}"
     )
 
