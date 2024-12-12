@@ -16,44 +16,41 @@ Discord bot to remotely control and manage multiple Minecraft servers.
 - advanced error handling
 - easy to self-host
 
-## Commands
+## Installation
 
-### Commands for All Users
-
-- `/start`: Starts the Minecraft server (and if necessary the server via Wake On Lan before)
-- `/stop`: Stops the Minecraft server and then shuts down the server (unless debug=“true” is set in the .env)
-- `/change_world`: Creates a drop-down menu in which the world to be switched to can be selected. The next time the server is started (with `/start` or `/restart`), the selected world is started.
-- `/restart`: Restarts the Minecraft server process, not the hole server.
-- `/show_worlds`: Shows all available worlds. (Super users are shown all worlds, including those not currently visible, and are also shown whether the respective world is visible)
-- `/ping`: Replies with "Pong"
-- `/reset_busy`: If the message that the bot is busy is sent by mistake, this command can reset the incorrect busy state.
-- `/help`: Displays all relevant commands from this bot with an explanation.
-
-### Commands for the Super User
-
-- `/add_world`: Creates a new reference to an installed Minecraft installation with the new display_name, start_cmd and the Booleans sudo_start_cmd (whether the start command should be executed with sudo rights) and visible (whether the world should be visible and selectable by normal users)
-- `/edit_world`: Edits and shows a reference to an installed Minecraft installation. The (old) display_name of the world reference has to be specified. Optionally, a new display_name, start_cmd, sudo_start_cmd or visble can be specified. All values updated after the possible change are then returned. This means that even without specifying the optional new parameters, only the currently saved status of the world can be displayed.
-- `/delete_world`: Deletes a reference to an installed Minecraft installation after renewed approval.
-- `/stop_without_shutdown`: Stops the Minecraft server, but doesn't shut it off
-
-## Setup
-
-### Installation
-
-#### From Source
+### From Source
 
 1. [install Rye](https://rye.astral.sh/guide/installation/)
 2. clone repository
 3. install Python dependencies with `rye sync`
 4. start bot with `python3 -m somnus.__main__` or `rye run dev`!
 
-#### With Docker
+### With Docker
 
 1. install Docker
 2. pull image
 3. run image with the required environment variables
 
-### Environment Variables (fill in .env with .env.example)
+## Reference
+
+### Commands
+
+| Command                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                      | Requires Super User |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `/start`                 | Starts the Minecraft server (and if necessary the server via Wake On Lan before)                                                                                                                                                                                                                                                                                                                                                 | no                  |
+| `/stop`                  | Stops the Minecraft server and then shuts down the server                                                                                                                                                                                                                                                                                                                                                                        | no                  |
+| `/change_world`          | Creates a drop-down menu in which the world to be switched to can be selected. The next time the server is started (with `/start` or `/restart`), the selected world is started.                                                                                                                                                                                                                                                 | no                  |
+| `/restart`               | Restarts the Minecraft server process, not the hole server.                                                                                                                                                                                                                                                                                                                                                                      | no                  |
+| `/show_worlds`           | Shows all available worlds. (Super users are shown all worlds, including those not currently visible, and are also shown whether the respective world is visible)                                                                                                                                                                                                                                                                | no                  |
+| `/ping`                  | Replies with "Pong"                                                                                                                                                                                                                                                                                                                                                                                                              | no                  |
+| `/reset_busy`            | If the message that the bot is busy is sent by mistake, this command can reset the incorrect busy state.                                                                                                                                                                                                                                                                                                                         | no                  |
+| `/help`                  | Displays all relevant commands from this bot with an explanation.                                                                                                                                                                                                                                                                                                                                                                | no                  |
+| `/add_world`             | Creates a new reference to an installed Minecraft installation with the new display_name, start_cmd and the Booleans sudo_start_cmd (whether the start command should be executed with sudo rights) and visible (whether the world should be visible and selectable by normal users)                                                                                                                                             | yes                 |
+| `/edit_world`            | Edits and shows a reference to an installed Minecraft installation. The (old) display_name of the world reference has to be specified. Optionally, a new display_name, start_cmd, sudo_start_cmd or visble can be specified. All values updated after the possible change are then returned. This means that even without specifying the optional new parameters, only the currently saved status of the world can be displayed. | yes                 |
+| `/delete_world`          | Deletes a reference to an installed Minecraft installation after renewed approval.                                                                                                                                                                                                                                                                                                                                               | yes                 |
+| `/stop_without_shutdown` | stops the Minecraft server, but doesn't shut it off                                                                                                                                                                                                                                                                                                                                                                              | yes                 |
+
+### Environment Variables
 
 | Env Var                     | Type    | Required | Default | Description                                                                                                           |
 | --------------------------- | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -72,11 +69,20 @@ Discord bot to remotely control and manage multiple Minecraft servers.
 | DISCORD_STATUS_CHANNEL_ID   | integer | no       | none    | discord channel id of the channel in which the automatic inactivity server shutdown message is sent                   |
 | DEBUG                       | boolean | no       | false   | debug messages are displayed and server does not shut down if set to “true”                                           |
 
+### Special Host System Requirements
+
+- `bash`
+
+- `screen`
+
 ## Contributors ✨
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+
 <!-- prettier-ignore-start -->
+
 <!-- markdownlint-disable -->
+
 <table>
   <tbody>
     <tr>
@@ -87,6 +93,7 @@ Discord bot to remotely control and manage multiple Minecraft servers.
 </table>
 
 <!-- markdownlint-restore -->
+
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
