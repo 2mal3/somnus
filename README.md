@@ -7,16 +7,16 @@
 
 A Discord bot to remotely control and manage multiple Minecraft servers.
 
-## Features
+## 📋 Features
 
-- easily start and stop servers via Discord Bot commands  
-- optional automatic server shutdown when server is empty to save resources  
-- switch between servers with different configurations on the fly  
-- well-thought-out user interface  
-- advanced error handling  
-- designed for easy self-hosting
+- ▶️ easily start and stop servers via Discord Bot commands  
+- 🔄 switch between servers with different configurations on the fly
+- 📊 optional automatic server shutdown when server is empty to save resources  
+- 🖥️ well-thought-out user interface  
+- 🚨 advanced error handling  
+- 🏡 designed for easy self-hosting
 
-## Installation
+## 📥 Installation
 
 ### From Source
 
@@ -33,7 +33,7 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 
 ## Reference
 
-### Commands
+### ▶️ Commands
 
 | Command                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                      | Requires Super User |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
@@ -50,7 +50,7 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 | `/delete_world`          | Deletes a reference to an installed Minecraft installation after renewed approval.                                                                                                                                                                                                                                                                                                                                               | yes                 |
 | `/stop_without_shutdown` | stops the Minecraft server, but doesn't shut it off                                                                                                                                                                                                                                                                                                                                                                              | yes                 |
 
-### Environment Variables
+### ⚙️ Environment Variables
 
 | Env Var                     | Type    | Required | Default | Description                                                                                                           |
 | --------------------------- | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -69,13 +69,13 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 | DISCORD_STATUS_CHANNEL_ID   | integer | no       | none    | discord channel id of the channel in which the automatic inactivity server shutdown message is sent                   |
 | DEBUG                       | boolean | no       | false   | debug messages are displayed and server does not shut down if set to “true”                                           |
 
-### Special Host System Requirements
+### 🧩 Special Host System Requirements
 
 - `bash`
 
 - `screen`
 
-## Contributors ✨
+## ✨ Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 
