@@ -99,22 +99,19 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 ## ✨ Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-
 <!-- prettier-ignore-start -->
-
 <!-- markdownlint-disable -->
-
 <table>
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/2mal3"><img src="https://avatars.githubusercontent.com/u/56305732?v=4?s=100" width="100px;" alt="2mal3"/><br /><sub><b>2mal3</b></sub></a><br /><a href="https://github.com/2mal3/somnus/commits?author=2mal3" title="Code">💻</a> <a href="https://github.com/2mal3/somnus/commits?author=2mal3" title="Documentation">📖</a> <a href="#ideas-2mal3" title="Ideas, Planning, & Feedback">🤔</a> <a href="#platform-2mal3" title="Packaging/porting to new platform">📦</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/programmer-44"><img src="https://avatars.githubusercontent.com/u/129310925?v=4?s=100" width="100px;" alt="E44"/><br /><sub><b>E44</b></sub></a><br /><a href="https://github.com/2mal3/somnus/issues?q=author%3Aprogrammer-44" title="Bug reports">🐛</a> <a href="https://github.com/2mal3/somnus/commits?author=programmer-44" title="Code">💻</a> <a href="https://github.com/2mal3/somnus/commits?author=programmer-44" title="Documentation">📖</a> <a href="#ideas-programmer-44" title="Ideas, Planning, & Feedback">🤔</a> <a href="#translation-programmer-44" title="Translation">🌍</a> <a href="#userTesting-programmer-44" title="User Testing">📓</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/MCsharerGIT"><img src="https://avatars.githubusercontent.com/u/98043315?v=4?s=100" width="100px;" alt="MCsharerGIT"/><br /><sub><b>MCsharerGIT</b></sub></a><br /><a href="https://github.com/2mal3/somnus/issues?q=author%3AMCsharerGIT" title="Bug reports">🐛</a> <a href="#ideas-MCsharerGIT" title="Ideas, Planning, & Feedback">🤔</a> <a href="#infra-MCsharerGIT" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#userTesting-MCsharerGIT" title="User Testing">📓</a></td>
     </tr>
   </tbody>
 </table>
 
 <!-- markdownlint-restore -->
-
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->

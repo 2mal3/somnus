@@ -35,6 +35,18 @@
         "translation",
         "userTesting"
       ]
+    },
+    {
+      "login": "MCsharerGIT",
+      "name": "MCsharerGIT",
+      "avatar_url": "https://avatars.githubusercontent.com/u/98043315?v=4",
+      "profile": "https://github.com/MCsharerGIT",
+      "contributions": [
+        "bug",
+        "ideas",
+        "infra",
+        "userTesting"
+      ]
     }
   ],
   "contributorsPerLine": 7,
