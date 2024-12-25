@@ -2,7 +2,6 @@
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=flat&logo=python&logoColor=ffdd54)
 [![CodeQL](https://github.com/2mal3/somnus/actions/workflows/codeql.yml/badge.svg)](https://github.com/2mal3/somnus/actions/workflows/codeql.yml)
-![GitHub License](https://img.shields.io/github/license/2mal3/somnus)
 ![GitHub last commit](https://img.shields.io/github/last-commit/2mal3/somnus)
 
 A Discord bot to remotely control and manage multiple Minecraft servers.
@@ -26,7 +25,7 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 
 1. get at least one server running Linux
 
-2. make sure that  the [Special Host System Requirements](#-special-host-system-requirements) are installed and enabled
+2. make sure that the [Special Host System Requirements](#-special-host-system-requirements) are installed and enabled
 
 3. if the control programm runs on another server, get the IP-Address of the server
 
@@ -116,6 +115,6 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
-## License
+---
 
-[GPL-3.0](/LICENSE.txt)
+License - [LGPL-3.0](/LICENSE.txt)
