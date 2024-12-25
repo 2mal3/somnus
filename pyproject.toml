@@ -1,6 +1,6 @@
 [project]
 name = "somnus"
-version = "0.1.0"
+version = "1.0.0"
 description = "Discord bot to remotely control and manage multiple Minecraft servers"
 authors = [
     { name = "2mal3", email = "56305732+2mal3@users.noreply.github.com" },
