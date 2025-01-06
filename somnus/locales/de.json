@@ -27,8 +27,7 @@
                     "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /stop um den Server zu stoppen.",
                     "canceled": "Erfolgreich abgebrochen!",
                     "question_singular": "Es ist noch ein Spieler online: {player_name}\n**Möchtest du den Server trotzdem stoppen?**",
-                    "question_plural": "Es sind noch {player_count} Spieler online:{player_names}\n**Möchtest du den Server trotzdem stoppen?**",
-                    "player_name_line": "`{player_name}`"
+                    "question_plural": "Es sind noch {player_count} Spieler online:{player_names}\n**Möchtest du den Server trotzdem stoppen?**"
                 }
             } 
         },
@@ -93,7 +92,17 @@
             "cancel": "Abrruch",
             "error": {
                 "general": "Der Bot ist aktuell nicht beschäftigt. Fehler können nicht behoben werden.",
-                "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /reset_busy um Busy-State  zurückzusetzen."
+                "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /reset_busy um Busy-State zurückzusetzen."
+            }
+        },
+        "get_players": {
+            "description": "Zeigt alle Spieler an, die aktuell auf dem Server online sind.",
+            "response_plural": "Aktuell sind folgende {player_count} Spieler auf dem Server:\n{player_names}",
+            "response_singular": "Aktuell ist folgender Spieler auf dem Server: {player_name}",
+            "error": {
+                "no_one_online": "Aktuell sind keine Spieler auf dem Server!",
+                "disabled": "Diese Funktion ist deaktiviert!",
+                "offline": "Da der Server offline ist, ist niemand online!"
             }
         },
         "help": {
@@ -136,6 +145,9 @@
         }
     },
     "formatting": {
+        "get_players": {
+            "player_name_line": "`{player_name}`"
+        },
         "show_worlds": {
             "title": "## Liste aller verfügbaren Welten \n```", 
             "current_world": "\n✅ - ",

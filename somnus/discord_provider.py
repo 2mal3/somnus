@@ -317,7 +317,7 @@ async def stop_without_shutdown_server_command(ctx: discord.Interaction):
 @tree.command(name="help", description=LH.t("commands.help.description"))
 async def help_command(ctx: discord.Interaction):
     sudo = await _is_super_user(ctx, False)
-    user_commands = ["start", "stop", "change_world", "restart", "show_worlds", "ping", "reset_busy", "help"]
+    user_commands = ["start", "stop", "change_world", "restart", "show_worlds", "ping", "reset_busy", "get_players", "help"]
     embed = discord.Embed(title=LH.t("commands.help.title"), color=discord.Color.blue())
     if sudo:
         embed.add_field(
@@ -395,6 +395,36 @@ async def reset_busy_command(ctx: discord.Interaction):
 
     await ctx.response.send_message(LH.t("commands.reset_busy.verification"), view=view)
 
+@tree.command(name="get_players", description=LH.t("commands.get_players.description"))
+async def get_players_command(ctx: discord.Interaction):
+    if CONFIG.GET_PLAYERS_COMMAND_ENABLED:
+        mc_status = await utils.get_mcstatus(CONFIG)
+        if mc_status is not None:
+            if mc_status.players.online == 0:
+                content = LH.t("commands.get_players.error.no_one_online")
+            else:
+                if mc_status.players.sample:
+                    if mc_status.players.online == 1:
+                        player_name = LH.t(
+                    "formatting.get_players.player_name_line", player_name=mc_status.players.sample[0].name
+                )
+                        content = LH.t("commands.get_players.response_singular", player_name=player_name)
+                    else:
+                        player_names= ""
+                        for player in mc_status.players.sample:
+                            player_names += "\n" + LH.t("formatting.get_players.player_name_line", player_name=player.name)
+
+                        content = LH.t("commands.get_players.response_singular", player_count=mc_status.players.online,
+                                player_names=player_names)
+
+                else:
+                    content = LH.t("commands.get_players.error.disabled")
+        else:
+            content = LH.t("commands.get_players.error.offline")
+    else:
+        content = LH.t("commands.get_players.error.disabled")
+    
+    await ctx.response.send_message(content)
 
 async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message: str) -> bool:
     global inactvity_seconds  # noqa: PLW0603
@@ -554,17 +584,21 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
     view.add_item(confirm_button)
     view.add_item(cancel_button)
 
+    
     if mcstatus.players.online == 1:
-        player_name = LH.t(
-            "commands.stop.error.players_online.player_name_line", player_name=mcstatus.players.sample[0].name
-        )
+        player_name = ""
+        if mcstatus.players.sample:
+            player_name = LH.t(
+                "formatting.get_players.player_name_line", player_name=mcstatus.players.sample[0].name
+            )
         content = (
             message + "\n\n" + LH.t("commands.stop.error.players_online.question_singular", player_name=player_name)
         )
     else:
         player_names = ""
-        for player in mcstatus.players.sample:
-            player_names += "\n" + LH.t("commands.stop.error.players_online.player_name_line", player_name=player.name)
+        if mcstatus.players.sample:
+            for player in mcstatus.players.sample:
+                player_names += "\n" + LH.t("formatting.get_players.player_name_line", player_name=player.name)
 
         content = (
             message

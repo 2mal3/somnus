@@ -11,10 +11,11 @@ class Config(BaseModel):
     HOST_SERVER_USER: str
     HOST_SERVER_SSH_PORT: int = 22
     HOST_SERVER_PASSWORD: str
-    HOST_SERVER_MAC: str
+    HOST_SERVER_MAC: str = ""
     MC_SERVER_START_CMD: str
     MC_SERVER_START_CMD_SUDO: bool = False
     MC_SERVER_ADDRESS: str
+    GET_PLAYERS_COMMAND_ENABLED: bool = True
     INACTIVITY_SHUTDOWN_MINUTES: int = 0
     DISCORD_STATUS_CHANNEL_ID: int | None = None
     LANGUAGE: str = "en"
