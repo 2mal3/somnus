@@ -47,7 +47,7 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 2. clone the somnus repository onto your server
 3. install Python dependencies with `rye sync`
 4. fill the `.env` file with the required [Environment Variables](#environment-variables) you got in step 1 and 2 (you can use the `.env.example` file for reference)
-5. start Discord bot with `rye run dev`
+5. start Discord bot with `rye run prod`
 
 ## Reference
 

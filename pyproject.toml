@@ -30,6 +30,7 @@ ignore = []
 
 [tool.rye.scripts]
 dev = "python3 -m somnus.__main__"
+prod = "python3 -m somnus.__main__"
 
 [build-system]
 requires = ["hatchling"]
