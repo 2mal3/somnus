@@ -27,8 +27,7 @@
                     "wrong_user": "You cannot use the menu because it was requested by someone else. Use /stop to stop the server.",
                     "canceled": "Canceled succesfully!",
                     "question_singular": "There is still one player online: {player_name}\n**Would you still like to stop the server?**",
-                    "question_plural": "There are still {player_count} players online:{player_names}\n**Would you still like to stop the server?**",
-                    "player_name_line": "`{player_name}`"
+                    "question_plural": "There are still {player_count} players online:{player_names}\n**Would you still like to stop the server?**"
                 }
             } 
         },
@@ -94,6 +93,16 @@
                 "wrong_user": "You cannot use the menu because it was requested by someone else. Use /reset_busy to reset the busy state."
             }
         },
+        "get_players": {
+            "description": "Shows all players who are online on the server.",
+            "response_plural": "There are currently {player_count} players on the server:\n{player_names}",
+            "response_singular": "There is currently one player on the server: {player_name}",
+            "error": {
+                "no_one_online": "There is currently no one on the server!",
+                "disabled": "This feature is disabled!",
+                "offline": "The server is offline, so there is no one is on the server!"
+            }
+        },
         "help": {
             "description": "Displays all relevant commands from this bot with an explanation.",
             "title": "Relevant Commands",
@@ -134,6 +143,9 @@
         }
     },
     "formatting": {
+        "get_players": {
+            "player_name_line": "`{player_name}`"
+        },
         "show_worlds": {
             "title": "## List of all available worlds \n```", 
             "current_world": "\n✅ - ",

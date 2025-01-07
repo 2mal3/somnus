@@ -78,9 +78,10 @@ async def _start_host_server(config: Config):
     wol_speed = 5
     ping_speed = 15
 
-    for _ in range(5):
-        send_magic_packet(config.HOST_SERVER_MAC)
-        await asyncio.sleep(wol_speed)
+    if config.HOST_SERVER_MAC != "":
+        for _ in range(5):
+            send_magic_packet(config.HOST_SERVER_MAC)
+            await asyncio.sleep(wol_speed)
     yield
 
     for i in range(ping_speed):
