@@ -1,6 +1,7 @@
 import asyncio
 
 from mcstatus import JavaServer
+from mcstatus.status_response import JavaStatusResponse
 from pexpect import pxssh
 from ping3 import ping
 from pydantic import BaseModel
@@ -19,7 +20,7 @@ class UserInputError(Exception):
     pass
 
 
-async def get_mcstatus(config: Config) -> JavaServer.status:
+async def get_mcstatus(config: Config) -> JavaStatusResponse | None:
     try:
         server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
         return server.status()
@@ -61,13 +62,16 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
     return ssh
 
 
-def _screen_is_installed(ssh: pxssh.pxssh) -> ServerState:
+def _screen_is_installed(ssh: pxssh.pxssh) -> bool:
     ssh.sendline("command -v screen")
     ssh.prompt()
     ssh.sendline("echo $?")
     ssh.prompt()
 
-    exit_status = int(ssh.before.splitlines()[-2])
+    before_output = ssh.before
+    if before_output is None:
+        return False
+    exit_status = int(before_output.splitlines()[-2])
     return exit_status == 0
 
 

@@ -1,12 +1,14 @@
-import discord
-from discord import app_commands, Status
-from discord.ext import tasks
-from typing import Union
 import asyncio
+from typing import Union
+
+import discord
+from discord import Status, app_commands
+from discord.ext import tasks
+from mcstatus.status_response import JavaStatusResponse
 
 from somnus.environment import CONFIG, Config
-from somnus.logger import log
 from somnus.language_handler import LH
+from somnus.logger import log
 from somnus.logic import start, stop, utils, world_selector
 
 LH.language_setup(CONFIG.LANGUAGE)
@@ -23,6 +25,10 @@ inactvity_seconds = 0  # noqa: PLW0603
 @bot.event
 async def on_ready():
     global inactvity_seconds  # noqa: PLW0603
+
+    if not bot.user:
+        log.fatal("Bot user not found!")
+        raise RuntimeError("Bot user not found!")
 
     log.info(f"Logged in as {bot.user} (ID: {bot.user.id})")
 
@@ -554,7 +560,7 @@ async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
             await ctx.channel.send(LH.t("commands.restart.finished_msg"))  # type: ignore
 
 
-async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: utils.JavaServer.status):
+async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse):
     await _no_longer_busy()
     result_future = asyncio.Future()
 
