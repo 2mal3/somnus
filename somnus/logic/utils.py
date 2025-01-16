@@ -37,8 +37,9 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
     """
 
     ssh = pxssh.pxssh()
+    attempts = 10
+    seconds_between_attempts = 5
 
-    attempts = 3
     for tries in range(attempts):
         try:
             ssh.login(
@@ -54,7 +55,7 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
 
         if tries == (attempts - 1):
             raise TimeoutError("Could not establish SSH connection to host server")
-        await asyncio.sleep(5)
+        await asyncio.sleep(seconds_between_attempts)
 
     if not _screen_is_installed(ssh):
         log.fatal("Screen is not installed on host server")
