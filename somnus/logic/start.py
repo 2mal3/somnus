@@ -75,13 +75,14 @@ async def _try_start_mc_server_with_ssh(config: Config):
 
 
 async def _start_host_server(config: Config):
-    wol_speed = 5
+    wol_send_delay_seconds = 5
+    wol_packed_amount = 10
     ping_speed = 15
 
     if config.HOST_SERVER_MAC != "":
-        for _ in range(5):
+        for _ in range(wol_packed_amount):
             send_magic_packet(config.HOST_SERVER_MAC)
-            await asyncio.sleep(wol_speed)
+            await asyncio.sleep(wol_send_delay_seconds)
     yield
 
     for i in range(ping_speed):
