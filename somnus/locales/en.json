@@ -10,7 +10,8 @@
             "finished_msg": "Server started!",
             "error": {
                 "general": "Could not start server\n-# ERROR: {e}",
-                "already_running": "Server is already running."
+                "already_running": "Server is already running.",
+                "wol_failed": "The server could not be turned on. Wake-On-Lan packet is being sent again!"
             }
         },
         "stop": {

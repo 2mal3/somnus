@@ -10,7 +10,8 @@
             "finished_msg": "Server gestartet!",
             "error": {
                 "general": "Server konnte nicht gestartet werden\n-# ERROR: {e}",
-                "already_running": "Server läuft bereits."
+                "already_running": "Server läuft bereits.",
+                "wol_failed": "Der Server konnte nicht hochgefahren werden. Wake-On-Lan-Paket wird erneut gesendet!"
             }
         },
         "stop": {

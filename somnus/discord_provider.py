@@ -460,8 +460,12 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
 
     i = 0
     try:
-        async for _ in start.start_server():
-            i += 1
+        async for wol_failed in start.start_server():
+            if wol_failed:
+                original_message = await ctx.original_response()
+                await original_message.reply(LH.t("commands.start.error.wol_failed"))
+            else:
+                i += 1
             await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
     except Exception as e:
         log.error("Could not start server", exc_info=e)
@@ -472,7 +476,7 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
             await ctx.edit_original_response(content=str(e))
         else:
             await ctx.edit_original_response(
-                content=LH.t("commands.start.error", e=_trim_text_for_discord_subtitle(str(e))),
+                content=LH.t("commands.start.error.general", e=_trim_text_for_discord_subtitle(str(e))),
             )
             await _ping_user_after_error(ctx)
 
