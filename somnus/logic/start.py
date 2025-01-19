@@ -25,7 +25,7 @@ async def start_server(config: Config = CONFIG):
 
     if server_state.host_server_running and server_state.mc_server_running:
         raise UserInputError(LH.t("commands.start.error.already_running"))
-    yield True
+    yield
 
     # Start host server
     if not server_state.host_server_running:
@@ -82,14 +82,14 @@ async def _start_host_server(config: Config):
     yield
 
     for i in range(ping_speed):
-        await asyncio.sleep((ping_timeout*2) // ping_speed)
+        await asyncio.sleep((ping_timeout * 2) // ping_speed)
 
         if (await get_server_state(config)).host_server_running:
             for j in range(i, ping_speed):
                 if j % 4:
                     yield
             return
-        if i == ping_speed//2:
+        if i == ping_speed // 2:
             # an discord_provider.py geben, dass Server ggf. nicht gestartet wurde und Start erneut versucht wird
             yield True
             await _send_wol_packet(config)
@@ -99,6 +99,7 @@ async def _start_host_server(config: Config):
         log.warning("Could not connect to host server, trying again...")
 
     raise TimeoutError("Could not start host server")
+
 
 async def _send_wol_packet(config: Config):
     wol_send_delay_seconds = 5
