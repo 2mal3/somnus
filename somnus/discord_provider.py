@@ -464,6 +464,7 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
             if wol_failed:
                 original_message = await ctx.original_response()
                 await original_message.reply(LH.t("commands.start.error.wol_failed"))
+                i = 2
             else:
                 i += 1
             await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
