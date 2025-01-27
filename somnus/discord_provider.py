@@ -49,11 +49,6 @@ async def on_ready():
     log.debug("Initial bot presence updated!")
 
 
-async def _get_world_choices(interaction: discord.Interaction, current: str):
-    data = await world_selector.get_world_selector_config()
-    return [app_commands.Choice(name=world.display_name, value=world.display_name) for world in data.worlds]
-
-
 @tree.command(name="ping", description=LH.t("commands.ping.description"))
 async def ping_command(ctx: discord.Interaction):
     await ctx.response.send_message(LH.t("commands.ping.response"))  # type: ignore
@@ -144,7 +139,9 @@ async def edit_world_command(  # noqa: PLR0913
         log.warning(f"Couldn't edit world '{editing_world_name}' | {e}", exc_info=e)
 
 
-edit_world_command.autocomplete("editing_world_name")(_get_world_choices)
+@edit_world_command.autocomplete("editing_world_name")
+async def _edit_world_command_autocomplete(interaction: discord.Interaction, current: str):
+    return await _get_world_choices()
 
 
 @tree.command(name="delete_world", description=LH.t("commands.delete_world.description"))
@@ -220,7 +217,14 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
     )
 
 
-delete_world_command.autocomplete("display_name")(_get_world_choices)
+@delete_world_command.autocomplete("display_name")
+async def _delete_world_command_autocomplete(interaction: discord.Interaction, current: str):
+    return await _get_world_choices()
+
+
+async def _get_world_choices() -> list[app_commands.Choice]:
+    data = await world_selector.get_world_selector_config()
+    return [app_commands.Choice(name=world.display_name, value=world.display_name) for world in data.worlds]
 
 
 @tree.command(name="change_world", description=LH.t("commands.change_world.description"))
