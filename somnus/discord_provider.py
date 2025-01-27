@@ -190,7 +190,7 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
 
             used = True
     except Exception as e:
-        print(e)
+        log.warning("Could not delete world", exc_info=e)
 
     async def cancel_callback(interaction: discord.Interaction):
         nonlocal used
@@ -280,7 +280,7 @@ async def show_worlds_command(ctx: discord.Interaction):
     sudo = await _is_super_user(ctx, False)
     world_selector_config = await world_selector.get_world_selector_config()
 
-    print("current:", world_selector_config.current_world, "selected:", world_selector_config.new_selected_world)
+    log.info("current:", world_selector_config.current_world, "selected:", world_selector_config.new_selected_world)
 
     max_name_length = len(world_selector_config.worlds[0].display_name)
     for world in world_selector_config.worlds:
