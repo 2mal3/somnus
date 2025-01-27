@@ -280,8 +280,6 @@ async def show_worlds_command(ctx: discord.Interaction):
     sudo = await _is_super_user(ctx, False)
     world_selector_config = await world_selector.get_world_selector_config()
 
-    log.info("current:", world_selector_config.current_world, "selected:", world_selector_config.new_selected_world)
-
     max_name_length = len(world_selector_config.worlds[0].display_name)
     for world in world_selector_config.worlds:
         if (world.visible or sudo) and len(world.display_name) > max_name_length:
