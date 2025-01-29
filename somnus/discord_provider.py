@@ -146,58 +146,43 @@ async def _edit_world_command_autocomplete(interaction: discord.Interaction, cur
 
 @tree.command(name="delete_world", description=LH.t("commands.delete_world.description"))
 async def delete_world_command(ctx: discord.Interaction, display_name: str):
-    try:
-        # only allow super user to delete
-        if not await _is_super_user(ctx):
-            return
-        world_selector_config = await world_selector.get_world_selector_config()
+    if not await _is_super_user(ctx):
+        return
 
-        # prevent deletion of the current world
-        if display_name in {world_selector_config.current_world, world_selector_config.new_selected_world}:
-            await ctx.response.send_message(LH.t("commands.delete_world.error.current_world"), ephemeral=True)
-            return
+    world_selector_config = await world_selector.get_world_selector_config()
 
-        # prevent deletion of non existing worlds
+    # prevent deletion of the current world
+    if display_name in {world_selector_config.current_world, world_selector_config.new_selected_world}:
+        await ctx.response.send_message(LH.t("commands.delete_world.error.current_world"), ephemeral=True)
+        return
+
+    # prevent deletion of non existing worlds
+    if display_name not in [world.display_name for world in world_selector_config.worlds]:
+        await ctx.response.send_message(
+            LH.t("commands.delete_world.error.not_found", display_name=display_name), ephemeral=True
+        )
+        return
+
+    world = await world_selector.get_world_by_name(display_name, world_selector_config)
+
+    confirm_button = discord.ui.Button(label="Delete", style=discord.ButtonStyle.red)
+    cancel_button = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.green)
+
+    async def confirm_callback(interaction: discord.Interaction):
         try:
-            world = await world_selector.get_world_by_name(display_name, world_selector_config)
-        except utils.UserInputError:
-            await ctx.response.send_message(
-                LH.t("commands.delete_world.error.not_found", display_name=display_name), ephemeral=True
+            await world_selector.try_delete_world(display_name)
+            await ctx.edit_original_response(
+                view=None, content=LH.t("commands.delete_world.success", display_name=display_name)
+            )
+        except Exception as e:
+            log.error(f"Could not delete world '{display_name}'", exc_info=e)
+            await ctx.edit_original_response(
+                view=None, content=LH.t("commands.delete_world.error", display_name=display_name, e=e)
             )
             return
 
-        confirm_button = discord.ui.Button(label="Delete", style=discord.ButtonStyle.red)
-        cancel_button = discord.ui.Button(label="Cancel", style=discord.ButtonStyle.green)
-        used = False
-
-        async def confirm_callback(interaction: discord.Interaction):
-            nonlocal used
-
-            if used:
-                await interaction.response.send_message(
-                    LH.t("commands.delete_world.error.button_inactive"), ephemeral=True
-                )
-                return
-
-            try:
-                await world_selector.try_delete_world(display_name)
-            except Exception:
-                await interaction.response.send_message(LH.t("commands.delete_world.success"), ephemeral=True)
-                return
-
-            used = True
-    except Exception as e:
-        log.warning("Could not delete world", exc_info=e)
-
     async def cancel_callback(interaction: discord.Interaction):
-        nonlocal used
-
-        if used:
-            await interaction.response.send_message(LH.t("commands.delete_world.error.button_inactive"), ephemeral=True)
-            return
-
-        await interaction.response.send_message(LH.t("commands.delete_world.canceled"), ephemeral=True)
-        used = True
+        await ctx.edit_original_response(view=None, content=LH.t("commands.delete_world.canceled"))
 
     confirm_button.callback = confirm_callback
     cancel_button.callback = cancel_callback
