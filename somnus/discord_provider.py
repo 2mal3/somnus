@@ -56,22 +56,45 @@ async def ping_command(ctx: discord.Interaction):
 
 @tree.command(name="start", description=LH.t("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction):
+    global inactvity_seconds, is_busy  # noqa: PLW0603
+
+    if is_busy:
+        log.warning("User tried to start server while already busy")
+        await ctx.response.send_message(LH.t("commands.start.error.already_running"))
+
     start_steps = 20
     message = LH.t("commands.start.msg_above_process_bar")
 
     log.info("Received start command ...")
     await ctx.response.send_message(_generate_progress_bar(1, start_steps, message))  # type: ignore
 
-    if await _start_minecraft_server(ctx=ctx, steps=start_steps, message=message):
+    is_busy = True
+    try:
+        await _try_start_minecraft_server(ctx=ctx, steps=start_steps, message=message)
         await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
         await ctx.channel.send(LH.t("commands.start.finished_msg"))  # type: ignore
+        log.info("Server started!")
+        inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+        update_players_online_status.start()
+        log.info("Status Updater started!")
+
+    # The user has done something wrong
+    except utils.UserInputError as e:
+        await ctx.edit_original_response(content=str(e))
+
+    # Something went wrong with our code
+    except Exception as e:
+        log.error("Could not start server", exc_info=e)
+        await ctx.edit_original_response(
+            content=LH.t("commands.start.error.general", e=_trim_text_for_discord_subtitle(str(e))),
+        )
+        await _ping_user_after_error(ctx)
+
+    is_busy = False
+    await _update_bot_presence()
 
 
-async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message: str) -> bool:
-    global inactvity_seconds  # noqa: PLW0603
-
-    if not await _check_if_busy(ctx):
-        return False
+async def _try_start_minecraft_server(ctx: discord.Interaction, steps: int, message: str):
     world_config = await world_selector.get_world_selector_config()
 
     activity = await _get_discord_activity(
@@ -80,38 +103,14 @@ async def _start_minecraft_server(ctx: discord.Interaction, steps: int, message:
     await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
 
     i = 0
-    try:
-        async for wol_failed in start.start_server():
-            if wol_failed:
-                original_message = await ctx.original_response()
-                await original_message.reply(LH.t("commands.start.error.wol_failed"))
-                i = 2
-            else:
-                i += 1
-            await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
-    except Exception as e:
-        log.error("Could not start server", exc_info=e)
-
-        # We want to give the user clear feedback if HE did something wrong but don't want
-        # to overwhelm him with the whole error message of errors that we caused
-        if isinstance(e, utils.UserInputError):
-            await ctx.edit_original_response(content=str(e))
+    async for wol_failed in start.start_server():
+        if wol_failed:
+            original_message = await ctx.original_response()
+            await original_message.reply(LH.t("commands.start.error.wol_failed"))
+            i = 2
         else:
-            await ctx.edit_original_response(
-                content=LH.t("commands.start.error.general", e=_trim_text_for_discord_subtitle(str(e))),
-            )
-            await _ping_user_after_error(ctx)
-
-        await _update_bot_presence()
-        await _no_longer_busy()
-        return False
-
-    log.info("Server started!")
-    inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-    update_players_online_status.start()
-    log.info("Status Updater started!")
-    await _no_longer_busy()
-    return True
+            i += 1
+        await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
 
 
 def _generate_progress_bar(value: int, max_value: int, message: str) -> str:
@@ -541,7 +540,7 @@ async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
         shutdown=False,
     ):
         await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, message))
-        if await _start_minecraft_server(
+        if await _try_start_minecraft_server(
             ctx=ctx, steps=start_steps, message=message + LH.t("commands.restart.above_process_bar.starting_addon")
         ):
             await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
