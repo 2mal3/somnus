@@ -5,7 +5,7 @@ from somnus.environment import CONFIG
 
 _LEVEL = logging.DEBUG if CONFIG.DEBUG else logging.INFO
 
-log = logging.getLogger("mc-server-control")
+log = logging.getLogger("somnus")
 
 _formatter = logging.Formatter(
     "[%(asctime)s] [%(module)s/%(process)d/%(levelname)s]: %(message)s", datefmt="%d-%m-%y %H:%M:%S"
