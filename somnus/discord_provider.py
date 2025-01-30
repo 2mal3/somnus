@@ -233,27 +233,23 @@ async def change_world_command(ctx: discord.Interaction):
     if index:
         select.options[index].default = True
 
-    async def select_callback(select_interaction: discord.Interaction):
-        if ctx.user.id != select_interaction.user.id:
-            await select_interaction.response.send_message(
-                LH.t("commands.change_world.wrong_user_error"),
-                ephemeral=True,
-            )
+    async def select_callback(interaction: discord.Interaction):
+        if ctx.user.id != interaction.user.id:
+            await ctx.edit_original_response(content=LH.t("commands.change_world.wrong_user_error"), view=None)
             return
 
         selected_value = select.values[0]
-        select.disabled = True
-        await select_interaction.message.edit(view=select_view)
         current_world_is_selected = await world_selector.select_new_world(selected_value)
-        await select_interaction.response.send_message(
-            LH.t("commands.change_world.success_offline", selected_value=selected_value)
+
+        await ctx.edit_original_response(
+            content=LH.t("commands.change_world.success_offline", selected_value=selected_value), view=None
         )
 
         if not (await utils.get_server_state(CONFIG)).mc_server_running:
             await world_selector.change_world()
             await _update_bot_presence()
         elif not current_world_is_selected:
-            await _change_world_now_message(select_interaction, selected_value)
+            await _change_world_now_message(interaction, selected_value)
 
     select.callback = select_callback
 
