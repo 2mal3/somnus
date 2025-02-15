@@ -129,7 +129,7 @@
   },
   "status": {
     "text": {
-      "online": "'{world_name}' ({players_online}/{max_players} Players online)",
+      "online": "'{world_name}' ({players_online}/{max_players} online)",
       "starting": "'{world_name}' soon",
       "stopping": "of '{world_name}' was stopped",
       "offline": "to /start to play '{world_name}'",
