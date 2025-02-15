@@ -1,171 +1,171 @@
 {
-    "commands": {
-        "ping": {
-            "description": "Antwortet mit Pong!",
-            "response": "Pong!"
-        },
-        "start": {
-            "description": "Startet den Server.",
-            "msg_above_process_bar": "Server startet ...",
-            "finished_msg": "Server gestartet!",
-            "error": {
-                "general": "Server konnte nicht gestartet werden\n-# ERROR: {e}",
-                "already_running": "Server läuft bereits.",
-                "wol_failed": "Der Server konnte nicht hochgefahren werden. Wake-On-Lan-Paket wird erneut gesendet!"
-            }
-        },
-        "stop": {
-            "description": "Stoppt den Server.",
-            "msg_above_process_bar": "Server stoppt ...",
-            "finished_msg": "Server gestoppt!",
-            "error": {
-                "general": "Sever konnte nicht gestoppt werden\n-# ERROR: {e}",
-                "already_stopped": "Server bereits gestoppt.",
-                "mc_already_stopped": "Minecraft-Server bereits gestoppt.",
-                "players_online": {
-                    "stop_anyway": "Stoppe trotzdem",
-                    "cancel": "Abbruch",
-                    "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /stop um den Server zu stoppen.",
-                    "canceled": "Erfolgreich abgebrochen!",
-                    "question_singular": "Es ist noch ein Spieler online: {player_name}\n**Möchtest du den Server trotzdem stoppen?**",
-                    "question_plural": "Es sind noch {player_count} Spieler online:{player_names}\n**Möchtest du den Server trotzdem stoppen?**"
-                }
-            } 
-        },
-        "add_world": {
-            "description": "SUPER-USER-ONLY: Erstellt eine neue Referenz auf eine bereits installierte Minecraft-Installation.",
-            "success": "Die Welt '{display_name}' wurde erfolgreich erstellt!",
-            "error": "Die Welt '{display_name}' konnte nicht erstellt werden! | {e}"
-        },
-        "edit_world": {
-            "description": "SUPER-USER-ONLY: Ändert die Referenz auf eine bereits installierte Minecraft-Installation.",
-            "success": "Die Welt '{editing_world_name}' wurde erfolgreich verändert! Die neuen Werte sind:{values}",
-            "edit_error": "Die Welt '{editing_world_name}' konnte nicht verändert werden | {e}"
-        },
-        "delete_world": {
-            "description": "SUPER-USER-ONLY: Löscht eine Referenz auf eine bereits installierte Minecraft-Installation.",
-            "success": "Die Referenz auf die Welt '{display_name}' wurde erfolgreich gelöscht!",
-            "canceled": "Löschprozess abgebrochen",
-            "verification": "Bist du dir sicher, dass du die Referenz auf die Welt '{display_name}' läschen willst?{values}",
-            "error": {
-                "current_world": "Du kannst die aktuell ausgewählte Welt nicht löschen. Wechsle die Welt mit /change_world und starte den Server neu",
-                "not_found": "Welt '{display_name}' wurde nicht gefunden.",
-                "button_inactive": "Button inaktiv, nutze /delete_world erneut."
-            }   
-        },
-        "change_world": {
-            "description": "Ändert die aktuelle Welt in eine andere verfügbare Welt.",
-            "placeholder": "Wähle die Welt aus, die du spielen möchtest",
-            "response": "Wähle die Welt aus, die du spielen möchtest:",
-            "success_offline": "'{selected_value}' wurde erfolgreich ausgewählt!",
-            "success_online": "'{selected_value}' wurde erfolgreich ausgewählt und wird beim nächsten Start gestartet.\nMöchtest du jetzt neustarten?",
-            "error": {
-                "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /change_world um die Welt zu ändern.",
-                "general": "Die Welt konnte nicht zu '{selected_value}' gewechselt werden. | {e}"
-            },
-            "restart_now": "Jetzt Neustarten",
-            "cancel": "Abbruch"
-        },
-        "show_worlds": {
-            "description": "Zeigt alle verfügbaren Welten an."
-        },
-        "stop_without_shutdown": {
-            "description": "SUPER-USER-ONLY: Stoppt den Minecraft-Server, allerdings nicht den Host-Server.",
-            "msg_above_process_bar": "Server stoppt ohne herunterzufahren ...",
-            "finished_msg": "Server ohne herunterfahren gestoppt!"
-        },
-        "restart": {
-            "description": "Startet den Minecraft-Server neu, nicht den gesamten Server.",
-            "error": "Der Server ist gestoppt. Nutze /start um ihn zu starten!",
-            "finished_msg": "Server wurde neugestartet!",
-            "above_process_bar": {
-                "msg": "**Server neustarten** ... ",
-                "starting_addon": "Startet",
-                "stopping_addon": "Stoppt"
-            }
-        },
-        "reset_busy": {
-            "description": "Falls der Bot irrtümlich beschäftigt ist, kann dieser Befehl den falschen Busy-State zurücksetzen.",
-            "verification": "Möchtest du wirklich den Busy-State zurücksetzen? Dadurch können Fehler entstehen, die bis zum Absturz des Bots führen können.",
-            "success": "Der Busy-State wurde erfolgreich zurückgesetzt.",
-            "canceled": "Das Zurücksetzen des Busy-States wurde abgebrochen.",
-            "reset": "Reset",
-            "cancel": "Abrruch",
-            "error": {
-                "general": "Der Bot ist aktuell nicht beschäftigt. Fehler können nicht behoben werden.",
-                "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /reset_busy um Busy-State zurückzusetzen."
-            }
-        },
-        "get_players": {
-            "description": "Zeigt alle Spieler an, die aktuell auf dem Server online sind.",
-            "response_plural": "Aktuell sind folgende {player_count} Spieler auf dem Server:\n{player_names}",
-            "response_singular": "Aktuell ist folgender Spieler auf dem Server: {player_name}",
-            "error": {
-                "no_one_online": "Aktuell sind keine Spieler auf dem Server!",
-                "disabled": "Diese Funktion ist deaktiviert!",
-                "offline": "Da der Server offline ist, ist niemand online!"
-            }
-        },
-        "help": {
-            "description": "Zeigt alle relevanten Befehle von diesem Bot mit Erklärung an.",
-            "title": "Relevante Befehle",
-            "user_subtitle": ":baby: User-Befehle",
-            "admin_subtitle": ":man_technologist: Admin-Befehle"
-        }
+  "commands": {
+    "ping": {
+      "description": "Antwortet mit Pong!",
+      "response": "Pong!"
     },
-    "other": {
-        "busy": "Bitte warte bis die aktuelle Aktion beendet wurde!",
-        "sudo": "Du bist nicht dazu berechtigt diesen Befehl zu nutzen. Frage deinen System-Administrator für Änderungen.",
-        "inactivity_shutdown": {
-            "verification": "Der Minecraft-Server ist nun {inactivity_shutdown_minutes} Minuten lang ohne Spieler online. \n**Daher wird der Server in 30s automatisch gestoppt!**",
-            "cancel": "Abbruch, Server online lassen",
-            "canceled": "Automatisches Stoppen abgebrochen. Wenn weiterhin die nächsten {inactivity_shutdown_minutes} Minuten keine Spieler online sind, wird wieder versucht den Server zu stoppen",
-            "stopping": "**Server stoppt wegen Inaktivität**",
-            "finished_msg": "**Server wegen Inaktivität gestoppt!**",
-            "error": {
-                "is_busy": "Server nicht gestoppt, da aktuell eine Aktion läuft.",
-                "players_online": "Server nicht gestoppt, da nun wieder Spieler online sind.",
-                "offline": "Minecraft-Server nicht gestoppt, da er schon offline ist."
-            }
-        }
+    "start": {
+      "description": "Startet den Server.",
+      "msg_above_process_bar": "Server startet ...",
+      "finished_msg": "Server gestartet!",
+      "error": {
+        "general": "Server konnte nicht gestartet werden\n-# ERROR: {e}",
+        "already_running": "Server läuft bereits.",
+        "wol_failed": "Der Server konnte nicht hochgefahren werden. Wake-On-Lan-Paket wird erneut gesendet!"
+      }
     },
-    "status": {
-        "text": {
-            "online": "'{world_name}' ({players_online}/{max_players} Spieler online)",
-            "starting": "gleich '{world_name}'",
-            "stopping": "nicht mehr '{world_name}'",
-            "offline": "auf /start, um '{world_name}' zu spielen",
-            "only_host_online": "auf /start, um '{world_name}' zu spielen"
-        },
-        "activity": {
-            "online": "Game",
-            "starting": "Game",
-            "stopping": "Game",
-            "offline": "Listening",
-            "only_host_online": "Listening"
+    "stop": {
+      "description": "Stoppt den Server.",
+      "msg_above_process_bar": "Server stoppt ...",
+      "finished_msg": "Server gestoppt!",
+      "error": {
+        "general": "Sever konnte nicht gestoppt werden\n-# ERROR: {e}",
+        "already_stopped": "Server bereits gestoppt.",
+        "mc_already_stopped": "Minecraft-Server bereits gestoppt.",
+        "players_online": {
+          "stop_anyway": "Stoppe trotzdem",
+          "cancel": "Abbruch",
+          "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /stop um den Server zu stoppen.",
+          "canceled": "Erfolgreich abgebrochen!",
+          "question_singular": "Es ist noch ein Spieler online: {player_name}\n**Möchtest du den Server trotzdem stoppen?**",
+          "question_plural": "Es sind noch {player_count} Spieler online:{player_names}\n**Möchtest du den Server trotzdem stoppen?**"
         }
+      }
     },
-    "formatting": {
-        "get_players": {
-            "player_name_line": "`{player_name}`"
-        },
-        "show_worlds": {
-            "title": "## Liste aller verfügbaren Welten \n```", 
-            "current_world": "\n✅ - ",
-            "new_selected_world": "\n⏩ - ",
-            "not_selecetd_world": "\n⬜ - ",
-            "end": "```"
-        },
-        "sudo_world_info": {
-            "start": "```",
-            "line": "\n{attr}:{gap_filler}{value}",
-            "end": "```"
-        },
-        "help": {
-            "command": "`/{command_name}`",
-            "command_description": "{description}",
-            "subtitle": "{subtitle}",
-            "admin_prefix_to_remove": "SUPER-USER-ONLY: "
-        }
+    "add_world": {
+      "description": "SUPER-USER-ONLY: Erstellt eine neue Referenz auf eine bereits installierte Minecraft-Installation.",
+      "success": "Die Welt '{display_name}' wurde erfolgreich erstellt!",
+      "error": "Die Welt '{display_name}' konnte nicht erstellt werden! | {e}"
+    },
+    "edit_world": {
+      "description": "SUPER-USER-ONLY: Ändert die Referenz auf eine bereits installierte Minecraft-Installation.",
+      "success": "Die Welt '{editing_world_name}' wurde erfolgreich verändert! Die neuen Werte sind:{values}",
+      "edit_error": "Die Welt '{editing_world_name}' konnte nicht verändert werden | {e}"
+    },
+    "delete_world": {
+      "description": "SUPER-USER-ONLY: Löscht eine Referenz auf eine bereits installierte Minecraft-Installation.",
+      "success": "Die Referenz auf die Welt '{display_name}' wurde erfolgreich gelöscht!",
+      "canceled": "Löschprozess abgebrochen",
+      "verification": "Bist du dir sicher, dass du die Referenz auf die Welt '{display_name}' läschen willst?{values}",
+      "error": {
+        "current_world": "Du kannst die aktuell ausgewählte Welt nicht löschen. Wechsle die Welt mit /change_world und starte den Server neu",
+        "not_found": "Welt '{display_name}' wurde nicht gefunden.",
+        "button_inactive": "Button inaktiv, nutze /delete_world erneut."
+      }
+    },
+    "change_world": {
+      "description": "Ändert die aktuelle Welt in eine andere verfügbare Welt.",
+      "placeholder": "Wähle die Welt aus, die du spielen möchtest",
+      "response": "Wähle die Welt aus, die du spielen möchtest:",
+      "success_offline": "'{selected_value}' wurde erfolgreich ausgewählt!",
+      "success_online": "'{selected_value}' wurde erfolgreich ausgewählt und wird beim nächsten Start gestartet.\nMöchtest du jetzt neustarten?",
+      "error": {
+        "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /change_world um die Welt zu ändern.",
+        "general": "Die Welt konnte nicht zu '{selected_value}' gewechselt werden. | {e}"
+      },
+      "restart_now": "Jetzt Neustarten",
+      "cancel": "Abbruch"
+    },
+    "show_worlds": {
+      "description": "Zeigt alle verfügbaren Welten an."
+    },
+    "stop_without_shutdown": {
+      "description": "SUPER-USER-ONLY: Stoppt den Minecraft-Server, allerdings nicht den Host-Server.",
+      "msg_above_process_bar": "Server stoppt ohne herunterzufahren ...",
+      "finished_msg": "Server ohne herunterfahren gestoppt!"
+    },
+    "restart": {
+      "description": "Startet den Minecraft-Server neu, nicht den gesamten Server.",
+      "error": "Der Server ist gestoppt. Nutze /start um ihn zu starten!",
+      "finished_msg": "Server wurde neugestartet!",
+      "above_process_bar": {
+        "msg": "**Server neustarten** ... ",
+        "starting_addon": "Startet",
+        "stopping_addon": "Stoppt"
+      }
+    },
+    "reset_busy": {
+      "description": "Falls der Bot irrtümlich beschäftigt ist, kann dieser Befehl den falschen Busy-State zurücksetzen.",
+      "verification": "Möchtest du wirklich den Busy-State zurücksetzen? Dadurch können Fehler entstehen, die bis zum Absturz des Bots führen können.",
+      "success": "Der Busy-State wurde erfolgreich zurückgesetzt.",
+      "canceled": "Das Zurücksetzen des Busy-States wurde abgebrochen.",
+      "reset": "Reset",
+      "cancel": "Abrruch",
+      "error": {
+        "general": "Der Bot ist aktuell nicht beschäftigt. Fehler können nicht behoben werden.",
+        "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /reset_busy um Busy-State zurückzusetzen."
+      }
+    },
+    "get_players": {
+      "description": "Zeigt alle Spieler an, die aktuell auf dem Server online sind.",
+      "response_plural": "Aktuell sind folgende {player_count} Spieler auf dem Server:\n{player_names}",
+      "response_singular": "Aktuell ist folgender Spieler auf dem Server: {player_name}",
+      "error": {
+        "no_one_online": "Aktuell sind keine Spieler auf dem Server!",
+        "disabled": "Diese Funktion ist deaktiviert!",
+        "offline": "Da der Server offline ist, ist niemand online!"
+      }
+    },
+    "help": {
+      "description": "Zeigt alle relevanten Befehle von diesem Bot mit Erklärung an.",
+      "title": "Relevante Befehle",
+      "user_subtitle": ":baby: User-Befehle",
+      "admin_subtitle": ":man_technologist: Admin-Befehle"
     }
+  },
+  "other": {
+    "busy": "Bitte warte bis die aktuelle Aktion beendet wurde!",
+    "sudo": "Du bist nicht dazu berechtigt diesen Befehl zu nutzen. Frage deinen System-Administrator für Änderungen.",
+    "inactivity_shutdown": {
+      "verification": "Der Minecraft-Server ist nun {inactivity_shutdown_minutes} Minuten lang ohne Spieler online. \n**Daher wird der Server in 30s automatisch gestoppt!**",
+      "cancel": "Abbruch, Server online lassen",
+      "canceled": "Automatisches Stoppen abgebrochen. Wenn weiterhin die nächsten {inactivity_shutdown_minutes} Minuten keine Spieler online sind, wird wieder versucht den Server zu stoppen",
+      "stopping": "**Server stoppt wegen Inaktivität**",
+      "finished_msg": "**Server wegen Inaktivität gestoppt!**",
+      "error": {
+        "is_busy": "Server nicht gestoppt, da aktuell eine Aktion läuft.",
+        "players_online": "Server nicht gestoppt, da nun wieder Spieler online sind.",
+        "offline": "Minecraft-Server nicht gestoppt, da er schon offline ist."
+      }
+    }
+  },
+  "status": {
+    "text": {
+      "online": "'{world_name}' ({players_online}/{max_players} Spieler online)",
+      "starting": "gleich '{world_name}'",
+      "stopping": "nicht mehr '{world_name}'",
+      "offline": "auf /start, um '{world_name}' zu spielen",
+      "only_host_online": "auf /start, um '{world_name}' zu spielen"
+    },
+    "activity": {
+      "online": "Game",
+      "starting": "Game",
+      "stopping": "Game",
+      "offline": "Listening",
+      "only_host_online": "Listening"
+    }
+  },
+  "formatting": {
+    "get_players": {
+      "player_name_line": "`{player_name}`"
+    },
+    "show_worlds": {
+      "title": "## Liste aller verfügbaren Welten \n```",
+      "current_world": "\n✅ - ",
+      "new_selected_world": "\n⏩ - ",
+      "not_selecetd_world": "\n⬜ - ",
+      "end": "```"
+    },
+    "sudo_world_info": {
+      "start": "```",
+      "line": "\n{attr}:{gap_filler}{value}",
+      "end": "```"
+    },
+    "help": {
+      "command": "`/{command_name}`",
+      "command_description": "{description}",
+      "subtitle": "{subtitle}",
+      "admin_prefix_to_remove": "SUPER-USER-ONLY: "
+    }
+  }
 }
