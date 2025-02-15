@@ -460,7 +460,7 @@ async def get_players_command(ctx: discord.Interaction):
                         player_names += "\n" + LH.t("formatting.get_players.player_name_line", player_name=player.name)
 
                     content = LH.t(
-                        "commands.get_players.response_singular",
+                        "commands.get_players.response_plural",
                         player_count=mc_status.players.online,
                         player_names=player_names,
                     )
