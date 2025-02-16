@@ -75,14 +75,15 @@ async def _try_start_mc_server_with_ssh(config: Config):
 
 
 async def _start_host_server(config: Config):
+    max_retries = 2 if config.DEBUG else 10
+    retry_intervall_seconds = 5 if config.DEBUG else 20
     ping_speed = 30
-    ping_timeout = 300
 
     await _send_wol_packet(config)
     yield
 
-    for i in range(ping_speed):
-        await asyncio.sleep((ping_timeout * 2) // ping_speed)
+    for i in range(max_retries):
+        await asyncio.sleep(retry_intervall_seconds)
 
         if (await get_server_state(config)).host_server_running:
             for j in range(i, ping_speed):
