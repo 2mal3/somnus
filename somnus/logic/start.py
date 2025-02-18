@@ -113,6 +113,8 @@ async def _send_wol_packet(config: Config):
 
 
 async def _start_mc_server(ssh: pxssh.pxssh):
+    log_search_timeout_seconds = 150
+
     log.debug("Send MC server start command ...")
     ssh.sendline((await get_current_world()).start_cmd)
     yield
@@ -127,7 +129,7 @@ async def _start_mc_server(ssh: pxssh.pxssh):
     ]
     for i, message in enumerate(messages):
         try:
-            found_element_index = ssh.expect(["Done"] + message, timeout=150)
+            found_element_index = ssh.expect(["Done"] + message, timeout=log_search_timeout_seconds)
             log.debug(f"Stage '{message}' completed")
 
             if found_element_index == 0:  # if finished earlier, animate the progress bar to its end
