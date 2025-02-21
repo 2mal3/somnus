@@ -1,11 +1,10 @@
 
-## v1.1.1
+## v1.1.2
 
 ### Changed
 
-- simpler and cleaner delete and world change command ui
+- refactoring for cleaner code
 
 ### Fixed
 
-- possible stability issues for unreliable internet connections
-- get players command not working when more than one player is online
+- removed unnecessary line break in /get_players plural message
