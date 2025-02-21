@@ -7,4 +7,4 @@
 
 ### Fixed
 
-- removed unnecessary line break in /get_players plural message
+- removed unnecessary line break in /get_players plural message 
