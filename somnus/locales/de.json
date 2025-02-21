@@ -98,7 +98,7 @@
     },
     "get_players": {
       "description": "Zeigt alle Spieler an, die aktuell auf dem Server online sind.",
-      "response_plural": "Aktuell sind folgende {player_count} Spieler auf dem Server:\n{player_names}",
+      "response_plural": "Aktuell sind folgende {player_count} Spieler auf dem Server: {player_names}",
       "response_singular": "Aktuell ist folgender Spieler auf dem Server: {player_name}",
       "error": {
         "no_one_online": "Aktuell sind keine Spieler auf dem Server!",
