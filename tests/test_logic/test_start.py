@@ -4,7 +4,7 @@ import podman
 from podman.domain.containers import Container
 
 from somnus.logic import start
-from somnus.environment import Config
+from somnus.config import Config
 
 
 def test_main():

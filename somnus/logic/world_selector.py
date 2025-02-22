@@ -4,7 +4,7 @@ import json
 import aiofiles
 from pydantic import BaseModel, field_validator
 
-from somnus.environment import CONFIG, Config
+from somnus.config import CONFIG, Config
 from somnus.logger import log
 
 WORLD_SELECTOR_CONFIG_FILE_PATH = "data/world_selector_data.json"

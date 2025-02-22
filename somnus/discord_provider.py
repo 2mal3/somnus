@@ -6,7 +6,7 @@ from discord import Status, app_commands
 from discord.ext import tasks
 from mcstatus.status_response import JavaStatusResponse
 
-from somnus.environment import CONFIG, Config
+from somnus.config import CONFIG, Config
 from somnus.language_handler import LH
 from somnus.logger import log
 from somnus.logic import start, stop, utils, world_selector

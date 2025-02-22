@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from somnus.environment import CONFIG
+from somnus.config import CONFIG
 
 _LEVEL = logging.DEBUG if CONFIG.DEBUG else logging.INFO
 

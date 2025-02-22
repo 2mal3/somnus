@@ -6,7 +6,7 @@ from pexpect import pxssh
 from ping3 import ping
 from pydantic import BaseModel
 
-from somnus.environment import CONFIG, Config
+from somnus.config import CONFIG, Config
 from somnus.logger import log
 from somnus.logic.world_selector import get_current_world
 

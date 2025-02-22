@@ -3,7 +3,7 @@ import asyncio
 from pexpect import pxssh
 from wakeonlan import send_magic_packet
 
-from somnus.environment import Config, CONFIG
+from somnus.config import Config, CONFIG
 from somnus.logger import log
 from somnus.language_handler import LH
 from somnus.logic.utils import (
