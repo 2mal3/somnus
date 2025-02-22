@@ -119,7 +119,7 @@ async def _is_host_server_running(config: Config) -> bool:
 
     try:
         ssh = await ssh_login(config)
-        ssh.logout()
+        ssh.close()
     except TimeoutError:
         return False
 
