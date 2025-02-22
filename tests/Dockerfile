@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM eclipse-temurin:21 AS build
 
 WORKDIR /app
 
@@ -6,8 +6,7 @@ RUN curl -o server.jar https://api.papermc.io/v2/projects/paper/versions/1.21.3/
     echo "eula=true" > eula.txt && \
     java -Xms1G -Xmx1G -Dpaperclip.patchonly=true -jar server.jar --nogui
 
-
-FROM eclipse-temurin:21-jdk AS run
+FROM eclipse-temurin:21 AS run
 
 WORKDIR /app
 
@@ -19,9 +18,11 @@ RUN apt-get update && \
 RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
     echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
     echo "root:root" | chpasswd && \
-    echo "java -Xms1G -Xmx1G -jar server.jar --nogui" > start.sh && \
+    echo "/opt/java/openjdk/bin/java -Xms1G -Xmx1G -jar server.jar --nogui" > start.sh && \
     chmod +x start.sh && \
     mkdir /var/run/sshd
+
+ENV SCREENDIR=/tmp/screen
 
 EXPOSE 25565 22
 

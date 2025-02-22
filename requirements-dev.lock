@@ -20,6 +20,10 @@ asyncio-dgram==2.2.0
     # via mcstatus
 attrs==23.2.0
     # via aiohttp
+certifi==2025.1.31
+    # via requests
+charset-normalizer==3.4.1
+    # via requests
 discord-py==2.4.0
 dnspython==2.6.1
     # via mcstatus
@@ -27,24 +31,38 @@ frozenlist==1.4.1
     # via aiohttp
     # via aiosignal
 idna==3.7
+    # via requests
     # via yarl
+iniconfig==2.0.0
+    # via pytest
 mcstatus==11.1.1
 multidict==6.0.5
     # via aiohttp
     # via yarl
+packaging==24.2
+    # via pytest
 pexpect==4.9.0
 ping3==4.0.8
+pluggy==1.5.0
+    # via pytest
+podman==5.2.0
 ptyprocess==0.7.0
     # via pexpect
 pydantic==2.8.2
 pydantic-core==2.20.1
     # via pydantic
+pytest==8.3.4
 python-dotenv==1.0.1
+requests==2.32.3
+    # via podman
 setuptools==70.3.0
     # via asyncio-dgram
 typing-extensions==4.12.2
     # via pydantic
     # via pydantic-core
+urllib3==2.3.0
+    # via podman
+    # via requests
 wakeonlan==3.1.0
 yarl==1.9.4
     # via aiohttp
