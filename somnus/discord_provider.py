@@ -129,6 +129,7 @@ async def stop_server_command(ctx: discord.Interaction):
     if await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=True):
         await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
         await ctx.channel.send(LH.t("commands.stop.finished_msg"))  # type: ignore
+        update_players_online_status.stop()
 
 
 def _trim_text_for_discord_subtitle(text: str) -> str:
@@ -488,7 +489,6 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
             return False
 
     world_config = await world_selector.get_world_selector_config()
-    update_players_online_status.stop()
 
     activity = await _get_discord_activity(
         "stopping", LH.t("status.text.stopping", world_name=world_config.current_world)
