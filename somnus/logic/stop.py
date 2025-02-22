@@ -50,7 +50,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
     yield
 
     ssh.sendline("exit")
-    ssh.logout()
+    ssh.close()
     yield
 
 

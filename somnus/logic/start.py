@@ -59,18 +59,20 @@ async def _try_start_mc_server_with_ssh(config: Config):
             yield
 
         # Exit peacefully
-        log.debug("Logging out ...")
+        log.debug("Detaching screen ...")
         await detach_screen_session(ssh)
         ssh.prompt()
-        ssh.logout()
+        log.debug("Logging out ...")
+        ssh.close()
         yield
 
     # Exit in error, kill screen
     except Exception as e:
+        log.debug("Problem occurred, stopping screen session ...")
         await detach_screen_session(ssh)
         await kill_screen(ssh, config)
         ssh.prompt()
-        ssh.logout()
+        ssh.close()
         raise RuntimeError(f"Could not start MC server | {e}")
 
 
