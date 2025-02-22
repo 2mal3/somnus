@@ -39,10 +39,7 @@ build-backend = "hatchling.build"
 [tool.rye]
 managed = true
 virtual = true
-dev-dependencies = [
-    "pytest==8.*",
-    "podman==5.*",
-]
+dev-dependencies = []
 
 [tool.hatch.metadata]
 allow-direct-references = true
