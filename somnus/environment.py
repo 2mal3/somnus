@@ -1,5 +1,6 @@
 import sys
 from os import environ
+from typing import Any
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, field_validator, ValidationError
@@ -23,7 +24,10 @@ class Config(BaseModel):
     DEBUG: bool = False
 
     @field_validator("DEBUG", "MC_SERVER_START_CMD_SUDO", mode="before")
-    def convert_str_to_bool(cls, value: str):  # noqa: N805
+    def convert_str_to_bool(cls, value: Any):  # noqa: N805
+        if isinstance(value, bool):
+            return value
+
         return text_is_true(value)
 
 

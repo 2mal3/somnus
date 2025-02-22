@@ -34,7 +34,7 @@ async def run_server():
             MC_SERVER_START_CMD="./start.sh",
             MC_SERVER_ADDRESS="25565",
             DISCORD_SUPER_USER_ID="",
-            DEBUG="true",
+            DEBUG=True,
         )
     ):
         pass
