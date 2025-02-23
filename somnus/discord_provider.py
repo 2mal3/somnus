@@ -137,6 +137,7 @@ async def stop_server_command(ctx: discord.Interaction):
 
     if await _stop_minecraft_server(ctx=ctx, message=message, shutdown=True):
         await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
+        await ctx.channel.send(LH.t("commands.stop.finished_msg"))  # type: ignore
         
 
 
