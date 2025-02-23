@@ -51,7 +51,7 @@ async def _try_start_mc_server_with_ssh(config: Config):
     ssh = await ssh_login(config)
 
     log.debug("Starting screen session ...")
-    await send_possible_sudo_command(ssh, config, "screen bash -S mc-server-control")
+    await send_possible_sudo_command(ssh, config, "screen -S mc-server-control")
     yield
 
     try:
@@ -63,7 +63,7 @@ async def _try_start_mc_server_with_ssh(config: Config):
         await detach_screen_session(ssh)
         ssh.prompt()
         log.debug("Logging out ...")
-        ssh.close()
+        ssh.logout()
         yield
 
     # Exit in error, kill screen
