@@ -74,9 +74,6 @@ async def start_server_command(ctx: discord.Interaction):
         await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
         await ctx.channel.send(LH.t("commands.start.finished_msg"))  # type: ignore
         log.info("Server started!")
-        
-        
-
 
     is_busy = False
     await _update_bot_presence()
@@ -93,7 +90,7 @@ async def _try_start_minecraft_server(ctx: discord.Interaction, message: str):
     await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
 
     i = 0
-    try: 
+    try:
         async for wol_failed in start.start_server():
             if wol_failed:
                 original_message = await ctx.original_response()
@@ -138,7 +135,6 @@ async def stop_server_command(ctx: discord.Interaction):
     if await _stop_minecraft_server(ctx=ctx, message=message, shutdown=True):
         await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
         await ctx.channel.send(LH.t("commands.stop.finished_msg"))  # type: ignore
-        
 
 
 def _trim_text_for_discord_subtitle(text: str) -> str:
@@ -406,7 +402,7 @@ async def restart_command(ctx: discord.Interaction):
     message = LH.t("commands.restart.above_process_bar.msg")
     await ctx.response.send_message(message)
     await _restart_minecraft_server(ctx, message)
-        
+
 
 @tree.command(name="reset_busy", description=LH.t("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction):
@@ -548,7 +544,8 @@ async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
     ):
         await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, message))
         if await _try_start_minecraft_server(
-            ctx=ctx, message=message + LH.t("commands.restart.above_process_bar.starting_addon")):
+            ctx=ctx, message=message + LH.t("commands.restart.above_process_bar.starting_addon")
+        ):
             await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
             await ctx.channel.send(LH.t("commands.restart.finished_msg"))  # type: ignore
             return True
