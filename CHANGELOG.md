@@ -1,10 +1,15 @@
 
-## v1.1.2
+## v1.1.3
 
 ### Changed
 
-- refactoring for cleaner code
+- more information in error messages
+- seperate log data for seperate somnus startups
 
 ### Fixed
 
-- removed unnecessary line break in /get_players plural message 
+- start command
+- stop command
+- stop_without_shutdown command
+- restart command
+- errors in gracefull shutdown will not curse errors anymore
