@@ -71,6 +71,7 @@ async def _try_start_mc_server_with_ssh(config: Config):
         try:
             log.debug("Problem occurred, try to gracefully exit ...", exc_info=exception1)
             await detach_screen_session(ssh)
+            ssh.prompt()
             await kill_screen(ssh, config)
             ssh.prompt()
             ssh.close()
