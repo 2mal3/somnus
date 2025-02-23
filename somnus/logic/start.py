@@ -67,13 +67,19 @@ async def _try_start_mc_server_with_ssh(config: Config):
         yield
 
     # Exit in error, kill screen
-    except Exception as e:
-        log.debug("Problem occurred, stopping screen session ...")
-        await detach_screen_session(ssh)
-        await kill_screen(ssh, config)
-        ssh.prompt()
-        ssh.close()
-        raise RuntimeError(f"Could not start MC server | {e}")
+    except Exception as exception1:
+        try:
+            log.debug("Problem occurred, try to gracefully exit ...", exc_info=exception1)
+            await detach_screen_session(ssh)
+            await kill_screen(ssh, config)
+            ssh.prompt()
+            ssh.close()
+            raise RuntimeError(f"Could not start MC server | {exception1}")
+
+        except Exception as exception2:
+            log.error("Could not gracefully exit", exc_info=exception2)
+            ssh.close()
+            raise RuntimeError(f"Could not start MC server and exit gracefully | E1: {exception1} | E2: {exception2}")
 
 
 async def _start_host_server(config: Config):
