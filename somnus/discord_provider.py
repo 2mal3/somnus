@@ -133,7 +133,7 @@ async def stop_server_command(ctx: discord.Interaction):
 
 
 def _trim_text_for_discord_subtitle(text: str) -> str:
-    return str(text).replace("\n", " ")[:32]
+    return str(text).replace("\n", " ")
 
 
 @tree.command(name="add_world", description=LH.t("commands.add_world.description"))
