@@ -43,6 +43,7 @@ async def on_ready():
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
+        log.info("Status Updater started!")
 
     log.debug("Updating bot presence ...")
     await _update_bot_presence()
@@ -56,7 +57,7 @@ async def ping_command(ctx: discord.Interaction):
 
 @tree.command(name="start", description=LH.t("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction):
-    global inactvity_seconds, is_busy  # noqa: PLW0603
+    global is_busy  # noqa: PLW0603
 
     if is_busy:
         log.warning("User tried to start server while already busy")
@@ -69,16 +70,45 @@ async def start_server_command(ctx: discord.Interaction):
     await ctx.response.send_message(_generate_progress_bar(1, start_steps, message))  # type: ignore
 
     is_busy = True
-    try:
-        await _try_start_minecraft_server(ctx=ctx, steps=start_steps, message=message)
+    if await _try_start_minecraft_server(ctx=ctx, steps=start_steps, message=message):
         await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
         await ctx.channel.send(LH.t("commands.start.finished_msg"))  # type: ignore
         log.info("Server started!")
+        
+        
+
+
+    is_busy = False
+    await _update_bot_presence()
+
+
+async def _try_start_minecraft_server(ctx: discord.Interaction, steps: int, message: str):
+    global inactvity_seconds  # noqa: PLW0603
+
+    world_config = await world_selector.get_world_selector_config()
+
+    activity = await _get_discord_activity(
+        "starting", LH.t("status.text.starting", world_name=world_config.current_world)
+    )
+    await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
+
+    i = 0
+    try: 
+        async for wol_failed in start.start_server():
+            if wol_failed:
+                original_message = await ctx.original_response()
+                await original_message.reply(LH.t("commands.start.error.wol_failed"))
+                i = 2
+            else:
+                i += 1
+            await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
+
         inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
         log.info("Status Updater started!")
+        return True
 
-    # The user has done something wrong
+        # The user has done something wrong
     except utils.UserInputError as e:
         await ctx.edit_original_response(content=str(e))
 
@@ -90,27 +120,7 @@ async def start_server_command(ctx: discord.Interaction):
         )
         await _ping_user_after_error(ctx)
 
-    is_busy = False
-    await _update_bot_presence()
-
-
-async def _try_start_minecraft_server(ctx: discord.Interaction, steps: int, message: str):
-    world_config = await world_selector.get_world_selector_config()
-
-    activity = await _get_discord_activity(
-        "starting", LH.t("status.text.starting", world_name=world_config.current_world)
-    )
-    await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
-
-    i = 0
-    async for wol_failed in start.start_server():
-        if wol_failed:
-            original_message = await ctx.original_response()
-            await original_message.reply(LH.t("commands.start.error.wol_failed"))
-            i = 2
-        else:
-            i += 1
-        await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
+    return False
 
 
 def _generate_progress_bar(value: int, max_value: int, message: str) -> str:
@@ -128,8 +138,7 @@ async def stop_server_command(ctx: discord.Interaction):
 
     if await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=True):
         await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
-        await ctx.channel.send(LH.t("commands.stop.finished_msg"))  # type: ignore
-        update_players_online_status.stop()
+        
 
 
 def _trim_text_for_discord_subtitle(text: str) -> str:
@@ -398,7 +407,7 @@ async def restart_command(ctx: discord.Interaction):
     message = LH.t("commands.restart.above_process_bar.msg")
     await ctx.response.send_message(message)
     await _restart_minecraft_server(ctx, message)
-
+        
 
 @tree.command(name="reset_busy", description=LH.t("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction):
@@ -490,6 +499,8 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
 
     world_config = await world_selector.get_world_selector_config()
 
+    update_players_online_status.stop()
+    log.info("Status Updater stopped!")
     activity = await _get_discord_activity(
         "stopping", LH.t("status.text.stopping", world_name=world_config.current_world)
     )
@@ -526,7 +537,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
 async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
     if not (await utils.get_server_state(CONFIG)).mc_server_running:
         await ctx.edit_original_response(content=LH.t("commands.restart.error"))  # type: ignore
-        return
+        return False
     stop_steps = 20
     start_steps = 20
 
@@ -545,6 +556,8 @@ async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
         ):
             await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
             await ctx.channel.send(LH.t("commands.restart.finished_msg"))  # type: ignore
+            return True
+    return False
 
 
 async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse):
@@ -775,6 +788,7 @@ async def _stop_inactivity():
 
         world_config = await world_selector.get_world_selector_config()
         update_players_online_status.stop()
+        log.info("Status Updater stopped!")
 
         activity = await _get_discord_activity(
             "stopping", LH.t("status.text.stopping", world_name=world_config.current_world)
