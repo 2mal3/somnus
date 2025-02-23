@@ -12,6 +12,7 @@ from somnus.logger import log
 from somnus.logic import start, stop, utils, world_selector
 
 LH.language_setup(CONFIG.LANGUAGE)
+PROGRESS_BAR_STEPS = 20
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -63,15 +64,14 @@ async def start_server_command(ctx: discord.Interaction):
         log.warning("User tried to start server while already busy")
         await ctx.response.send_message(LH.t("commands.start.error.already_running"))
 
-    start_steps = 20
     message = LH.t("commands.start.msg_above_process_bar")
 
     log.info("Received start command ...")
-    await ctx.response.send_message(_generate_progress_bar(1, start_steps, message))  # type: ignore
+    await ctx.response.send_message(_generate_progress_bar(1, message))  # type: ignore
 
     is_busy = True
-    if await _try_start_minecraft_server(ctx=ctx, steps=start_steps, message=message):
-        await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
+    if await _try_start_minecraft_server(ctx=ctx, message=message):
+        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
         await ctx.channel.send(LH.t("commands.start.finished_msg"))  # type: ignore
         log.info("Server started!")
         
@@ -82,7 +82,7 @@ async def start_server_command(ctx: discord.Interaction):
     await _update_bot_presence()
 
 
-async def _try_start_minecraft_server(ctx: discord.Interaction, steps: int, message: str):
+async def _try_start_minecraft_server(ctx: discord.Interaction, message: str):
     global inactvity_seconds  # noqa: PLW0603
 
     world_config = await world_selector.get_world_selector_config()
@@ -101,7 +101,7 @@ async def _try_start_minecraft_server(ctx: discord.Interaction, steps: int, mess
                 i = 2
             else:
                 i += 1
-            await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
+            await ctx.edit_original_response(content=_generate_progress_bar(i, message))
 
         inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
@@ -123,21 +123,20 @@ async def _try_start_minecraft_server(ctx: discord.Interaction, steps: int, mess
     return False
 
 
-def _generate_progress_bar(value: int, max_value: int, message: str) -> str:
-    progress = "█" * value + "░" * (max_value - value)
+def _generate_progress_bar(value: int, message: str) -> str:
+    progress = "█" * value + "░" * (PROGRESS_BAR_STEPS - value)
     return f"{message}\n{progress}"
 
 
 @tree.command(name="stop", description=LH.t("commands.stop.description"))
 async def stop_server_command(ctx: discord.Interaction):
-    stop_steps = 20
     message = LH.t("commands.stop.msg_above_process_bar")
 
     log.info("Received stop command ...")
-    await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
+    await ctx.response.send_message(_generate_progress_bar(1, message))  # type: ignore
 
-    if await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=True):
-        await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
+    if await _stop_minecraft_server(ctx=ctx, message=message, shutdown=True):
+        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
         
 
 
@@ -348,14 +347,13 @@ async def show_worlds_command(ctx: discord.Interaction):
 async def stop_without_shutdown_server_command(ctx: discord.Interaction):
     if not await _is_super_user(ctx):
         return
-    stop_steps = 20
     message = LH.t("commands.stop_without_shutdown.msg_above_process_bar")
 
     log.info("Received stop command without shutdown ...")
-    await ctx.response.send_message(_generate_progress_bar(1, stop_steps, message))  # type: ignore
+    await ctx.response.send_message(_generate_progress_bar(1, message))  # type: ignore
 
-    if await _stop_minecraft_server(ctx=ctx, steps=stop_steps, message=message, shutdown=False):
-        await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, ""))
+    if await _stop_minecraft_server(ctx=ctx, message=message, shutdown=False):
+        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
         await ctx.channel.send(LH.t("commands.stop_without_shutdown.finished_msg"))  # type: ignore
 
 
@@ -485,7 +483,7 @@ async def get_players_command(ctx: discord.Interaction):
     await ctx.response.send_message(content)
 
 
-async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: str, shutdown: bool) -> bool:
+async def _stop_minecraft_server(ctx: discord.Interaction, message: str, shutdown: bool) -> bool:
     if not await _check_if_busy(ctx):
         return False
 
@@ -510,7 +508,7 @@ async def _stop_minecraft_server(ctx: discord.Interaction, steps: int, message: 
     try:
         async for _ in stop.stop_server(shutdown):
             i += 2
-            await ctx.edit_original_response(content=_generate_progress_bar(i, steps, message))
+            await ctx.edit_original_response(content=_generate_progress_bar(i, message))
     except Exception as e:
         if isinstance(e, utils.UserInputError):
             await ctx.edit_original_response(content=str(e))
@@ -538,23 +536,19 @@ async def _restart_minecraft_server(ctx: discord.Interaction, message: str):
     if not (await utils.get_server_state(CONFIG)).mc_server_running:
         await ctx.edit_original_response(content=LH.t("commands.restart.error"))  # type: ignore
         return False
-    stop_steps = 20
-    start_steps = 20
 
     log.info("Received restart command ...")
-    await ctx.edit_original_response(content=_generate_progress_bar(1, stop_steps, message))  # type: ignore
+    await ctx.edit_original_response(content=_generate_progress_bar(1, message))  # type: ignore
 
     if await _stop_minecraft_server(
         ctx=ctx,
-        steps=stop_steps,
         message=message + LH.t("commands.restart.above_process_bar.stopping_addon"),
         shutdown=False,
     ):
-        await ctx.edit_original_response(content=_generate_progress_bar(stop_steps, stop_steps, message))
+        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, message))
         if await _try_start_minecraft_server(
-            ctx=ctx, steps=start_steps, message=message + LH.t("commands.restart.above_process_bar.starting_addon")
-        ):
-            await ctx.edit_original_response(content=_generate_progress_bar(start_steps, start_steps, ""))
+            ctx=ctx, message=message + LH.t("commands.restart.above_process_bar.starting_addon")):
+            await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
             await ctx.channel.send(LH.t("commands.restart.finished_msg"))  # type: ignore
             return True
     return False
