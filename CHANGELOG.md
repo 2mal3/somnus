@@ -1,15 +1,11 @@
 
-## v1.1.3
+## v1.1.4
 
 ### Changed
 
-- more information in error messages
-- seperate log data for seperate somnus startups
+- cleaner world name design
 
 ### Fixed
 
-- start command
-- stop command
-- stop_without_shutdown command
-- restart command
-- errors in gracefull shutdown will not curse errors anymore
+- change_world command requests to restart again
+- restart command blocks other commands during restart (use /reset_busy to reset a wrong busy state)
