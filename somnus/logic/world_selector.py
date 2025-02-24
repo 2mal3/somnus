@@ -91,6 +91,11 @@ async def select_new_world(new_world_name):
 async def edit_new_world(
     editing_world_name, new_display_name, start_cmd, start_cmd_sudo, visible
 ) -> WorldSelectorWorld:
+    """
+    Raises
+        UserInputError: If the world to edit doesn't exist
+    """
+
     world_selector_config = await get_world_selector_config()
 
     for i, world in enumerate(world_selector_config.worlds):
@@ -108,6 +113,8 @@ async def edit_new_world(
 
             await _save_world_selector_config(world_selector_config)
             return world_selector_config.worlds[i]
+
+    raise UserInputError(f"World '{editing_world_name}' not found")
 
 
 async def try_delete_world(display_name: str):
