@@ -34,34 +34,34 @@
     },
     "add_world": {
       "description": "SUPER-USER-ONLY: Erstellt eine neue Referenz auf eine bereits installierte Minecraft-Installation.",
-      "success": "Die Welt '{display_name}' wurde erfolgreich erstellt!",
-      "error": "Die Welt '{display_name}' konnte nicht erstellt werden! | {e}"
+      "success": "Die Welt `{display_name}` wurde erfolgreich erstellt!",
+      "error": "Die Welt `{display_name}` konnte nicht erstellt werden! | {e}"
     },
     "edit_world": {
       "description": "SUPER-USER-ONLY: Ändert die Referenz auf eine bereits installierte Minecraft-Installation.",
-      "success": "Die Welt '{editing_world_name}' wurde erfolgreich verändert! Die neuen Werte sind:{values}",
-      "edit_error": "Die Welt '{editing_world_name}' konnte nicht verändert werden | {e}"
+      "success": "Die Welt `{editing_world_name}` wurde erfolgreich verändert! Die neuen Werte sind:{values}",
+      "edit_error": "Die Welt `{editing_world_name}` konnte nicht verändert werden | {e}"
     },
     "delete_world": {
       "description": "SUPER-USER-ONLY: Löscht eine Referenz auf eine bereits installierte Minecraft-Installation.",
-      "success": "Die Referenz auf die Welt '{display_name}' wurde erfolgreich gelöscht!",
+      "success": "Die Referenz auf die Welt `{display_name}` wurde erfolgreich gelöscht!",
       "canceled": "Löschprozess abgebrochen",
-      "verification": "Bist du dir sicher, dass du die Referenz auf die Welt '{display_name}' läschen willst?{values}",
+      "verification": "Bist du dir sicher, dass du die Referenz auf die Welt `{display_name}` läschen willst?{values}",
       "error": {
         "current_world": "Du kannst die aktuell ausgewählte Welt nicht löschen. Wechsle die Welt mit /change_world und starte den Server neu",
-        "not_found": "Welt '{display_name}' wurde nicht gefunden.",
+        "not_found": "Welt `{display_name}` wurde nicht gefunden.",
         "button_inactive": "Button inaktiv, nutze /delete_world erneut."
       }
     },
     "change_world": {
       "description": "Ändert die aktuelle Welt in eine andere verfügbare Welt.",
       "placeholder": "Wähle die Welt aus, die du spielen möchtest",
-      "response": "Wähle die Welt aus, die du spielen möchtest:",
-      "success_offline": "'{selected_value}' wurde erfolgreich ausgewählt!",
-      "success_online": "'{selected_value}' wurde erfolgreich ausgewählt und wird beim nächsten Start gestartet.\nMöchtest du jetzt neustarten?",
+      "response": "Aktuell ist `{current_selected_world}` ausgewählt. Wähle die Welt aus, die du spielen möchtest:",
+      "success_offline": "`{selected_value}` wurde erfolgreich ausgewählt!",
+      "success_online": "`{selected_value}` wurde erfolgreich ausgewählt und wird beim nächsten Start gestartet.\nMöchtest du jetzt neustarten?",
       "error": {
         "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /change_world um die Welt zu ändern.",
-        "general": "Die Welt konnte nicht zu '{selected_value}' gewechselt werden. | {e}"
+        "general": "Die Welt konnte nicht zu `{selected_value}` gewechselt werden. | {e}"
       },
       "restart_now": "Jetzt Neustarten",
       "cancel": "Abbruch"
@@ -131,11 +131,11 @@
   },
   "status": {
     "text": {
-      "online": "'{world_name}' ({players_online}/{max_players} online)",
-      "starting": "gleich '{world_name}'",
-      "stopping": "nicht mehr '{world_name}'",
-      "offline": "auf /start, um '{world_name}' zu spielen",
-      "only_host_online": "auf /start, um '{world_name}' zu spielen"
+      "online": "`{world_name}` ({players_online}/{max_players} online)",
+      "starting": "gleich `{world_name}`",
+      "stopping": "nicht mehr `{world_name}`",
+      "offline": "auf /start, um `{world_name}` zu spielen",
+      "only_host_online": "auf /start, um `{world_name}` zu spielen"
     },
     "activity": {
       "online": "Game",
