@@ -112,10 +112,9 @@ async def _try_start_minecraft_server(ctx: discord.Interaction, message: str):
     # Something went wrong with our code
     except Exception as e:
         log.error("Could not start server", exc_info=e)
-        await ctx.edit_original_response(content=LH(
-            "commands.start.error.general",
-            args={"e": _trim_text_for_discord_subtitle(str(e))}
-        ))
+        await ctx.edit_original_response(
+            content=LH("commands.start.error.general", args={"e": _trim_text_for_discord_subtitle(str(e))})
+        )
         await _ping_user_after_error(ctx)
 
     return False
@@ -152,7 +151,9 @@ async def add_world_command(
 
     try:
         await world_selector.create_new_world(display_name, start_cmd, start_cmd_sudo, visible)
-        await ctx.response.send_message(LH("commands.add_world.success", args={"display_name": display_name}), ephemeral=True)
+        await ctx.response.send_message(
+            LH("commands.add_world.success", args={"display_name": display_name}), ephemeral=True
+        )
     except Exception as e:
         log.debug(f"Could not create world | {e}")
         await ctx.response.send_message(
@@ -184,7 +185,7 @@ async def edit_world_command(  # noqa: PLR0913
                 args={
                     "editing_world_name": editing_world_name,
                     "values": await _get_formatted_world_info_string(world),
-                }
+                },
             ),
             ephemeral=True,
         )
@@ -253,7 +254,7 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str):
             args={
                 "display_name": display_name,
                 "values": await _get_formatted_world_info_string(world),
-            }
+            },
         ),
         view=view,
         ephemeral=True,
@@ -377,18 +378,24 @@ async def help_command(ctx: discord.Interaction):
     embed = discord.Embed(title=LH("commands.help.title"), color=discord.Color.blue())
     if sudo:
         embed.add_field(
-            name=LH("formatting.help.subtitle", args={"subtitle": LH("commands.help.user_subtitle")}), value="", inline=False
+            name=LH("formatting.help.subtitle", args={"subtitle": LH("commands.help.user_subtitle")}),
+            value="",
+            inline=False,
         )
     for user_command in user_commands:
         embed.add_field(
             name=LH("formatting.help.command", args={"command_name": user_command}),
-            value=LH("formatting.help.command_description", args={"description": LH(f"commands.{user_command}.description")}),
+            value=LH(
+                "formatting.help.command_description", args={"description": LH(f"commands.{user_command}.description")}
+            ),
             inline=False,
         )
     if sudo:
         embed.add_field(name="", value="", inline=False)
         embed.add_field(
-            name=LH("formatting.help.subtitle", args={"subtitle": LH("commands.help.admin_subtitle")}), value="", inline=False
+            name=LH("formatting.help.subtitle", args={"subtitle": LH("commands.help.admin_subtitle")}),
+            value="",
+            inline=False,
         )
         admin_commands = ["add_world", "edit_world", "delete_world", "stop_without_shutdown"]
         for admin_command in admin_commands:
@@ -462,13 +469,16 @@ async def get_players_command(ctx: discord.Interaction):
             elif mc_status.players.sample:
                 if mc_status.players.online == 1:
                     player_name = LH(
-                        "formatting.get_players.player_name_line", args={"player_name": mc_status.players.sample[0].name}
+                        "formatting.get_players.player_name_line",
+                        args={"player_name": mc_status.players.sample[0].name},
                     )
                     content = LH("commands.get_players.response_singular", args={"player_name": player_name})
                 else:
                     player_names = ""
                     for player in mc_status.players.sample:
-                        player_names += "\n" + LH("formatting.get_players.player_name_line", args={"player_name": player.name})
+                        player_names += "\n" + LH(
+                            "formatting.get_players.player_name_line", args={"player_name": player.name}
+                        )
 
                     content = LH(
                         "commands.get_players.response_plural",
@@ -607,9 +617,13 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
     if mcstatus.players.online == 1:
         player_name = ""
         if mcstatus.players.sample:
-            player_name = LH("formatting.get_players.player_name_line", args={"player_name": mcstatus.players.sample[0].name})
+            player_name = LH(
+                "formatting.get_players.player_name_line", args={"player_name": mcstatus.players.sample[0].name}
+            )
         content = (
-            message + "\n\n" + LH("commands.stop.error.players_online.question_singular", args={"player_name": player_name})
+            message
+            + "\n\n"
+            + LH("commands.stop.error.players_online.question_singular", args={"player_name": player_name})
         )
     else:
         player_names = ""
@@ -662,7 +676,8 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
         button_view.remove_item(confirm_button)
         button_view.remove_item(cancel_button)
         await interaction.response.edit_message(
-            content=LH("commands.change_world.success_offline", args={"selected_value": selected_value}), view=button_view
+            content=LH("commands.change_world.success_offline", args={"selected_value": selected_value}),
+            view=button_view,
         )
 
     confirm_button.callback = confirm_callback
@@ -691,7 +706,11 @@ async def _update_bot_presence():
         else:
             text = LH(
                 "status.text.online",
-                args={"world_name": world_selector_config.current_world, "players_online": mc_status.players.online, "max_players": mc_status.players.max},
+                args={
+                    "world_name": world_selector_config.current_world,
+                    "players_online": mc_status.players.online,
+                    "max_players": mc_status.players.max,
+                },
             )
             if await _check_for_inactivity_shutdown(mc_status.players.online):
                 return
@@ -810,7 +829,8 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> dis
         inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         await message.edit(
             content=LH(
-                "other.inactivity_shutdown.canceled", args={"inactivity_shutdown_minutes": CONFIG.INACTIVITY_SHUTDOWN_MINUTES}
+                "other.inactivity_shutdown.canceled",
+                args={"inactivity_shutdown_minutes": CONFIG.INACTIVITY_SHUTDOWN_MINUTES},
             ),
             view=view,
         )
@@ -824,7 +844,8 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> dis
 
     message = await channel.send(
         content=LH(
-            "other.inactivity_shutdown.verification", args={"inactivity_shutdown_minutes": CONFIG.INACTIVITY_SHUTDOWN_MINUTES}
+            "other.inactivity_shutdown.verification",
+            args={"inactivity_shutdown_minutes": CONFIG.INACTIVITY_SHUTDOWN_MINUTES},
         ),
         view=view,
     )
