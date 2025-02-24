@@ -5,13 +5,13 @@ import discord
 from discord import Status, app_commands
 from discord.ext import tasks
 from mcstatus.status_response import JavaStatusResponse
-from yai18n import Translator
 
 from somnus.config import CONFIG, Config
 from somnus.logger import log
 from somnus.logic import start, stop, utils, world_selector
+from somnus.language_handler import LH
 
-LH = Translator(fallback_locale="en", default_locale=CONFIG.LANGUAGE)
+
 PROGRESS_BAR_STEPS = 20
 
 intents = discord.Intents.default()
