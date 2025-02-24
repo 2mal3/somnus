@@ -58,29 +58,24 @@ async def ping_command(ctx: discord.Interaction):
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction):
-    global is_busy  # noqa: PLW0603
-
-    if is_busy:
-        log.warning("User tried to start server while already busy")
-        await ctx.response.send_message(LH("commands.start.error.already_running"))
-
     message = LH("commands.start.msg_above_process_bar")
 
     log.info("Received start command ...")
     await ctx.response.send_message(_generate_progress_bar(1, message))  # type: ignore
 
-    is_busy = True
     if await _try_start_minecraft_server(ctx=ctx, message=message):
         await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
         await ctx.channel.send(LH("commands.start.finished_msg"))  # type: ignore
         log.info("Server started!")
 
-    is_busy = False
     await _update_bot_presence()
 
 
 async def _try_start_minecraft_server(ctx: discord.Interaction, message: str):
     global inactvity_seconds  # noqa: PLW0603
+
+    if not await _check_if_busy(ctx):
+        return False
 
     world_config = await world_selector.get_world_selector_config()
 
@@ -103,6 +98,7 @@ async def _try_start_minecraft_server(ctx: discord.Interaction, message: str):
         inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
         log.info("Status Updater started!")
+        await _no_longer_busy()
         return True
 
         # The user has done something wrong
@@ -280,10 +276,6 @@ async def change_world_command(ctx: discord.Interaction):
     for world in world_selector_config.worlds:
         if not world.visible:
             continue
-        if (
-            world_selector_config.new_selected_world and world_selector_config.new_selected_world == world.display_name
-        ) or (world_selector_config.current_world == world.display_name):
-            index = len(options)
         options.append(discord.SelectOption(label=world.display_name, value=world.display_name))
 
     select = discord.ui.Select(
@@ -294,7 +286,7 @@ async def change_world_command(ctx: discord.Interaction):
 
     async def select_callback(interaction: discord.Interaction):
         if ctx.user.id != interaction.user.id:
-            await ctx.edit_original_response(content=LH("commands.change_world.wrong_user_error"), view=None)
+            await interaction.edit_original_response(content=LH("commands.change_world.wrong_user_error"), view=None)
             return
 
         selected_value = select.values[0]
@@ -303,20 +295,27 @@ async def change_world_command(ctx: discord.Interaction):
         await ctx.edit_original_response(
             content=LH("commands.change_world.success_offline", args={"selected_value": selected_value}), view=None
         )
+        await interaction.response.defer()
 
-        if not (await utils.get_server_state(CONFIG)).mc_server_running:
+        if not ((await utils.get_server_state(CONFIG)).mc_server_running):
             await world_selector.change_world()
             await _update_bot_presence()
         elif not current_world_is_selected:
-            await _change_world_now_message(interaction, selected_value)
+            await _change_world_now_message(ctx, selected_value)
+            
 
     select.callback = select_callback
 
     select_view = discord.ui.View()
     select_view.add_item(select)
 
+    if world_selector_config.new_selected_world:
+        selected_world = world_selector_config.new_selected_world
+    else:
+        selected_world = world_selector_config.current_world
+
     # Sende die Nachricht mit dem Dropdown-Menü
-    await ctx.response.send_message(LH("commands.change_world.response"), view=select_view)
+    await ctx.response.send_message(LH("commands.change_world.response", args={"current_selected_world": selected_world}), view=select_view)
 
 
 @tree.command(name="show_worlds", description=LH("commands.show_worlds.description"))
@@ -686,7 +685,7 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
     button_view = discord.ui.View()
     button_view.add_item(confirm_button)
     button_view.add_item(cancel_button)
-
+    
     await select_interaction.edit_original_response(
         content=LH("commands.change_world.success_online", args={"selected_value": selected_value}), view=button_view
     )
