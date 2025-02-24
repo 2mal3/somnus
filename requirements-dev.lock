@@ -48,3 +48,4 @@ typing-extensions==4.12.2
 wakeonlan==3.1.0
 yarl==1.9.4
     # via aiohttp
+yet-another-i18n==0.2.0

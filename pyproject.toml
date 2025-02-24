@@ -15,6 +15,7 @@ dependencies = [
     "mcstatus==11.*",
     "pydantic==2.*",
     "aiofiles==24.*",
+    "yet-another-i18n==0.*",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
