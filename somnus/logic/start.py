@@ -5,7 +5,6 @@ from wakeonlan import send_magic_packet
 
 from somnus.config import Config, CONFIG
 from somnus.logger import log
-from somnus.language_handler import LH
 from somnus.logic.utils import (
     get_server_state,
     ssh_login,
@@ -14,6 +13,7 @@ from somnus.logic.utils import (
     detach_screen_session,
     kill_screen,
 )
+from somnus.language_handler import LH
 from somnus.logic.world_selector import get_current_world
 
 
@@ -24,7 +24,7 @@ async def start_server(config: Config = CONFIG):
     )
 
     if server_state.host_server_running and server_state.mc_server_running:
-        raise UserInputError(LH.t("commands.start.error.already_running"))
+        raise UserInputError(LH("commands.start.error.already_running"))
     yield
 
     # Start host server
