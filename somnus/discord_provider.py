@@ -722,7 +722,7 @@ async def _get_discord_activity(
     if activity_str == "Game":
         return discord.Game(name=text)
     elif activity_str == "Streaming":
-        return discord.Streaming(name=text)
+        return discord.Streaming(name=text, url="")
     elif activity_str == "Listening":
         return discord.Activity(type=discord.ActivityType.listening, name=text)
     elif activity_str == "Watching":
@@ -755,10 +755,12 @@ async def _stop_inactivity():
         log.error("DISCORD_STATUS_CHANNEL_ID in .env not correct. Automatic shutdown due to inactivity not possible!")
         return False
     channel = bot.get_channel(CONFIG.DISCORD_STATUS_CHANNEL_ID)
+    if not channel or not isinstance(channel, discord.TextChannel):
+        raise TypeError("Could not get channel from Discord!")
 
     log.info("Send information message for shutdown due to inactivity ...")
-    message = await _inactivity_shutdown_verification(channel)
-    if message is not False:
+    message, player_confirmed_stop = await _inactivity_shutdown_verification(channel)
+    if player_confirmed_stop:
         log.info("Stopping due to inactivity ...")
         if not await _check_if_busy():
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
@@ -794,7 +796,7 @@ async def _stop_inactivity():
         await _no_longer_busy()
 
 
-async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> discord.Message | bool:
+async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> tuple[discord.Message, bool]:
     result_future = asyncio.Future()
 
     cancel_button = discord.ui.Button(label=LH.t("other.inactivity_shutdown.cancel"), style=discord.ButtonStyle.green)
@@ -836,9 +838,9 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> dis
     finally:
         result = await result_future
         if result:
-            return message
+            return message, True
         else:
-            return False
+            return message, False
 
 
 async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWorld):

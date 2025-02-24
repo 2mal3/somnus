@@ -1,5 +1,3 @@
-import asyncio
-
 from pexpect import pxssh
 
 from somnus.config import Config, CONFIG
@@ -86,12 +84,3 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
                 yield
             return
         yield
-
-
-async def main():
-    async for _ in stop_server():
-        pass
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
