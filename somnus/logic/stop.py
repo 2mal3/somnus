@@ -1,5 +1,3 @@
-import asyncio
-
 from pexpect import pxssh
 
 from somnus.config import Config, CONFIG
