@@ -4,7 +4,6 @@ from pexpect import pxssh
 
 from somnus.config import Config, CONFIG
 from somnus.logger import log
-from somnus.language_handler import LH
 from somnus.logic.utils import (
     get_server_state,
     ssh_login,
@@ -14,6 +13,7 @@ from somnus.logic.utils import (
     detach_screen_session,
     kill_screen,
 )
+from somnus.language_handler import LH
 
 
 async def stop_server(shutdown: bool, config: Config = CONFIG):
@@ -24,9 +24,9 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
     )
 
     if not (server_state.host_server_running or server_state.mc_server_running):
-        raise UserInputError(LH.t("commands.stop.error.already_stopped"))
+        raise UserInputError(LH("commands.stop.error.already_stopped"))
     elif not shutdown and not server_state.mc_server_running:
-        raise UserInputError(LH.t("commands.stop.error.mc_already_stopped"))
+        raise UserInputError(LH("commands.stop.error.mc_already_stopped"))
 
     yield
 
