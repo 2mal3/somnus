@@ -87,7 +87,8 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 | HOST_SERVER_SSH_PORT        | integer | no       | 22      | ssh port of the host server                                                                                           |
 | INACTIVITY_SHUTDOWN_MINUTES | integer | no       | none    | time after which the server shuts down if nobody is online. Use "" so that the server doesn't shut down automatically |
 | DISCORD_STATUS_CHANNEL_ID   | integer | no       | none    | discord channel id of the channel in which the automatic inactivity server shutdown message is sent                   |
-| DEBUG                       | boolean | no       | false   | debug messages are displayed and server does not shut down if set to “true”                                           |
+| DEBUG                       | boolean | no       | false   | server does not shut down and faster timeouts if set to “true”                                                        |
+| DEBUG_LOGGING               | boolean | no       | false   | debug messages are displayed                                                                                          |
 
 ### 🧩 Special Host System Requirements
 

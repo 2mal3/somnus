@@ -4,7 +4,7 @@ from pathlib import Path
 
 from somnus.config import CONFIG
 
-_LEVEL = logging.DEBUG if CONFIG.DEBUG else logging.INFO
+_LEVEL = logging.DEBUG if CONFIG.DEBUG_LOGGING else logging.INFO
 
 log = logging.getLogger("somnus")
 

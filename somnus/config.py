@@ -22,8 +22,9 @@ class Config(BaseModel):
     LANGUAGE: str = "en"
     DISCORD_SUPER_USER_ID: str
     DEBUG: bool = False
+    DEBUG_LOGGING: bool = False
 
-    @field_validator("DEBUG", "MC_SERVER_START_CMD_SUDO", mode="before")
+    @field_validator("DEBUG", "DEBUG_LOGGING", "MC_SERVER_START_CMD_SUDO", mode="before")
     def convert_str_to_bool(cls, value: Any):  # noqa: N805
         if isinstance(value, bool):
             return value
