@@ -1,5 +1,4 @@
 import asyncio
-from time import sleep
 
 import podman
 import pytest
@@ -43,7 +42,6 @@ def test_main():
 async def start_server():
     async for _ in start.start_server():
         pass
-
 
 
 async def stop_server():

@@ -302,7 +302,6 @@ async def change_world_command(ctx: discord.Interaction):
             await _update_bot_presence()
         elif not current_world_is_selected:
             await _change_world_now_message(ctx, selected_value)
-            
 
     select.callback = select_callback
 
@@ -315,7 +314,9 @@ async def change_world_command(ctx: discord.Interaction):
         selected_world = world_selector_config.current_world
 
     # Sende die Nachricht mit dem Dropdown-Menü
-    await ctx.response.send_message(LH("commands.change_world.response", args={"current_selected_world": selected_world}), view=select_view)
+    await ctx.response.send_message(
+        LH("commands.change_world.response", args={"current_selected_world": selected_world}), view=select_view
+    )
 
 
 @tree.command(name="show_worlds", description=LH("commands.show_worlds.description"))
@@ -685,7 +686,7 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
     button_view = discord.ui.View()
     button_view.add_item(confirm_button)
     button_view.add_item(cancel_button)
-    
+
     await select_interaction.edit_original_response(
         content=LH("commands.change_world.success_online", args={"selected_value": selected_value}), view=button_view
     )
@@ -773,7 +774,9 @@ async def _stop_inactivity():
     global inactvity_seconds  # noqa: PLW0603
 
     if not CONFIG.DISCORD_STATUS_CHANNEL_ID:
-        log.error("DISCORD_STATUS_CHANNEL_ID in .env not correct. Automatic shutdown due to inactivity not possible!")
+        log.error(
+            "DISCORD_STATUS_CHANNEL_ID in .env.test not correct. Automatic shutdown due to inactivity not possible!"
+        )
         return False
     channel = bot.get_channel(CONFIG.DISCORD_STATUS_CHANNEL_ID)
     if not channel or not isinstance(channel, discord.TextChannel):
