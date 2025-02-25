@@ -26,8 +26,30 @@ line-length = 120
 
 [tool.ruff.lint]
 # Rules are explained here: https://docs.astral.sh/ruff/rules
-select = ["E4", "E7", "E9", "F", "C", "N", "A", "SIM", "PL"]
-ignore = []
+select = ["ALL"]
+ignore = [
+    "FBT",
+    "ASYNC",
+    "D",
+    "ANN",
+    "PT",
+    "B",
+    "EM",
+    "TRY",
+    "PGH",
+    "COM",
+    "TCH",
+    "I",
+    "PTH",
+    "RET",
+    "BLE",
+    "ARG",
+    "RUF",
+    "DTZ",
+    "UP",
+    "PD",
+    "T",
+]
 
 [tool.rye.scripts]
 dev = "python3 -m somnus.__main__"
