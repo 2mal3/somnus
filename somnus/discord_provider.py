@@ -19,8 +19,8 @@ intents.message_content = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
-is_busy = False  # noqa: PLW0603
-inactvity_seconds = 0  # noqa: PLW0603
+is_busy = False
+inactvity_seconds = 0
 
 
 @bot.event

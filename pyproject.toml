@@ -42,7 +42,7 @@ ignore = [
     "RET",
     "BLE",
     "ARG",
-    "RUF",
+    "RUF005",
     "DTZ",
     "UP",
     "PD",
