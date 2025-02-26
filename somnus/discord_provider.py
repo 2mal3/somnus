@@ -193,7 +193,7 @@ async def edit_world_command(  # noqa: PLR0913
 
 
 @edit_world_command.autocomplete("editing_world_name")
-async def _edit_world_command_autocomplete(interaction: discord.Interaction, current: str) -> None:
+async def _edit_world_command_autocomplete(interaction: discord.Interaction, current: str) -> list[app_commands.Choice]:
     return await _get_world_choices()
 
 

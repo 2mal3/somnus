@@ -89,7 +89,11 @@ async def select_new_world(new_world_name: str) -> bool:
 
 
 async def edit_new_world(
-    editing_world_name: str, new_display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool
+    editing_world_name: str,
+    new_display_name: str | None,
+    start_cmd: str | None,
+    start_cmd_sudo: bool | None,
+    visible: bool | None,
 ) -> WorldSelectorWorld:
     """
     Raises
