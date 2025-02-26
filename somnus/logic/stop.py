@@ -1,4 +1,5 @@
 from pexpect import pxssh
+from typing import AsyncGenerator
 
 from somnus.config import Config, CONFIG
 from somnus.logger import log
@@ -14,7 +15,7 @@ from somnus.logic.utils import (
 from somnus.language_handler import LH
 
 
-async def stop_server(shutdown: bool, config: Config = CONFIG):
+async def stop_server(shutdown: bool, config: Config = CONFIG) -> AsyncGenerator:
     ssh = await ssh_login(config)
     server_state = await get_server_state(config)
     log.info(
@@ -52,7 +53,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG):
     yield
 
 
-async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config):
+async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config) -> AsyncGenerator:
     log.debug("Connecting to screen session ...")
     await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
     yield
@@ -68,7 +69,7 @@ async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config):
         await kill_screen(ssh, config)
 
 
-async def _stop_mc_server(ssh: pxssh.pxssh, config: Config):
+async def _stop_mc_server(ssh: pxssh.pxssh, config: Config) -> AsyncGenerator:
     server_shutdown_maximum_time = 600
 
     log.debug("Sending stop command ...")

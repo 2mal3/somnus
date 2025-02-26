@@ -76,14 +76,14 @@ def _screen_is_installed(ssh: pxssh.pxssh) -> bool:
     return exit_status == 0
 
 
-async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
+async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> None:
     if not (await get_current_world()).start_cmd_sudo:
         ssh.sendline(command)
     else:
         await send_sudo_command(ssh, config, command)
 
 
-async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str):
+async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> None:
     ssh.sendline(f"sudo {command}")
     choice = ssh.expect(["sudo", "@"])
     if choice == 0:
@@ -126,11 +126,11 @@ async def _is_host_server_running(config: Config) -> bool:
     return True
 
 
-async def detach_screen_session(ssh: pxssh.pxssh):
+async def detach_screen_session(ssh: pxssh.pxssh) -> None:
     ssh.sendcontrol("a")
     await asyncio.sleep(0.1)
     ssh.sendcontrol("d")
 
 
-async def kill_screen(ssh: pxssh.pxssh, config: Config = CONFIG):
+async def kill_screen(ssh: pxssh.pxssh, config: Config = CONFIG) -> None:
     await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")

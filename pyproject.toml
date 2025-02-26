@@ -29,9 +29,7 @@ line-length = 120
 select = ["ALL"]
 ignore = [
     "FBT",
-    "ASYNC",
     "D",
-    "ANN",
     "PT",
     "B",
     "EM",

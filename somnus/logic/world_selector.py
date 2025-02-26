@@ -41,7 +41,7 @@ async def get_current_world() -> WorldSelectorWorld:
     return current_world
 
 
-async def create_new_world(display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool):
+async def create_new_world(display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool) -> None:
     new_world = WorldSelectorWorld(
         display_name=display_name, start_cmd=start_cmd, start_cmd_sudo=start_cmd_sudo, visible=visible
     )
@@ -65,7 +65,7 @@ async def _world_exists(display_name: str, world_selector_config: WorldSelectorC
         return False
 
 
-async def change_world():
+async def change_world() -> None:
     world_selector_config = await get_world_selector_config()
 
     if world_selector_config.current_world != world_selector_config.new_selected_world:
@@ -76,7 +76,7 @@ async def change_world():
                 return
 
 
-async def select_new_world(new_world_name):
+async def select_new_world(new_world_name: str) -> bool:
     world_selector_config = await get_world_selector_config()
     if world_selector_config.current_world == new_world_name:
         world_selector_config.new_selected_world = ""
@@ -89,7 +89,7 @@ async def select_new_world(new_world_name):
 
 
 async def edit_new_world(
-    editing_world_name, new_display_name, start_cmd, start_cmd_sudo, visible
+    editing_world_name: str, new_display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool
 ) -> WorldSelectorWorld:
     """
     Raises
@@ -117,7 +117,7 @@ async def edit_new_world(
     raise UserInputError(f"World '{editing_world_name}' not found")
 
 
-async def try_delete_world(display_name: str):
+async def try_delete_world(display_name: str) -> bool:
     try:
         await _delete_world(display_name)
         return True
@@ -125,7 +125,7 @@ async def try_delete_world(display_name: str):
         return False
 
 
-async def _delete_world(display_name: str):
+async def _delete_world(display_name: str) -> None:
     world_selector_config = await get_world_selector_config()
 
     for i, world in enumerate(world_selector_config.worlds):
@@ -180,7 +180,7 @@ def _get_default_world_selector_config(config: Config = CONFIG) -> WorldSelector
     return data
 
 
-async def _save_world_selector_config(data: WorldSelectorConfig):
+async def _save_world_selector_config(data: WorldSelectorConfig) -> None:
     os.makedirs("data", exist_ok=True)
     async with aiofiles.open(WORLD_SELECTOR_CONFIG_FILE_PATH, "w", encoding="utf-8") as file:
         await file.write(json.dumps(data.model_dump(), indent=4))

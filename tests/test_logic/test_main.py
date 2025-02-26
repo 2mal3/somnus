@@ -1,4 +1,5 @@
 import asyncio
+from typing import Generator
 
 import podman
 import pytest
@@ -9,7 +10,7 @@ from somnus.logic import start, stop
 
 
 @pytest.fixture(scope="session", autouse=True)
-def podman_setup():
+def podman_setup() -> Generator:
     client = podman.PodmanClient()
 
     container: Container = client.containers.run(
@@ -27,7 +28,7 @@ def podman_setup():
     client.close()
 
 
-def test_main():
+def test_main() -> None:
     server = mcstatus.JavaServer("127.0.0.1", 25565)
 
     asyncio.run(start_server())
@@ -39,11 +40,11 @@ def test_main():
         server.ping()
 
 
-async def start_server():
+async def start_server() -> None:
     async for _ in start.start_server():
         pass
 
 
-async def stop_server():
+async def stop_server() -> None:
     async for _ in stop.stop_server(True):
         pass

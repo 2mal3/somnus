@@ -1,4 +1,5 @@
 import asyncio
+from typing import AsyncGenerator
 
 from pexpect import pxssh
 from wakeonlan import send_magic_packet
@@ -17,7 +18,7 @@ from somnus.language_handler import LH
 from somnus.logic.world_selector import get_current_world
 
 
-async def start_server(config: Config = CONFIG):
+async def start_server(config: Config = CONFIG) -> AsyncGenerator:
     server_state = await get_server_state(config)
     log.info(
         f"Host server running: {server_state.host_server_running} | MC server running: {server_state.mc_server_running}"
@@ -47,7 +48,7 @@ async def start_server(config: Config = CONFIG):
         yield
 
 
-async def _try_start_mc_server_with_ssh(config: Config):
+async def _try_start_mc_server_with_ssh(config: Config) -> AsyncGenerator:
     ssh = await ssh_login(config)
 
     log.debug("Starting screen session ...")
@@ -83,7 +84,7 @@ async def _try_start_mc_server_with_ssh(config: Config):
             raise RuntimeError(f"Could not start MC server and exit gracefully | E1: {exception1} | E2: {exception2}")
 
 
-async def _start_host_server(config: Config):
+async def _start_host_server(config: Config) -> AsyncGenerator:
     max_retries = 2 if config.DEBUG else 10
     retry_intervall_seconds = 5 if config.DEBUG else 20
     ping_speed = 30
@@ -111,7 +112,7 @@ async def _start_host_server(config: Config):
     raise TimeoutError("Could not start host server")
 
 
-async def _send_wol_packet(config: Config):
+async def _send_wol_packet(config: Config) -> None:
     wol_send_delay_seconds = 5
     wol_packed_amount = 10
 
@@ -121,7 +122,7 @@ async def _send_wol_packet(config: Config):
             await asyncio.sleep(wol_send_delay_seconds)
 
 
-async def _start_mc_server(ssh: pxssh.pxssh):
+async def _start_mc_server(ssh: pxssh.pxssh) -> AsyncGenerator:
     log_search_timeout_seconds = 150
 
     log.debug("Send MC server start command ...")
@@ -150,7 +151,7 @@ async def _start_mc_server(ssh: pxssh.pxssh):
             raise TimeoutError(f"Minecraft-Server could not be startet. Timeout in starting keyword expecting {e}")
 
 
-async def main():
+async def main() -> None:
     async for _ in start_server():
         pass
 
