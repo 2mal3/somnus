@@ -50,5 +50,5 @@ try:
     CONFIG = Config(**environ)  # type: ignore
 except ValidationError as errors:
     for error in errors.errors():
-        print(f"FATAL: Missing environment variable: {error['loc'][0]}")
+        print(f"FATAL: Missing environment variable: {error['loc'][0]}")    # noqa: T201
     sys.exit(1)

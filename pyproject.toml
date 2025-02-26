@@ -29,24 +29,23 @@ line-length = 120
 select = ["ALL"]
 ignore = [
     "FBT",
-    "D",
+    "D",    # we are not a library
     "PT",
     "B",
     "EM",
     "TRY",
     "PGH",
-    "COM",
+    "COM812",   # unnecessary complex
     "TCH",
-    "I",
+    "I",    # way to complex to automate this
     "PTH",
     "RET",
     "BLE",
-    "ARG",
-    "RUF005",
+    "ARG",  # discord.py needs some arguments to be present even when we don't use them
+    "RUF005",   # Bad readability / unnecessary complex
     "DTZ",
     "UP",
-    "PD",
-    "T",
+    "PD",   # we are not data scientists
 ]
 
 [tool.rye.scripts]
