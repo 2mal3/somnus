@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21 AS build
+FROM docker.io/eclipse-temurin:21 AS build
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN curl -o installer.jar https://maven.minecraftforge.net/net/minecraftforge/fo
     cd server && \
     echo "eula=true" > eula.txt
 
-FROM ubuntu:25.04 AS run
+FROM docker.io/ubuntu:25.04 AS run
 
 WORKDIR /app
 
