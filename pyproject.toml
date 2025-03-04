@@ -60,8 +60,8 @@ build-backend = "hatchling.build"
 managed = true
 virtual = true
 dev-dependencies = [
-    "podman>=5.4.0.1",
-    "pytest>=8.3.4",
+    "podman==5.*",
+    "pytest==8.*",
 ]
 
 [tool.hatch.metadata]
