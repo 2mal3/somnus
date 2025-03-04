@@ -9,7 +9,8 @@ from podman.domain.containers import Container
 from somnus.logic import start, stop
 
 
-@pytest.fixture(scope="session", autouse=True)
+# Enable this for local testing
+# @pytest.fixture(scope="session", autouse=True)
 def podman_setup() -> Generator:
     client = podman.PodmanClient()
 
