@@ -75,9 +75,9 @@ async def _stop_mc_server(ssh: pxssh.pxssh, config: Config) -> AsyncGenerator:
     log.debug("Sending stop command ...")
     ssh.sendline("stop")
 
-    messages = ["overworld", "nether", "end", "@"]
+    messages = ["overworld", "nether", "end", "All"]
     for i, message in enumerate(messages):
-        found_element_index = ssh.expect(["@", message], timeout=server_shutdown_maximum_time)
+        found_element_index = ssh.expect(["All", message], timeout=server_shutdown_maximum_time)
         log.debug(f"Stage '{message}' completed")
 
         if found_element_index == 0:
