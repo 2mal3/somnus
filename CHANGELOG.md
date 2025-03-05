@@ -1,6 +1,12 @@
 
-## v1.1.5
+## v1.1.6
+
+### Fixed
+
+- missing busystate update after /start error added
+- second wol try works now
 
 ### Changed
 
-- DEBUG_LOGGING in environment added to show Debug messages without using debug timeouts
+- Better Stability
+- Better detection for localhost usecases
