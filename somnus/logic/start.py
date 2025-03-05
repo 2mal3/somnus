@@ -94,7 +94,7 @@ async def _try_start_mc_server_with_ssh(config: Config) -> AsyncGenerator:
 
 async def _start_host_server(config: Config) -> None:
     ping_count = 2 if config.DEBUG else 15
-    ping_timeout_seconds = 5 if config.DEBUG else 30 # normal 300
+    ping_timeout_seconds = 5 if config.DEBUG else 300
 
     await _send_wol_packet(config)
     yield
