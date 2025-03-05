@@ -467,7 +467,7 @@ async def reset_busy_command(ctx: discord.Interaction) -> bool | None:
 async def get_players_command(ctx: discord.Interaction) -> None:
     if CONFIG.GET_PLAYERS_COMMAND_ENABLED:
         mc_status = await utils.get_mcstatus(CONFIG)
-        if mc_status is not None:
+        if mc_status:
             if mc_status.players.online == 0:
                 content = LH("commands.get_players.error.no_one_online")
             elif mc_status.players.sample:
@@ -702,7 +702,7 @@ async def _update_bot_presence() -> None:
 
     if server_status.mc_server_running:
         mc_status = await utils.get_mcstatus(CONFIG)
-        if mc_status is None:
+        if not mc_status:
             text = LH(
                 "status.text.online",
                 args={"world_name": world_selector_config.current_world, "players_online": "X", "max_players": "Y"},
