@@ -102,16 +102,23 @@ async def _is_mc_server_running(config: Config) -> bool:
 
 
 async def _is_host_server_running(config: Config) -> bool:
-    if config.HOST_SERVER_HOST in ["localhost", "127.0.0.1"]:
+    if config.DEBUG and config.HOST_SERVER_HOST in ["localhost", "127.0.0.1"]:
         return True
 
-    if not ping(config.HOST_SERVER_HOST):
+    if config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"] and not ping(config.HOST_SERVER_HOST):
         return False
 
     try:
-        ssh = await ssh_login(config)
+        ssh = pxssh.pxssh()
+        ssh.login(
+            config.HOST_SERVER_HOST,
+            config.HOST_SERVER_USER,
+            config.HOST_SERVER_PASSWORD,
+            port=config.HOST_SERVER_SSH_PORT,
+            login_timeout=5,
+        )
         ssh.close()
-    except TimeoutError:
+    except Exception:
         return False
 
     return True
