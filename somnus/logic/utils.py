@@ -38,7 +38,6 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
 
     attempts = 2 if config.DEBUG else 10
     seconds_between_attempts = 1 if config.DEBUG else 5
-    
     ssh = pxssh.pxssh()
 
     for tries in range(attempts):
