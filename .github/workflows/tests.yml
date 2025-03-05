@@ -41,7 +41,7 @@ jobs:
       - name: Build Image
         uses: docker/build-push-action@v6
         with:
-          context: test
+          context: tests
           tags: somnus-test:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
