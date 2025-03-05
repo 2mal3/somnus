@@ -57,9 +57,6 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
             raise TimeoutError("Could not establish SSH connection to host server")
         await asyncio.sleep(seconds_between_attempts)
 
-    if not _screen_is_installed(ssh):
-        log.fatal("Screen is not installed on host server")
-
     return ssh
 
 
