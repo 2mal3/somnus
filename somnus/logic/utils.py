@@ -111,7 +111,7 @@ async def _is_mc_server_running(config: Config) -> bool:
 
 
 async def _is_host_server_running(config: Config) -> bool:
-    if config.HOST_SERVER_HOST == "localhost":
+    if config.HOST_SERVER_HOST in ["localhost", "127.0.0.1"]:
         return True
 
     if not ping(config.HOST_SERVER_HOST):
