@@ -36,8 +36,16 @@ async def start_server(config: Config = CONFIG) -> AsyncGenerator:
             async for _ in _start_host_server(config):
                 yield
 
-        except Exception as e:
-            raise RuntimeError(f"Could not start host server | {e}")
+        except Exception:
+            log.warning("Could not connect to host server. Send WOL packages again and retry.")
+            yield True
+            try:
+                async for _ in _start_host_server(config):
+                    yield
+
+            except Exception as e:
+                raise RuntimeError(f"Could not start host server | {e}")
+
     else:
         for _ in range(9):
             yield
@@ -84,29 +92,25 @@ async def _try_start_mc_server_with_ssh(config: Config) -> AsyncGenerator:
             raise RuntimeError(f"Could not start MC server and exit gracefully | E1: {exception1} | E2: {exception2}")
 
 
-async def _start_host_server(config: Config) -> AsyncGenerator:
-    max_retries = 2 if config.DEBUG else 10
-    retry_intervall_seconds = 5 if config.DEBUG else 20
-    ping_speed = 30
+async def _start_host_server(config: Config) -> None:
+    ping_count = 2 if config.DEBUG else 15
+    ping_timeout_seconds = 5 if config.DEBUG else 30 # normal 300
 
     await _send_wol_packet(config)
     yield
 
-    for i in range(max_retries):
-        await asyncio.sleep(retry_intervall_seconds)
+    for i in range(ping_count):
+        await asyncio.sleep(ping_timeout_seconds // ping_count)
 
         if (await get_server_state(config)).host_server_running:
-            for j in range(i, ping_speed):
-                if j % 4:
+            for j in range(i, ping_count):
+                if j % 2:
                     yield
             return
-        if i == ping_speed // 2:
-            # an discord_provider.py geben, dass Server ggf. nicht gestartet wurde und Start erneut versucht wird
-            yield True
-            await _send_wol_packet(config)
 
-        if i % 4:
+        if i % 2:
             yield
+
         log.warning("Could not connect to host server, trying again...")
 
     raise TimeoutError("Could not start host server")
