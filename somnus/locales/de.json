@@ -19,7 +19,7 @@
       "msg_above_process_bar": "Server stoppt ...",
       "finished_msg": "Server gestoppt!",
       "error": {
-        "general": "Sever konnte nicht gestoppt werden\n-# ERROR: {e}",
+        "general": "Server konnte nicht gestoppt werden\n-# ERROR: {e}",
         "already_stopped": "Server bereits gestoppt.",
         "mc_already_stopped": "Minecraft-Server bereits gestoppt.",
         "players_online": {
