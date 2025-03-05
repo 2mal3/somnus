@@ -36,12 +36,12 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
         TimeoutError: Could not establish a SSH connection to the server
     """
 
-    ssh = pxssh.pxssh()
     attempts = 2 if config.DEBUG else 10
     seconds_between_attempts = 1 if config.DEBUG else 5
 
     for tries in range(attempts):
         try:
+            ssh = pxssh.pxssh()
             ssh.login(
                 config.HOST_SERVER_HOST,
                 config.HOST_SERVER_USER,
