@@ -92,7 +92,7 @@ async def _try_start_mc_server_with_ssh(config: Config) -> AsyncGenerator:
             raise RuntimeError(f"Could not start MC server and exit gracefully | E1: {exception1} | E2: {exception2}")
 
 
-async def _start_host_server(config: Config) -> None:
+async def _start_host_server(config: Config) -> AsyncGenerator:
     ping_count = 2 if config.DEBUG else 15
     ping_timeout_seconds = 5 if config.DEBUG else 300
 
