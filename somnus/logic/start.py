@@ -135,7 +135,7 @@ async def _start_mc_server(ssh: pxssh.pxssh) -> AsyncGenerator:
         ["Loading libraries", "Loading"],
         ["Environment", "Preparing"],
         ["Preparing level"],
-        []
+        [],
     ]
     for i, message in enumerate(messages):
         try:
