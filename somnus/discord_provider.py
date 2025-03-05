@@ -113,6 +113,8 @@ async def _try_start_minecraft_server(ctx: discord.Interaction, message: str) ->
         )
         await _ping_user_after_error(ctx)
 
+    await _no_longer_busy()
+    await _update_bot_presence()
     return False
 
 
