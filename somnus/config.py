@@ -19,7 +19,7 @@ class Config(BaseModel):
     INACTIVITY_SHUTDOWN_MINUTES: int = 0
     DISCORD_STATUS_CHANNEL_ID: int | None = None
     LANGUAGE: str = "en"
-    DISCORD_SUPER_USER_ID: str
+    DISCORD_SUPER_USER_ID: str = ""
     DEBUG: bool = False
     DEBUG_LOGGING: bool = False
 

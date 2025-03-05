@@ -72,7 +72,7 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 ### ⚙️ Environment Variables
 
 | Env Var                     | Type    | Required | Default | Description                                                                                                           |
-| --------------------------- | ------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| --------------------------- | ------- |----------| ------- | --------------------------------------------------------------------------------------------------------------------- |
 | DISCORD_TOKEN               | string  | yes      |         | your discord bot token                                                                                                |
 | HOST_SERVER_HOST            | string  | yes      |         | ip adress of your host server on which the Minecraft server process should be started                                 |
 | HOST_SERVER_USER            | string  | yes      |         | username on host server                                                                                               |
@@ -80,7 +80,7 @@ A Discord bot to remotely control and manage multiple Minecraft servers.
 | HOST_SERVER_MAC             | string  | yes      |         | mac adress of host server (only necessary if Wake On Lan is activated)                                                |
 | MC_SERVER_START_CMD         | string  | yes      |         | start command for minecraft server (use absolute path if possible)                                                    |
 | MC_SERVER_ADDRESS           | string  | yes      |         | minecraft server adress WITH PORT                                                                                     |
-| DISCORD_SUPER_USER_ID       | integer | yes      |         | discord user id's separated with “;” from discord users who should have access to superuser commands                  |
+| DISCORD_SUPER_USER_ID       | integer | no       |         | discord user id's separated with “;” from discord users who should have access to superuser commands                  |
 | GET_PLAYERS_COMMAND_ENABLED | boolean | no       | true    | if the "/get_players" command is enabled (returns all player names of players who are online)                         |
 | MC_SERVER_START_CMD_SUDO    | boolean | no       | false   | if the minecraft server should start with sudo rights                                                                 |
 | LANGUAGE                    | string  | no       | en      | display language for the discord bot ("en" -> english, "de" -> deutsch/german are included)                           |
