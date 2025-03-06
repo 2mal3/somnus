@@ -119,10 +119,19 @@ def _generate_progress_bar(value: int, message: str) -> str:
 
 
 @tree.command(name="stop", description=LH("commands.stop.description"))
-async def stop_server_command(ctx: discord.Interaction, prevent_host_shutdown: bool = False) -> None:
-    if prevent_host_shutdown and not _is_super_user(ctx):
+async def stop_server_command(ctx: discord.Interaction) -> None:
+    await _stop_server(ctx, prevent_host_shutdown=False)
+
+
+@tree.command(name="stop_without_shutdown", description=LH("commands.stop_without_shutdown.description"))
+async def stop_without_shutdown_command(ctx: discord.Interaction) -> None:
+    if not _is_super_user(ctx):
         return
 
+    await _stop_server(ctx, prevent_host_shutdown=True)
+
+
+async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) -> None:
     if is_busy:
         await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return
@@ -149,17 +158,21 @@ async def stop_server_command(ctx: discord.Interaction, prevent_host_shutdown: b
         async for _ in stop.stop_server(not prevent_host_shutdown):
             i += 2
             await ctx.edit_original_response(content=_generate_progress_bar(i, message))
+
     except errors.UserInputError as e:
         await ctx.edit_original_response(content=str(e))
+
     except Exception as e:
         await ctx.edit_original_response(
             content=LH("commands.stop.error.general", args={"e": _trim_text_for_discord_subtitle(str(e))})
         )
         await _ping_user_after_error(ctx)
+
     else:
         update_players_online_status.stop()
         await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
         await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
+
     finally:
         await _update_bot_presence()
         await _no_longer_busy()
