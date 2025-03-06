@@ -530,7 +530,7 @@ async def restart_command(ctx: discord.Interaction) -> None:
     except Exception as e:
         await ctx.edit_original_response(
             content=LH("commands.stop.error.general", args={"e": _trim_text_for_discord_subtitle(str(e))})
-        )   # TODO: accurate error message
+        )
         await _ping_user_after_error(ctx)
         log.error("Error while restarting server", exc_info=e)
     else:
@@ -878,7 +878,7 @@ async def _no_longer_busy() -> None:
 
 
 def _make_busy() -> None:
-    global is_busy # noqa: PLW0603
+    global is_busy  # noqa: PLW0603
 
     is_busy = True
 
