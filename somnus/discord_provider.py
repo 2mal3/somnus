@@ -135,6 +135,55 @@ async def stop_server_command(ctx: discord.Interaction) -> None:
         await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
 
 
+async def _stop_minecraft_server(ctx: discord.Interaction, message: str, shutdown: bool) -> bool:
+    if not await _check_if_busy(ctx):
+        return False
+
+    mc_status = await utils.get_mcstatus(CONFIG)
+    if mc_status and mc_status.players.online:
+        if not await _players_online_verification(ctx, message, mc_status):
+            return False
+
+        if not await _check_if_busy(ctx):
+            return False
+
+    world_config = await world_selector.get_world_selector_config()
+
+    update_players_online_status.stop()
+    log.info("Status Updater stopped!")
+    activity = await _get_discord_activity(
+        "stopping", LH("status.text.stopping", args={"world_name": world_config.current_world})
+    )
+    await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
+
+    i = 0
+    try:
+        async for _ in stop.stop_server(shutdown):
+            i += 2
+            await ctx.edit_original_response(content=_generate_progress_bar(i, message))
+    except Exception as e:
+        if isinstance(e, utils.UserInputError):
+            await ctx.edit_original_response(content=str(e))
+            await _update_bot_presence()
+            await _no_longer_busy()
+            return False
+        log.error(f"Could not stop server | {e}")
+        await ctx.edit_original_response(
+            content=LH("commands.stop.error.general", args={"e": _trim_text_for_discord_subtitle(str(e))})
+        )
+        await _ping_user_after_error(ctx)
+        await _update_bot_presence()
+        await _no_longer_busy()
+        return False
+
+    log.debug("Change current world in JSON file to selected world (if necessary)")
+    await world_selector.change_world()
+    await _update_bot_presence()
+    log.info("Bot presence updated!")
+    await _no_longer_busy()
+    return True
+
+
 def _trim_text_for_discord_subtitle(text: str) -> str:
     return str(text).replace("\n", " ")
 
@@ -502,53 +551,7 @@ async def get_players_command(ctx: discord.Interaction) -> None:
     await ctx.response.send_message(content)
 
 
-async def _stop_minecraft_server(ctx: discord.Interaction, message: str, shutdown: bool) -> bool:
-    if not await _check_if_busy(ctx):
-        return False
 
-    mc_status = await utils.get_mcstatus(CONFIG)
-    if mc_status and mc_status.players.online:
-        if not await _players_online_verification(ctx, message, mc_status):
-            return False
-
-        if not await _check_if_busy(ctx):
-            return False
-
-    world_config = await world_selector.get_world_selector_config()
-
-    update_players_online_status.stop()
-    log.info("Status Updater stopped!")
-    activity = await _get_discord_activity(
-        "stopping", LH("status.text.stopping", args={"world_name": world_config.current_world})
-    )
-    await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
-
-    i = 0
-    try:
-        async for _ in stop.stop_server(shutdown):
-            i += 2
-            await ctx.edit_original_response(content=_generate_progress_bar(i, message))
-    except Exception as e:
-        if isinstance(e, utils.UserInputError):
-            await ctx.edit_original_response(content=str(e))
-            await _update_bot_presence()
-            await _no_longer_busy()
-            return False
-        log.error(f"Could not stop server | {e}")
-        await ctx.edit_original_response(
-            content=LH("commands.stop.error.general", args={"e": _trim_text_for_discord_subtitle(str(e))})
-        )
-        await _ping_user_after_error(ctx)
-        await _update_bot_presence()
-        await _no_longer_busy()
-        return False
-
-    log.debug("Change current world in JSON file to selected world (if necessary)")
-    await world_selector.change_world()
-    await _update_bot_presence()
-    log.info("Bot presence updated!")
-    await _no_longer_busy()
-    return True
 
 
 async def _restart_minecraft_server(ctx: discord.Interaction, message: str) -> bool:
