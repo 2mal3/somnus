@@ -1,21 +1,23 @@
-from pexpect import pxssh
 from typing import AsyncGenerator
 
+from somnus.actions.stop_mc import stop_mc_server
+from somnus.actions.stop_host import stop_host_server
 from somnus.config import Config, CONFIG
 from somnus.logger import log
-from somnus.logic.utils import (
-    get_server_state,
-    ssh_login,
-    UserInputError,
-    send_possible_sudo_command,
-    send_sudo_command,
-    detach_screen_session,
-    kill_screen,
-)
+from somnus.actions.stats import get_server_state
+from somnus.actions.ssh import ssh_login
 from somnus.language_handler import LH
+from somnus.logic.errors import UserInputError
 
 
 async def stop_server(shutdown: bool, config: Config = CONFIG) -> AsyncGenerator:
+    """
+    Raises:
+        UserInputError: If the user input is invalid.
+        MCServerStartError: If MC server could not be started.
+        HostServerStartError: If host server could not be started.
+    """
+
     ssh = await ssh_login(config)
     server_state = await get_server_state(config)
     log.info(
@@ -32,7 +34,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG) -> AsyncGenerator
     # Stop MC server
     if server_state.mc_server_running:
         log.debug("Stopping MC server ...")
-        async for _ in _try_stop_mc_server(ssh, config):
+        async for _ in stop_mc_server(ssh, config):
             yield
     else:
         for _ in range(5):
@@ -41,47 +43,9 @@ async def stop_server(shutdown: bool, config: Config = CONFIG) -> AsyncGenerator
 
     # Stop host server
     if server_state.host_server_running and shutdown and config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"]:
-        log.debug("Stopping host server ...")
-        try:
-            await send_sudo_command(ssh, config, "shutdown -h now")
-        except Exception as e:
-            raise RuntimeError(f"Could not stop host server | {e}")
+        await stop_host_server(ssh, config)
     yield
 
     ssh.sendline("exit")
     ssh.close()
     yield
-
-
-async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config) -> AsyncGenerator:
-    log.debug("Connecting to screen session ...")
-    await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
-    yield
-
-    try:
-        async for _ in _stop_mc_server(ssh, config):
-            yield
-    except Exception as e:
-        raise RuntimeError(f"Could not stop MC server | {e}")
-    finally:
-        log.debug("Exiting screen session ...")
-        await detach_screen_session(ssh)
-        await kill_screen(ssh, config)
-
-
-async def _stop_mc_server(ssh: pxssh.pxssh, config: Config) -> AsyncGenerator:
-    server_shutdown_maximum_time = 600
-
-    log.debug("Sending stop command ...")
-    ssh.sendline("stop")
-
-    messages = ["overworld", "nether", "end", "All"]
-    for i, message in enumerate(messages):
-        found_element_index = ssh.expect(["All", message], timeout=server_shutdown_maximum_time)
-        log.debug(f"Stage '{message}' completed")
-
-        if found_element_index == 0:
-            for _ in range(i, len(messages)):
-                yield
-            return
-        yield
