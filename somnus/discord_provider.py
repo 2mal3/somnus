@@ -60,6 +60,8 @@ async def ping_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction) -> None:
+    global inactvity_seconds  # noqa: PLW0603
+
     if is_busy:
         await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return
@@ -99,7 +101,9 @@ async def start_server_command(ctx: discord.Interaction) -> None:
         await _ping_user_after_error(ctx)
 
     else:
+        inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
+
         await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
         await ctx.channel.send(LH("commands.start.finished_msg"))  # type: ignore
         log.info("Server started!")
