@@ -1,4 +1,5 @@
 import asyncio
+
 from typing import Union
 
 import discord
@@ -8,7 +9,8 @@ from mcstatus.status_response import JavaStatusResponse
 
 from somnus.config import CONFIG, Config
 from somnus.logger import log
-from somnus.logic import start, stop, utils, world_selector
+from somnus.logic import start, stop, world_selector, errors
+from somnus.actions import stats, stop_mc, start_mc, ssh
 from somnus.language_handler import LH
 
 
@@ -40,7 +42,7 @@ async def on_ready() -> None:
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
 
-    if (await utils.get_server_state(CONFIG)).mc_server_running:
+    if (await stats.get_server_state(CONFIG)).mc_server_running:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
@@ -58,34 +60,25 @@ async def ping_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction) -> None:
+    if is_busy:
+        await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
+        return
+    _make_busy()
+
     message = LH("commands.start.msg_above_process_bar")
 
     log.info("Received start command ...")
     await ctx.response.send_message(_generate_progress_bar(1, message))  # type: ignore
 
-    if await _try_start_minecraft_server(ctx=ctx, message=message):
-        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
-        await ctx.channel.send(LH("commands.start.finished_msg"))  # type: ignore
-        log.info("Server started!")
-
-    await _update_bot_presence()
-
-
-async def _try_start_minecraft_server(ctx: discord.Interaction, message: str) -> bool:
-    global inactvity_seconds  # noqa: PLW0603
-
-    if not await _check_if_busy(ctx):
-        return False
-
+    # Set bot presence
     world_config = await world_selector.get_world_selector_config()
-
     activity = await _get_discord_activity(
         "starting", LH("status.text.starting", args={"world_name": world_config.current_world})
     )
     await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
 
-    i = 0
     try:
+        i = 0
         async for wol_failed in start.start_server():
             if wol_failed:
                 original_message = await ctx.original_response()
@@ -95,17 +88,9 @@ async def _try_start_minecraft_server(ctx: discord.Interaction, message: str) ->
                 i += 1
             await ctx.edit_original_response(content=_generate_progress_bar(i, message))
 
-        inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-        update_players_online_status.start()
-        log.info("Status Updater started!")
-        await _no_longer_busy()
-        return True
-
-        # The user has done something wrong
-    except utils.UserInputError as e:
+    except errors.UserInputError as e:
         await ctx.edit_original_response(content=str(e))
 
-    # Something went wrong with our code
     except Exception as e:
         log.error("Could not start server", exc_info=e)
         await ctx.edit_original_response(
@@ -113,9 +98,15 @@ async def _try_start_minecraft_server(ctx: discord.Interaction, message: str) ->
         )
         await _ping_user_after_error(ctx)
 
-    await _no_longer_busy()
-    await _update_bot_presence()
-    return False
+    else:
+        update_players_online_status.start()
+        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
+        await ctx.channel.send(LH("commands.start.finished_msg"))  # type: ignore
+        log.info("Server started!")
+
+    finally:
+        await _update_bot_presence()
+        await _no_longer_busy()
 
 
 def _generate_progress_bar(value: int, message: str) -> str:
@@ -124,64 +115,50 @@ def _generate_progress_bar(value: int, message: str) -> str:
 
 
 @tree.command(name="stop", description=LH("commands.stop.description"))
-async def stop_server_command(ctx: discord.Interaction) -> None:
+async def stop_server_command(ctx: discord.Interaction, prevent_host_shutdown: bool = False) -> None:
+    if prevent_host_shutdown and not _is_super_user(ctx):
+        return
+
+    if is_busy:
+        await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
+        return
+    _make_busy()
+
     message = LH("commands.stop.msg_above_process_bar")
+
+    mc_status = await stats.get_mcstatus(CONFIG)
+    if mc_status and mc_status.players.online and not await _players_online_verification(ctx, message, mc_status):
+        return
 
     log.info("Received stop command ...")
     await ctx.response.send_message(_generate_progress_bar(1, message))  # type: ignore
 
-    if await _stop_minecraft_server(ctx=ctx, message=message, shutdown=True):
-        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
-        await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
-
-
-async def _stop_minecraft_server(ctx: discord.Interaction, message: str, shutdown: bool) -> bool:
-    if not await _check_if_busy(ctx):
-        return False
-
-    mc_status = await utils.get_mcstatus(CONFIG)
-    if mc_status and mc_status.players.online:
-        if not await _players_online_verification(ctx, message, mc_status):
-            return False
-
-        if not await _check_if_busy(ctx):
-            return False
-
+    # Update bots presence
     world_config = await world_selector.get_world_selector_config()
-
-    update_players_online_status.stop()
-    log.info("Status Updater stopped!")
     activity = await _get_discord_activity(
         "stopping", LH("status.text.stopping", args={"world_name": world_config.current_world})
     )
     await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
 
-    i = 0
     try:
-        async for _ in stop.stop_server(shutdown):
+        i = 0
+        async for _ in stop.stop_server(not prevent_host_shutdown):
             i += 2
             await ctx.edit_original_response(content=_generate_progress_bar(i, message))
+    except errors.UserInputError as e:
+        await ctx.edit_original_response(content=str(e))
     except Exception as e:
-        if isinstance(e, utils.UserInputError):
-            await ctx.edit_original_response(content=str(e))
-            await _update_bot_presence()
-            await _no_longer_busy()
-            return False
-        log.error(f"Could not stop server | {e}")
         await ctx.edit_original_response(
             content=LH("commands.stop.error.general", args={"e": _trim_text_for_discord_subtitle(str(e))})
         )
         await _ping_user_after_error(ctx)
+    else:
+        update_players_online_status.stop()
+        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
+        await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
+    finally:
         await _update_bot_presence()
         await _no_longer_busy()
-        return False
-
-    log.debug("Change current world in JSON file to selected world (if necessary)")
-    await world_selector.change_world()
-    await _update_bot_presence()
-    log.info("Bot presence updated!")
-    await _no_longer_busy()
-    return True
 
 
 def _trim_text_for_discord_subtitle(text: str) -> str:
@@ -350,7 +327,7 @@ async def change_world_command(ctx: discord.Interaction) -> None:
         )
         await interaction.response.defer()
 
-        if not ((await utils.get_server_state(CONFIG)).mc_server_running):
+        if not ((await stats.get_server_state(CONFIG)).mc_server_running):
             await world_selector.change_world()
             await _update_bot_presence()
         elif not current_world_is_selected:
@@ -398,20 +375,6 @@ async def show_worlds_command(ctx: discord.Interaction) -> None:
                 string += (3 + max_name_length - len(world.display_name)) * " " + str(world.visible)
 
     await ctx.response.send_message(string + LH("formatting.show_worlds.end"), ephemeral=sudo)
-
-
-@tree.command(name="stop_without_shutdown", description=LH("commands.stop_without_shutdown.description"))
-async def stop_without_shutdown_server_command(ctx: discord.Interaction) -> None:
-    if not await _is_super_user(ctx):
-        return
-    message = LH("commands.stop_without_shutdown.msg_above_process_bar")
-
-    log.info("Received stop command without shutdown ...")
-    await ctx.response.send_message(_generate_progress_bar(1, message))  # type: ignore
-
-    if await _stop_minecraft_server(ctx=ctx, message=message, shutdown=False):
-        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
-        await ctx.channel.send(LH("commands.stop_without_shutdown.finished_msg"))  # type: ignore
 
 
 @tree.command(name="help", description=LH("commands.help.description"))
@@ -463,13 +426,6 @@ async def help_command(ctx: discord.Interaction) -> None:
     await ctx.response.send_message(embed=embed, ephemeral=True)
 
 
-@tree.command(name="restart", description=LH("commands.restart.description"))
-async def restart_command(ctx: discord.Interaction) -> None:
-    message = LH("commands.restart.above_process_bar.msg")
-    await ctx.response.send_message(message)
-    await _restart_minecraft_server(ctx, message)
-
-
 @tree.command(name="reset_busy", description=LH("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction) -> bool | None:
     if not is_busy:
@@ -515,7 +471,7 @@ async def reset_busy_command(ctx: discord.Interaction) -> bool | None:
 @tree.command(name="get_players", description=LH("commands.get_players.description"))
 async def get_players_command(ctx: discord.Interaction) -> None:
     if CONFIG.GET_PLAYERS_COMMAND_ENABLED:
-        mc_status = await utils.get_mcstatus(CONFIG)
+        mc_status = await stats.get_mcstatus(CONFIG)
         if mc_status:
             if mc_status.players.online == 0:
                 content = LH("commands.get_players.error.no_one_online")
@@ -551,30 +507,35 @@ async def get_players_command(ctx: discord.Interaction) -> None:
     await ctx.response.send_message(content)
 
 
-
-
-
-async def _restart_minecraft_server(ctx: discord.Interaction, message: str) -> bool:
-    if not (await utils.get_server_state(CONFIG)).mc_server_running:
+@tree.command(name="restart", description=LH("commands.restart.description"))
+async def restart_command(ctx: discord.Interaction) -> None:
+    if not (await stats.get_server_state(CONFIG)).mc_server_running:
         await ctx.edit_original_response(content=LH("commands.restart.error"))  # type: ignore
-        return False
+        return
 
+    message = LH("commands.restart.above_process_bar.msg")
+    await ctx.response.send_message(message)
     log.info("Received restart command ...")
     await ctx.edit_original_response(content=_generate_progress_bar(1, message))  # type: ignore
 
-    if await _stop_minecraft_server(
-        ctx=ctx,
-        message=message + LH("commands.restart.above_process_bar.stopping_addon"),
-        shutdown=False,
-    ):
-        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, message))
-        if await _try_start_minecraft_server(
-            ctx=ctx, message=message + LH("commands.restart.above_process_bar.starting_addon")
-        ):
-            await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
-            await ctx.channel.send(LH("commands.restart.finished_msg"))  # type: ignore
-            return True
-    return False
+    try:
+        i = 0
+        ssh_client = await ssh.ssh_login(CONFIG)
+        async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
+            i += 1
+            await ctx.edit_original_response(content=_generate_progress_bar(i, message))
+        async for _ in start_mc.start_mc_server(CONFIG):
+            i += 1
+            await ctx.edit_original_response(content=_generate_progress_bar(i, message))
+    except Exception as e:
+        await ctx.edit_original_response(
+            content=LH("commands.stop.error.general", args={"e": _trim_text_for_discord_subtitle(str(e))})
+        )   # TODO: accurate error message
+        await _ping_user_after_error(ctx)
+        log.error("Error while restarting server", exc_info=e)
+    else:
+        await ctx.edit_original_response(content=_generate_progress_bar(PROGRESS_BAR_STEPS, ""))
+        await ctx.channel.send(LH("commands.restart.finished_msg"))  # type: ignore
 
 
 async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse) -> None:
@@ -671,7 +632,12 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
             + LH("commands.restart.above_process_bar.msg")
         )
         await interaction.response.edit_message(content=message, view=button_view)
-        await _restart_minecraft_server(interaction, message)
+
+        ssh_client = await ssh.ssh_login(CONFIG)
+        async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
+            pass
+        async for _ in start_mc.start_mc_server(CONFIG):
+            pass
 
     async def cancel_callback(interaction: discord.Interaction) -> None:
         if select_interaction.user.id != interaction.user.id:
@@ -701,10 +667,10 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
 
 async def _update_bot_presence() -> None:
     world_selector_config = await world_selector.get_world_selector_config()
-    server_status = await utils.get_server_state(CONFIG)
+    server_status = await stats.get_server_state(CONFIG)
 
     if server_status.mc_server_running:
-        mc_status = await utils.get_mcstatus(CONFIG)
+        mc_status = await stats.get_mcstatus(CONFIG)
         if not mc_status:
             text = LH(
                 "status.text.online",
@@ -734,7 +700,7 @@ async def _update_bot_presence() -> None:
     await bot.change_presence(status=status, activity=activity)
 
 
-def _map_server_status_to_discord_activity(server_status: utils.ServerState) -> discord.Status:
+def _map_server_status_to_discord_activity(server_status: stats.ServerState) -> discord.Status:
     if not server_status.host_server_running:
         return discord.Status.dnd
     # After here the host server is running
@@ -797,7 +763,7 @@ async def _stop_inactivity() -> bool | None:
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH("other.inactivity_shutdown.error.is_busy"))
             return None
-        mcstatus = await utils.get_mcstatus(CONFIG)
+        mcstatus = await stats.get_mcstatus(CONFIG)
         if mcstatus is None:
             await _no_longer_busy()
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
@@ -909,6 +875,12 @@ async def _no_longer_busy() -> None:
     global is_busy  # noqa: PLW0603
 
     is_busy = False
+
+
+def _make_busy() -> None:
+    global is_busy # noqa: PLW0603
+
+    is_busy = True
 
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool:
