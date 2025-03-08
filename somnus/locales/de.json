@@ -2,7 +2,7 @@
   "commands": {
     "ping": {
       "description": "Antwortet mit Pong!",
-      "response": "Pong!"
+      "response": "Pong!\n-# Somnus {version}"
     },
     "start": {
       "description": "Startet den Server.",

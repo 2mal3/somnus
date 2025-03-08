@@ -1,5 +1,6 @@
 import asyncio
-
+import aiofiles
+import toml
 from typing import Union
 
 import discord
@@ -55,7 +56,13 @@ async def on_ready() -> None:
 
 @tree.command(name="ping", description=LH("commands.ping.description"))
 async def ping_command(ctx: discord.Interaction) -> None:
-    await ctx.response.send_message(LH("commands.ping.response"))  # type: ignore
+    version = ""
+    async with aiofiles.open('pyproject.toml', 'r') as file:
+        toml_data = await file.read()
+        data = toml.loads(toml_data)
+        version = "v"+data['project']['version']
+
+    await ctx.response.send_message(LH("commands.ping.response", args={"version": version}))  # type: ignore
 
 
 @tree.command(name="start", description=LH("commands.start.description"))

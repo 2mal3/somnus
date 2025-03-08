@@ -58,6 +58,7 @@ requests==2.32.3
 ruff==0.9.9
 setuptools==70.3.0
     # via asyncio-dgram
+toml==0.10.2
 typing-extensions==4.12.2
     # via pydantic
     # via pydantic-core
