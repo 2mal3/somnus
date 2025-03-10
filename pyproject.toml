@@ -15,8 +15,8 @@ dependencies = [
     "mcstatus==11.*",
     "pydantic==2.*",
     "aiofiles==24.*",
-    "yet-another-i18n==0.*",
-    "toml>=0.10.2",
+    "yet-another-i18n==0.2.*",
+    "toml==0.10.*",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -63,7 +63,7 @@ virtual = true
 dev-dependencies = [
     "podman==5.*",
     "pytest==8.*",
-    "ruff>=0.9.9",
+    "ruff==0.9.*",
 ]
 
 [tool.hatch.metadata]
