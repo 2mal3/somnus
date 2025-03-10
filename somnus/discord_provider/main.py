@@ -14,6 +14,7 @@ from somnus.logic import start, stop, world_selector, errors
 from somnus.actions import stats, stop_mc, start_mc, ssh
 from somnus.language_handler import LH
 from somnus.discord_provider.utils import trim_text_for_discord_subtitle, generate_progress_bar
+from somnus.discord_provider.busy_provider import busy_provider
 
 
 PROGRESS_BAR_STEPS = 20
@@ -23,7 +24,6 @@ intents.message_content = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
-is_busy = False
 inactvity_seconds = 0
 
 
@@ -70,10 +70,10 @@ async def ping_command(ctx: discord.Interaction) -> None:
 async def start_server_command(ctx: discord.Interaction) -> None:
     global inactvity_seconds  # noqa: PLW0603
 
-    if is_busy:
+    if busy_provider.is_busy():
         await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return
-    _make_busy()
+    busy_provider.make_busy()
 
     message = LH("commands.start.msg_above_process_bar")
 
@@ -118,7 +118,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
 
     finally:
         await _update_bot_presence()
-        await _no_longer_busy()
+        busy_provider.make_available()
 
 
 @tree.command(name="stop", description=LH("commands.stop.description"))
@@ -135,10 +135,10 @@ async def stop_without_shutdown_command(ctx: discord.Interaction) -> None:
 
 
 async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) -> None:
-    if is_busy:
+    if busy_provider.is_busy():
         await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return
-    _make_busy()
+    busy_provider.make_busy()
 
     message = LH("commands.stop.msg_above_process_bar")
 
@@ -178,7 +178,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
     finally:
         await _update_bot_presence()
-        await _no_longer_busy()
+        busy_provider.make_available()
 
 
 @tree.command(name="add_world", description=LH("commands.add_world.description"))
@@ -444,7 +444,7 @@ async def help_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="reset_busy", description=LH("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction) -> bool | None:
-    if not is_busy:
+    if not busy_provider.is_busy():
         await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
         return False
 
@@ -458,7 +458,7 @@ async def reset_busy_command(ctx: discord.Interaction) -> bool | None:
                 ephemeral=True,
             )
             return
-        await _no_longer_busy()
+        busy_provider.make_available()
         confirm_button.disabled = True
         cancel_button.disabled = True
         await interaction.response.edit_message(content=LH("commands.reset_busy.success"), view=view)
@@ -555,7 +555,7 @@ async def restart_command(ctx: discord.Interaction) -> None:
 
 
 async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse) -> None:
-    await _no_longer_busy()
+    busy_provider.make_available()
     result_future = asyncio.Future()
 
     confirm_button = discord.ui.Button(
@@ -781,12 +781,12 @@ async def _stop_inactivity() -> bool | None:
             return None
         mcstatus = await stats.get_mcstatus(CONFIG)
         if mcstatus is None:
-            await _no_longer_busy()
+            busy_provider.make_available()
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH("other.inactivity_shutdown.error.offline"))
             return None
         if mcstatus.players.online != 0:
-            await _no_longer_busy()
+            busy_provider.make_available()
             inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH("other.inactivity_shutdown.error.players_online"))
             return None
@@ -806,7 +806,7 @@ async def _stop_inactivity() -> bool | None:
             pass
         await _update_bot_presence()
         await message.edit(content=LH("other.inactivity_shutdown.finished_msg"))  # type: ignore
-        await _no_longer_busy()
+        busy_provider.make_available()
 
 
 async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> tuple[discord.Message, bool]:
@@ -876,27 +876,13 @@ async def _ping_user_after_error(ctx: discord.Interaction) -> None:
 
 
 async def _check_if_busy(ctx: discord.Interaction | None = None) -> bool:
-    global is_busy  # noqa: PLW0603
-
-    if is_busy:
+    if busy_provider.is_busy():
         if ctx is not None:
             await ctx.edit_original_response(content=LH("other.busy"))  # type: ignore
         return False
     else:
-        is_busy = True
+        busy_provider.make_busy()
         return True
-
-
-async def _no_longer_busy() -> None:
-    global is_busy  # noqa: PLW0603
-
-    is_busy = False
-
-
-def _make_busy() -> None:
-    global is_busy  # noqa: PLW0603
-
-    is_busy = True
 
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool:
