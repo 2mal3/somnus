@@ -17,19 +17,19 @@ from somnus.discord_provider.utils import trim_text_for_discord_subtitle, genera
 from somnus.discord_provider.busy_provider import busy_provider
 
 
-PROGRESS_BAR_STEPS = 20
+TOTAL_PROGRESS_BAR_STEPS = 20
 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
-inactvity_seconds = 0
+inactivity_seconds = 0
 
 
 @bot.event
 async def on_ready() -> None:
-    global inactvity_seconds  # noqa: PLW0603
+    global inactivity_seconds  # noqa: PLW0603
 
     if not bot.user:
         log.fatal("Bot user not found!")
@@ -46,7 +46,7 @@ async def on_ready() -> None:
 
     if (await stats.get_server_state(CONFIG)).mc_server_running:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
         log.info("Status Updater started!")
 
@@ -68,7 +68,7 @@ async def ping_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction) -> None:
-    global inactvity_seconds  # noqa: PLW0603
+    global inactivity_seconds  # noqa: PLW0603
 
     if busy_provider.is_busy():
         await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
@@ -78,7 +78,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
     message = LH("commands.start.msg_above_process_bar")
 
     log.info("Received start command ...")
-    await ctx.response.send_message(generate_progress_bar(1, message, PROGRESS_BAR_STEPS))  # type: ignore
+    await ctx.response.send_message(generate_progress_bar(1, message, TOTAL_PROGRESS_BAR_STEPS))  # type: ignore
 
     # Set bot presence
     world_config = await world_selector.get_world_selector_config()
@@ -96,7 +96,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
                 i = 1
             else:
                 i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, PROGRESS_BAR_STEPS, message))
+            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
 
     except errors.UserInputError as e:
         await ctx.edit_original_response(content=str(e))
@@ -109,10 +109,10 @@ async def start_server_command(ctx: discord.Interaction) -> None:
         await _ping_user_after_error(ctx)
 
     else:
-        inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+        inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
 
-        await ctx.edit_original_response(content=generate_progress_bar(PROGRESS_BAR_STEPS, PROGRESS_BAR_STEPS))
+        await ctx.edit_original_response(content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS))
         await ctx.channel.send(LH("commands.start.finished_msg"))  # type: ignore
         log.info("Server started!")
 
@@ -147,7 +147,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
         return
 
     log.info("Received stop command ...")
-    await ctx.response.send_message(generate_progress_bar(1, message, PROGRESS_BAR_STEPS))  # type: ignore
+    await ctx.response.send_message(generate_progress_bar(1, message, TOTAL_PROGRESS_BAR_STEPS))  # type: ignore
 
     # Update bots presence
     world_config = await world_selector.get_world_selector_config()
@@ -160,7 +160,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
         i = 0
         async for _ in stop.stop_server(not prevent_host_shutdown):
             i += 2
-            await ctx.edit_original_response(content=generate_progress_bar(i, PROGRESS_BAR_STEPS, message))
+            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
 
     except errors.UserInputError as e:
         await ctx.edit_original_response(content=str(e))
@@ -173,7 +173,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
     else:
         update_players_online_status.stop()
-        await ctx.edit_original_response(content=generate_progress_bar(PROGRESS_BAR_STEPS, PROGRESS_BAR_STEPS))
+        await ctx.edit_original_response(content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS))
         await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
 
     finally:
@@ -532,17 +532,17 @@ async def restart_command(ctx: discord.Interaction) -> None:
     message = LH("commands.restart.above_process_bar.msg")
     await ctx.response.send_message(message)
     log.info("Received restart command ...")
-    await ctx.edit_original_response(content=generate_progress_bar(1, message, PROGRESS_BAR_STEPS))  # type: ignore
+    await ctx.edit_original_response(content=generate_progress_bar(1, message, TOTAL_PROGRESS_BAR_STEPS))  # type: ignore
 
     try:
         i = 0
         ssh_client = await ssh.ssh_login(CONFIG)
         async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
             i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, PROGRESS_BAR_STEPS, message))
+            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
         async for _ in start_mc.start_mc_server(CONFIG):
             i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, PROGRESS_BAR_STEPS, message))
+            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
     except Exception as e:
         await ctx.edit_original_response(
             content=LH("commands.stop.error.general", args={"e": trim_text_for_discord_subtitle(str(e))})
@@ -550,7 +550,7 @@ async def restart_command(ctx: discord.Interaction) -> None:
         await _ping_user_after_error(ctx)
         log.error("Error while restarting server", exc_info=e)
     else:
-        await ctx.edit_original_response(content=generate_progress_bar(PROGRESS_BAR_STEPS, PROGRESS_BAR_STEPS))
+        await ctx.edit_original_response(content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS))
         await ctx.channel.send(LH("commands.restart.finished_msg"))  # type: ignore
 
 
@@ -745,22 +745,22 @@ async def _get_discord_activity(
 
 
 async def _check_for_inactivity_shutdown(players_online: int) -> bool:
-    global inactvity_seconds  # noqa: PLW0603
+    global inactivity_seconds  # noqa: PLW0603
 
     if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
         if players_online == 0:
-            if inactvity_seconds >= 0:
-                if inactvity_seconds == 0:
+            if inactivity_seconds >= 0:
+                if inactivity_seconds == 0:
                     await _stop_inactivity()
                     return True
-                inactvity_seconds -= 10
+                inactivity_seconds -= 10
         else:
-            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
     return False
 
 
 async def _stop_inactivity() -> bool | None:
-    global inactvity_seconds  # noqa: PLW0603
+    global inactivity_seconds  # noqa: PLW0603
 
     if not CONFIG.DISCORD_STATUS_CHANNEL_ID:
         log.error(
@@ -776,22 +776,22 @@ async def _stop_inactivity() -> bool | None:
     if player_confirmed_stop:
         log.info("Stopping due to inactivity ...")
         if not await _check_if_busy():
-            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH("other.inactivity_shutdown.error.is_busy"))
             return None
         mcstatus = await stats.get_mcstatus(CONFIG)
         if mcstatus is None:
             busy_provider.make_available()
-            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH("other.inactivity_shutdown.error.offline"))
             return None
         if mcstatus.players.online != 0:
             busy_provider.make_available()
-            inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH("other.inactivity_shutdown.error.players_online"))
             return None
 
-        inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+        inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
 
         world_config = await world_selector.get_world_selector_config()
         update_players_online_status.stop()
@@ -815,11 +815,11 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> tup
     cancel_button = discord.ui.Button(label=LH("other.inactivity_shutdown.cancel"), style=discord.ButtonStyle.green)
 
     async def cancel_callback(interaction: discord.Interaction) -> None:
-        global inactvity_seconds  # noqa: PLW0603
+        global inactivity_seconds  # noqa: PLW0603
 
         await interaction.response.defer()
         cancel_button.disabled = True
-        inactvity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+        inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         await message.edit(
             content=LH(
                 "other.inactivity_shutdown.canceled",
