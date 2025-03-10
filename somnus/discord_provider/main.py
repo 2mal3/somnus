@@ -112,7 +112,9 @@ async def start_server_command(ctx: discord.Interaction) -> None:
         inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
 
-        await ctx.edit_original_response(content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS))
+        await ctx.edit_original_response(
+            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
+        )
         await ctx.channel.send(LH("commands.start.finished_msg"))  # type: ignore
         log.info("Server started!")
 
@@ -173,7 +175,9 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
     else:
         update_players_online_status.stop()
-        await ctx.edit_original_response(content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS))
+        await ctx.edit_original_response(
+            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
+        )
         await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
 
     finally:
@@ -550,7 +554,9 @@ async def restart_command(ctx: discord.Interaction) -> None:
         await _ping_user_after_error(ctx)
         log.error("Error while restarting server", exc_info=e)
     else:
-        await ctx.edit_original_response(content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS))
+        await ctx.edit_original_response(
+            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
+        )
         await ctx.channel.send(LH("commands.restart.finished_msg"))  # type: ignore
 
 
