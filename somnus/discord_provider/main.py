@@ -142,13 +142,12 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
     busy_provider.make_busy()
 
     message = LH("commands.stop.msg_above_process_bar")
+    log.info("Received stop command ...")
+    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
 
     mc_status = await stats.get_mcstatus(CONFIG)
     if mc_status and mc_status.players.online and not await _players_online_verification(ctx, message, mc_status):
         return
-
-    log.info("Received stop command ...")
-    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
 
     # Update bots presence
     world_config = await world_selector.get_world_selector_config()
@@ -529,13 +528,12 @@ async def get_players_command(ctx: discord.Interaction) -> None:
 @tree.command(name="restart", description=LH("commands.restart.description"))
 async def restart_command(ctx: discord.Interaction) -> None:
     if not (await stats.get_server_state(CONFIG)).mc_server_running:
-        await ctx.edit_original_response(content=LH("commands.restart.error"))  # type: ignore
+        await ctx.response.send_message(content=LH("commands.restart.error"))  # type: ignore
         return
 
     message = LH("commands.restart.above_process_bar.msg")
-    await ctx.response.send_message(message)
     log.info("Received restart command ...")
-    await ctx.edit_original_response(content=generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
+    await ctx.response.send_message(content=generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
 
     try:
         i = 0
