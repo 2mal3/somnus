@@ -130,9 +130,8 @@ async def stop_server_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="stop_without_shutdown", description=LH("commands.stop_without_shutdown.description"))
 async def stop_without_shutdown_command(ctx: discord.Interaction) -> None:
-    if not _is_super_user(ctx):
+    if not await _is_super_user(ctx):
         return
-
     await _stop_server(ctx, prevent_host_shutdown=True)
 
 
