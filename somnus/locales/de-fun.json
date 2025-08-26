@@ -9,7 +9,7 @@
       "msg_above_process_bar": "Server startet ...",
       "finished_msg": "Server gestartet!",
       "error": {
-        "general": "Server hatte keine Lust zu starten\n-# ERROR: {e}",
+        "general": "Der Server hatte keine Lust zu starten\n-# ERROR: {e}",
         "already_running": "Du kannst den Server nicht doppelt starten. Aber wenn du Spaß am Starten hast, nutze zuerst `/stop`, um den Server zu stoppen.",
         "wol_failed": "Der Server schläft offensichtlich sehr tief. Nächster Weckversuch gestartet!"
       }
@@ -117,7 +117,7 @@
     "busy": "DER SERVER IST BESCHÄFTIGT!!1! LASS IHN IN RUHE!1!!!",
     "sudo": "Du bist nicht krass genug, um diesen Befehl zu nutzen. Frage deinen System-Administrator für Änderungen, vielleicht kannst du aufranken.",
     "inactivity_shutdown": {
-      "verification": "Dem Minecraft-Server ist nun schon seit {inactivity_shutdown_minutes} Minuten langweileig, weil niemand mehr spielt. \n**Daher geht der Server in 30s automatisch schlafen!**",
+      "verification": "Dem Minecraft-Server ist nun schon seit {inactivity_shutdown_minutes} Minuten langweilig, weil niemand mehr spielt. \n**Daher geht der Server in 30s automatisch schlafen!**",
       "cancel": "Abbruch, Server online lassen",
       "canceled": "Automatisches Stoppen abgebrochen. Aber die Geduld des Servers reicht nur noch {inactivity_shutdown_minutes} Minuten. Wenn bis dann immer noch niemand da war, geht er wirklich schlafen",
       "stopping": "**Server geht aus Langeweile schlafen**",
