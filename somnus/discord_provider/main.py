@@ -78,7 +78,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
     message = LH("commands.start.msg_above_process_bar")
 
     log.info("Received start command ...")
-    await ctx.response.send_message(generate_progress_bar(1, message, TOTAL_PROGRESS_BAR_STEPS))  # type: ignore
+    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
 
     # Set bot presence
     world_config = await world_selector.get_world_selector_config()
@@ -149,7 +149,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
         return
 
     log.info("Received stop command ...")
-    await ctx.response.send_message(generate_progress_bar(1, message, TOTAL_PROGRESS_BAR_STEPS))  # type: ignore
+    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
 
     # Update bots presence
     world_config = await world_selector.get_world_selector_config()
@@ -536,7 +536,7 @@ async def restart_command(ctx: discord.Interaction) -> None:
     message = LH("commands.restart.above_process_bar.msg")
     await ctx.response.send_message(message)
     log.info("Received restart command ...")
-    await ctx.edit_original_response(content=generate_progress_bar(1, message, TOTAL_PROGRESS_BAR_STEPS))  # type: ignore
+    await ctx.edit_original_response(content=generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
 
     try:
         i = 0
