@@ -13,7 +13,7 @@ from somnus.logger import log
 from somnus.logic import start, stop, world_selector, errors
 from somnus.actions import stats, stop_mc, start_mc, ssh
 from somnus.language_handler import LH
-from somnus.discord_provider.utils import trim_text_for_discord_subtitle, generate_progress_bar
+from somnus.discord_provider.utils import edit_error_for_discord_subtitle, generate_progress_bar
 from somnus.discord_provider.busy_provider import busy_provider
 
 
@@ -104,7 +104,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
     except Exception as e:
         log.error("Could not start server", exc_info=e)
         await ctx.edit_original_response(
-            content=LH("commands.start.error.general", args={"e": trim_text_for_discord_subtitle(str(e))})
+            content=LH("commands.start.error.general", args={"e": edit_error_for_discord_subtitle(e)})
         )
         await _ping_user_after_error(ctx)
 
@@ -169,7 +169,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
     except Exception as e:
         await ctx.edit_original_response(
-            content=LH("commands.stop.error.general", args={"e": trim_text_for_discord_subtitle(str(e))})
+            content=LH("commands.stop.error.general", args={"e": edit_error_for_discord_subtitle(e)})
         )
         await _ping_user_after_error(ctx)
 
@@ -549,7 +549,7 @@ async def restart_command(ctx: discord.Interaction) -> None:
             await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
     except Exception as e:
         await ctx.edit_original_response(
-            content=LH("commands.stop.error.general", args={"e": trim_text_for_discord_subtitle(str(e))})
+            content=LH("commands.stop.error.general", args={"e": edit_error_for_discord_subtitle(e)})
         )
         await _ping_user_after_error(ctx)
         log.error("Error while restarting server", exc_info=e)
