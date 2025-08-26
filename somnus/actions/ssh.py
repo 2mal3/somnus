@@ -38,13 +38,6 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
     return ssh
 
 
-async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> None:
-    if not (await get_current_world()).start_cmd_sudo:
-        ssh.sendline(command)
-    else:
-        await _send_sudo_command(ssh, config, command)
-
-
 async def _send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> None:
     ssh.sendline(f"sudo {command}")
     choice = ssh.expect(["sudo", "@"])
@@ -61,17 +54,17 @@ async def detach_screen_session(ssh: pxssh.pxssh) -> None:
 
 async def kill_screen(ssh: pxssh.pxssh, config: Config = CONFIG) -> None:
     log.debug("Killing screen session ...")
-    await send_possible_sudo_command(ssh, config, "screen -X -S mc-server-control quit")
+    ssh.sendline("screen -X -S mc-server-control quit")
 
 
 async def create_screen(ssh: pxssh.pxssh, config: Config) -> None:
     log.debug("Starting screen session ...")
-    await send_possible_sudo_command(ssh, config, "screen -S mc-server-control")
+    ssh.sendline("screen -S mc-server-control")
 
 
 async def attach_screen(ssh: pxssh.pxssh, config: Config) -> None:
     log.debug("Connecting to screen session ...")
-    await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
+    ssh.sendline("screen -r mc-server-control")
 
 
 async def shutdown_host(ssh: pxssh.pxssh, config: Config) -> None:

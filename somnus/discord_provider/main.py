@@ -13,7 +13,11 @@ from somnus.logger import log
 from somnus.logic import start, stop, world_selector, errors
 from somnus.actions import stats, stop_mc, start_mc, ssh
 from somnus.language_handler import LH
-from somnus.discord_provider.utils import edit_error_for_discord_subtitle, generate_progress_bar, map_server_status_to_discord_activity
+from somnus.discord_provider.utils import (
+    edit_error_for_discord_subtitle,
+    generate_progress_bar,
+    map_server_status_to_discord_activity,
+)
 from somnus.discord_provider.busy_provider import busy_provider
 
 
@@ -180,15 +184,13 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
 
 @tree.command(name="add_world", description=LH("commands.add_world.description"))
-async def add_world_command(
-    ctx: discord.Interaction, display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool
-) -> None:
+async def add_world_command(ctx: discord.Interaction, display_name: str, start_cmd: str, visible: bool) -> None:
     # only allow super users
     if not await _is_super_user(ctx):
         return
 
     try:
-        await world_selector.create_new_world(display_name, start_cmd, start_cmd_sudo, visible)
+        await world_selector.create_new_world(display_name, start_cmd, visible)
         await ctx.response.send_message(
             LH("commands.add_world.success", args={"display_name": display_name}), ephemeral=True
         )
@@ -206,7 +208,6 @@ async def edit_world_command(  # noqa: PLR0913
     editing_world_name: str,
     new_display_name: str | None = None,
     start_cmd: str | None = None,
-    sudo_start_cmd: bool | None = None,
     visible: bool | None = None,
 ) -> None:
     # only super users
@@ -214,9 +215,7 @@ async def edit_world_command(  # noqa: PLR0913
         return
 
     try:
-        world = await world_selector.edit_new_world(
-            editing_world_name, new_display_name, start_cmd, sudo_start_cmd, visible
-        )
+        world = await world_selector.edit_new_world(editing_world_name, new_display_name, start_cmd, visible)
         await ctx.response.send_message(
             LH(
                 "commands.edit_world.success",
@@ -365,17 +364,17 @@ async def change_world_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="show_worlds", description=LH("commands.show_worlds.description"))
 async def show_worlds_command(ctx: discord.Interaction) -> None:
-    sudo = await _is_super_user(ctx, False)
+    is_super_user = await _is_super_user(ctx, False)
     world_selector_config = await world_selector.get_world_selector_config()
 
     max_name_length = len(world_selector_config.worlds[0].display_name)
     for world in world_selector_config.worlds:
-        if (world.visible or sudo) and len(world.display_name) > max_name_length:
+        if (world.visible or is_super_user) and len(world.display_name) > max_name_length:
             max_name_length = len(world.display_name)
 
     string = LH("formatting.show_worlds.title")
     for world in world_selector_config.worlds:
-        if world.visible or sudo:
+        if world.visible or is_super_user:
             if world.display_name == world_selector_config.current_world:
                 string += LH("formatting.show_worlds.current_world")
             elif world.display_name == world_selector_config.new_selected_world:
@@ -385,15 +384,15 @@ async def show_worlds_command(ctx: discord.Interaction) -> None:
 
             string += world.display_name
 
-            if sudo:
+            if is_super_user:
                 string += (3 + max_name_length - len(world.display_name)) * " " + str(world.visible)
 
-    await ctx.response.send_message(string + LH("formatting.show_worlds.end"), ephemeral=sudo)
+    await ctx.response.send_message(string + LH("formatting.show_worlds.end"), ephemeral=is_super_user)
 
 
 @tree.command(name="help", description=LH("commands.help.description"))
 async def help_command(ctx: discord.Interaction) -> None:
-    sudo = await _is_super_user(ctx, False)
+    is_super_user = await _is_super_user(ctx, False)
     user_commands = [
         "start",
         "stop",
@@ -406,7 +405,7 @@ async def help_command(ctx: discord.Interaction) -> None:
         "help",
     ]
     embed = discord.Embed(title=LH("commands.help.title"), color=discord.Color.blue())
-    if sudo:
+    if is_super_user:
         embed.add_field(
             name=LH("formatting.help.subtitle", args={"subtitle": LH("commands.help.user_subtitle")}),
             value="",
@@ -420,7 +419,7 @@ async def help_command(ctx: discord.Interaction) -> None:
             ),
             inline=False,
         )
-    if sudo:
+    if is_super_user:
         embed.add_field(name="", value="", inline=False)
         embed.add_field(
             name=LH("formatting.help.subtitle", args={"subtitle": LH("commands.help.admin_subtitle")}),
@@ -835,7 +834,7 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> tup
 async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWorld) -> str:
     string = LH("formatting.sudo_world_info.start")
 
-    attributes = ["display_name", "start_cmd", "start_cmd_sudo", "visible"]
+    attributes = ["display_name", "start_cmd", "visible"]
     for attr in attributes:
         string += LH(
             "formatting.sudo_world_info.line",
@@ -847,6 +846,7 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
 async def _ping_user_after_error(ctx: discord.Interaction) -> None:
     user_mention = ctx.user.mention
     await ctx.followup.send(content=f"{user_mention}", ephemeral=False)
+
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool:
     super_users = [user.strip() for user in CONFIG.DISCORD_SUPER_USER_ID.split(";") if user.strip()]

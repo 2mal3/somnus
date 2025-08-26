@@ -17,12 +17,7 @@ class UserInputError(Exception):
 class WorldSelectorWorld(BaseModel):
     display_name: str
     start_cmd: str
-    start_cmd_sudo: str | bool
     visible: bool
-
-    @field_validator("start_cmd_sudo", mode="before")
-    def convert_str_to_bool(cls, value: str) -> bool:  # noqa: N805
-        return value in ("", "true", "True", True, "1")
 
 
 class WorldSelectorConfig(BaseModel):
@@ -41,10 +36,8 @@ async def get_current_world() -> WorldSelectorWorld:
     return current_world
 
 
-async def create_new_world(display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool) -> None:
-    new_world = WorldSelectorWorld(
-        display_name=display_name, start_cmd=start_cmd, start_cmd_sudo=start_cmd_sudo, visible=visible
-    )
+async def create_new_world(display_name: str, start_cmd: str, visible: bool) -> None:
+    new_world = WorldSelectorWorld(display_name=display_name, start_cmd=start_cmd, visible=visible)
 
     world_selector_config = await get_world_selector_config()
 
@@ -92,7 +85,6 @@ async def edit_new_world(
     editing_world_name: str,
     new_display_name: str | None,
     start_cmd: str | None,
-    start_cmd_sudo: bool | None,
     visible: bool | None,
 ) -> WorldSelectorWorld:
     """
@@ -110,8 +102,6 @@ async def edit_new_world(
                     world_selector_config.current_world = new_display_name
             if start_cmd not in ("", None):
                 world_selector_config.worlds[i].start_cmd = start_cmd
-            if start_cmd_sudo not in ("", None):
-                world_selector_config.worlds[i].start_cmd_sudo = start_cmd_sudo
             if visible not in ("", None):
                 world_selector_config.worlds[i].visible = visible
 
@@ -176,7 +166,6 @@ def _get_default_world_selector_config(config: Config = CONFIG) -> WorldSelector
             WorldSelectorWorld(
                 display_name="Minecraft",
                 start_cmd=config.MC_SERVER_START_CMD,
-                start_cmd_sudo=config.MC_SERVER_START_CMD_SUDO,
                 visible=True,
             )
         ],
