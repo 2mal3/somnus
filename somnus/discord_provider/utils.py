@@ -7,6 +7,8 @@ def edit_error_for_discord_subtitle(err: Exception) -> str:
 
 
 def generate_progress_bar(value: int, max_value: int, message: str = "") -> str:
+    if value < 0 or value > max_value:
+        raise ValueError(f"value must be between 0 and {max_value}, got {value}")
     progress = "█" * value + "░" * (max_value - value)
     if message:
         return f"{message}\n{progress}"
