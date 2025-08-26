@@ -13,7 +13,7 @@ from somnus.logger import log
 from somnus.logic import start, stop, world_selector, errors
 from somnus.actions import stats, stop_mc, start_mc, ssh
 from somnus.language_handler import LH
-from somnus.discord_provider.utils import edit_error_for_discord_subtitle, generate_progress_bar
+from somnus.discord_provider.utils import edit_error_for_discord_subtitle, generate_progress_bar, map_server_status_to_discord_activity
 from somnus.discord_provider.busy_provider import busy_provider
 
 
@@ -714,19 +714,9 @@ async def _update_bot_presence() -> None:
         text = LH("status.text.offline", args={"world_name": world_selector_config.current_world})
         activity = await _get_discord_activity("offline", text)
 
-    status = _map_server_status_to_discord_activity(server_status)
+    status = map_server_status_to_discord_activity(server_status)
 
     await bot.change_presence(status=status, activity=activity)
-
-
-def _map_server_status_to_discord_activity(server_status: stats.ServerState) -> discord.Status:
-    if not server_status.host_server_running:
-        return discord.Status.dnd
-    # After here the host server is running
-    elif not server_status.mc_server_running:
-        return discord.Status.idle
-    else:
-        return discord.Status.online
 
 
 async def _get_discord_activity(
