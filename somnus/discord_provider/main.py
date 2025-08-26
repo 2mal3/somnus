@@ -63,7 +63,7 @@ async def ping_command(ctx: discord.Interaction) -> None:
         data = toml.loads(toml_data)
         version = "v" + data["project"]["version"]
 
-    await ctx.response.send_message(LH("commands.ping.response", args={"version": version}))  # type: ignore
+    await ctx.response.send_message(LH("commands.ping.response", args={"version": version}))
 
 
 @tree.command(name="start", description=LH("commands.start.description"))
@@ -71,21 +71,21 @@ async def start_server_command(ctx: discord.Interaction) -> None:
     global inactivity_seconds  # noqa: PLW0603
 
     if busy_provider.is_busy():
-        await ctx.response.send_message(LH("other.busy"), ephemeral=True)  # type: ignore
+        await ctx.response.send_message(LH("other.busy"), ephemeral=True)
         return
     busy_provider.make_busy()
 
     message = LH("commands.start.msg_above_process_bar")
 
     log.info("Received start command ...")
-    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
+    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
 
     # Set bot presence
     world_config = await world_selector.get_world_selector_config()
     activity = await _get_discord_activity(
         "starting", LH("status.text.starting", args={"world_name": world_config.current_world})
     )
-    await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
+    await bot.change_presence(status=Status.idle, activity=activity)
 
     try:
         i = 0
@@ -137,13 +137,13 @@ async def stop_without_shutdown_command(ctx: discord.Interaction) -> None:
 
 async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) -> None:
     if busy_provider.is_busy():
-        await ctx.response.send_message(LH("other.busy"), ephemeral=True)  # type: ignore
+        await ctx.response.send_message(LH("other.busy"), ephemeral=True)
         return
     busy_provider.make_busy()
 
     message = LH("commands.stop.msg_above_process_bar")
     log.info("Received stop command ...")
-    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
+    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
 
     mc_status = await stats.get_mcstatus(CONFIG)
     if mc_status and mc_status.players.online and not await _players_online_verification(ctx, message, mc_status):
@@ -154,7 +154,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
     activity = await _get_discord_activity(
         "stopping", LH("status.text.stopping", args={"world_name": world_config.current_world})
     )
-    await bot.change_presence(status=Status.idle, activity=activity)  # type: ignore
+    await bot.change_presence(status=Status.idle, activity=activity)
 
     try:
         i = 0
@@ -447,7 +447,7 @@ async def help_command(ctx: discord.Interaction) -> None:
 @tree.command(name="reset_busy", description=LH("commands.reset_busy.description"))
 async def reset_busy_command(ctx: discord.Interaction) -> bool | None:
     if not busy_provider.is_busy():
-        await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
+        await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)
         return False
 
     confirm_button = discord.ui.Button(label=LH("commands.reset_busy.reset"), style=discord.ButtonStyle.red)
@@ -528,12 +528,12 @@ async def get_players_command(ctx: discord.Interaction) -> None:
 @tree.command(name="restart", description=LH("commands.restart.description"))
 async def restart_command(ctx: discord.Interaction) -> None:
     if not (await stats.get_server_state(CONFIG)).mc_server_running:
-        await ctx.response.send_message(content=LH("commands.restart.error"))  # type: ignore
+        await ctx.response.send_message(content=LH("commands.restart.error"))
         return
 
     message = LH("commands.restart.above_process_bar.msg")
     log.info("Received restart command ...")
-    await ctx.response.send_message(content=generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))  # type: ignore
+    await ctx.response.send_message(content=generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
 
     try:
         i = 0
@@ -809,7 +809,7 @@ async def _stop_inactivity() -> bool | None:
         async for _ in stop.stop_server(True):
             pass
         await _update_bot_presence()
-        await message.edit(content=LH("other.inactivity_shutdown.finished_msg"))  # type: ignore
+        await message.edit(content=LH("other.inactivity_shutdown.finished_msg"))
         busy_provider.make_available()
 
 
