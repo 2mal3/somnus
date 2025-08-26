@@ -42,9 +42,9 @@ async def start_mc_server(config: Config) -> AsyncGenerator:
         except Exception as exception2:
             log.error("Could not gracefully exit", exc_info=exception2)
             ssh.close()
-            raise MCServerStartError from exception2
+            raise MCServerStartError("Problem occured, try to gracefully exit failed. Problem01 (initial problem):\n" + str(exception1) + "\n\nProblem02 (fail to exit gracefully): " + str(exception2)) from exception2
         else:
-            raise MCServerStartError from exception1
+            raise MCServerStartError("Problem occurred (gracefully exit successfully done):\n" + str(exception1)) from exception1
 
 
 async def _try_start_mc_server(ssh: pxssh.pxssh) -> AsyncGenerator:
