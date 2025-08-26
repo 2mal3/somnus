@@ -76,7 +76,7 @@
     },
     "restart": {
       "description": "Startet den Minecraft-Server neu, nicht den gesamten Server.",
-      "error": "Der Server ist läuft doch gar nicht. Dafür müsstest du ihn erst mit /start starten!",
+      "error": "Der Server ist läuft doch gar nicht. Dafür müsstest du ihn erst mit `/start` starten!",
       "finished_msg": "Server wurde neugestartet!",
       "above_process_bar": {
         "msg": "**Server neustarten** ... ",
