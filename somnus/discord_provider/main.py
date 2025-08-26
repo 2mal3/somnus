@@ -71,7 +71,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
     global inactivity_seconds  # noqa: PLW0603
 
     if busy_provider.is_busy():
-        await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
+        await ctx.response.send_message(LH("other.busy"), ephemeral=True)  # type: ignore
         return
     busy_provider.make_busy()
 
@@ -138,7 +138,7 @@ async def stop_without_shutdown_command(ctx: discord.Interaction) -> None:
 
 async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) -> None:
     if busy_provider.is_busy():
-        await ctx.response.send_message(LH("commands.reset_busy.error.general"), ephemeral=True)  # type: ignore
+        await ctx.response.send_message(LH("other.busy"), ephemeral=True)  # type: ignore
         return
     busy_provider.make_busy()
 
@@ -781,10 +781,11 @@ async def _stop_inactivity() -> bool | None:
     message, player_confirmed_stop = await _inactivity_shutdown_verification(channel)
     if player_confirmed_stop:
         log.info("Stopping due to inactivity ...")
-        if not await _check_if_busy():
+        if busy_provider.is_busy():
             inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             await message.edit(content=LH("other.inactivity_shutdown.error.is_busy"))
             return None
+        busy_provider.make_busy()
         mcstatus = await stats.get_mcstatus(CONFIG)
         if mcstatus is None:
             busy_provider.make_available()
@@ -879,17 +880,6 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
 async def _ping_user_after_error(ctx: discord.Interaction) -> None:
     user_mention = ctx.user.mention
     await ctx.followup.send(content=f"{user_mention}", ephemeral=False)
-
-
-async def _check_if_busy(ctx: discord.Interaction | None = None) -> bool:
-    if busy_provider.is_busy():
-        if ctx is not None:
-            await ctx.edit_original_response(content=LH("other.busy"))  # type: ignore
-        return False
-    else:
-        busy_provider.make_busy()
-        return True
-
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool:
     super_users = [user.strip() for user in CONFIG.DISCORD_SUPER_USER_ID.split(";") if user.strip()]
