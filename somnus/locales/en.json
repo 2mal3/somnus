@@ -134,13 +134,6 @@
       "stopping": "of `{world_name}` was stopped",
       "offline": "to /start to play `{world_name}`",
       "only_host_online": "to /start to play `{world_name}`"
-    },
-    "activity": {
-      "online": "Game",
-      "starting": "Game",
-      "stopping": "Game",
-      "offline": "Listening",
-      "only_host_online": "Listening"
     }
   },
   "formatting": {

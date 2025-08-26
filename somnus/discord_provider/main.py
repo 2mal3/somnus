@@ -82,9 +82,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
 
     # Set bot presence
     world_config = await world_selector.get_world_selector_config()
-    activity = await _get_discord_activity(
-        "starting", LH("status.text.starting", args={"world_name": world_config.current_world})
-    )
+    activity = discord.Game(name=LH("status.text.starting", args={"world_name": world_config.current_world}))
     await bot.change_presence(status=Status.idle, activity=activity)
 
     try:
@@ -151,9 +149,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
     # Update bots presence
     world_config = await world_selector.get_world_selector_config()
-    activity = await _get_discord_activity(
-        "stopping", LH("status.text.stopping", args={"world_name": world_config.current_world})
-    )
+    activity = discord.Game(name=LH("status.text.stopping", args={"world_name": world_config.current_world}))
     await bot.change_presence(status=Status.idle, activity=activity)
 
     try:
@@ -689,6 +685,7 @@ async def _update_bot_presence() -> None:
     server_status = await stats.get_server_state(CONFIG)
 
     if server_status.mc_server_running:
+        # Online
         mc_status = await stats.get_mcstatus(CONFIG)
         if not mc_status:
             text = LH(
@@ -706,35 +703,20 @@ async def _update_bot_presence() -> None:
             )
             if await _check_for_inactivity_shutdown(mc_status.players.online):
                 return
-        activity = await _get_discord_activity("online", text)
+        activity = discord.Game(name=text)
+
     elif server_status.host_server_running:
+        # Only Host online
         text = LH("status.text.only_host_online", args={"world_name": world_selector_config.current_world})
-        activity = await _get_discord_activity("only_host_online", text)
+        activity = discord.Activity(type=discord.ActivityType.listening, name=text)
     else:
+        # Offline
         text = LH("status.text.offline", args={"world_name": world_selector_config.current_world})
-        activity = await _get_discord_activity("offline", text)
+        activity = discord.Activity(type=discord.ActivityType.listening, name=text)
 
     status = map_server_status_to_discord_activity(server_status)
 
     await bot.change_presence(status=status, activity=activity)
-
-
-async def _get_discord_activity(
-    server_status_str: str, text: str
-) -> Union[discord.Game, discord.Streaming, discord.Activity, discord.BaseActivity]:
-    activity_str = LH("status.activity." + server_status_str)
-    if activity_str == "Game":
-        return discord.Game(name=text)
-    elif activity_str == "Streaming":
-        return discord.Streaming(name=text, url="")
-    elif activity_str == "Listening":
-        return discord.Activity(type=discord.ActivityType.listening, name=text)
-    elif activity_str == "Watching":
-        return discord.Activity(type=discord.ActivityType.watching, name=text)
-    else:
-        raise TypeError(
-            f"Wrong Discord Activity choosen. Use 'Game', 'Streaming', 'Listening' or 'Watching'. Not '{activity_str}'"
-        )
 
 
 async def _check_for_inactivity_shutdown(players_online: int) -> bool:
@@ -791,9 +773,7 @@ async def _stop_inactivity() -> bool | None:
         update_players_online_status.stop()
         log.info("Status Updater stopped!")
 
-        activity = await _get_discord_activity(
-            "stopping", LH("status.text.stopping", args={"world_name": world_config.current_world})
-        )
+        activity = discord.Game(name=LH("status.text.stopping", args={"world_name": world_config.current_world}))
         await bot.change_presence(status=Status.idle, activity=activity)
 
         async for _ in stop.stop_server(True):

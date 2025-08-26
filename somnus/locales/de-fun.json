@@ -136,13 +136,6 @@
       "stopping": "nicht mehr `{world_name}`",
       "offline": "auf /start, um `{world_name}` zu spielen",
       "only_host_online": "auf /start, um `{world_name}` zu spielen"
-    },
-    "activity": {
-      "online": "Game",
-      "starting": "Game",
-      "stopping": "Game",
-      "offline": "Listening",
-      "only_host_online": "Listening"
     }
   },
   "formatting": {
