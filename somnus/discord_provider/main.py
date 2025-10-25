@@ -13,7 +13,11 @@ from somnus.logger import log
 from somnus.logic import start, stop, world_selector, errors
 from somnus.actions import stats, stop_mc, start_mc, ssh
 from somnus.language_handler import LH
-from somnus.discord_provider.utils import edit_error_for_discord_subtitle, generate_progress_bar, map_server_status_to_discord_activity
+from somnus.discord_provider.utils import (
+    edit_error_for_discord_subtitle,
+    generate_progress_bar,
+    map_server_status_to_discord_activity,
+)
 from somnus.discord_provider.busy_provider import busy_provider
 
 
@@ -847,6 +851,7 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
 async def _ping_user_after_error(ctx: discord.Interaction) -> None:
     user_mention = ctx.user.mention
     await ctx.followup.send(content=f"{user_mention}", ephemeral=False)
+
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool:
     super_users = [user.strip() for user in CONFIG.DISCORD_SUPER_USER_ID.split(";") if user.strip()]
