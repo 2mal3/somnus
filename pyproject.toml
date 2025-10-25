@@ -47,6 +47,7 @@ ignore = [
     "DTZ",
     "UP",
     "PD",   # we are not data scientists
+    "S101", # we need assert for tests
 ]
 
 [tool.rye.scripts]

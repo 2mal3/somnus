@@ -2,19 +2,19 @@ import pytest
 from somnus.discord_provider.utils import edit_error_for_discord_subtitle, generate_progress_bar
 
 
-class CustomException(Exception):
-    def __str__(self):
+class CustomError(Exception):
+    def __str__(self) -> str:
         return "error line1\nerror line2"
 
 
 @pytest.mark.parametrize(
     "err, expected",
     [
-        (CustomException(), "error line1\n-# error line2"),
+        (CustomError(), "error line1\n-# error line2"),
         (Exception(), "No error message. Error type: 'Exception'"),
     ],
 )
-def test_edit_error_for_discord_subtitle(err, expected):
+def test_edit_error_for_discord_subtitle(err: Exception, expected: str) -> None:
     result = edit_error_for_discord_subtitle(err)
     assert result == expected
 
@@ -27,12 +27,12 @@ def test_edit_error_for_discord_subtitle(err, expected):
         (5, 5, "█████"),
     ],
 )
-def test_generate_progress_bar_without_message(value, max_value, expected):
+def test_generate_progress_bar_without_message(value: int, max_value: int, expected: str) -> None:
     result = generate_progress_bar(value, max_value)
     assert result == expected
 
 
-def test_generate_progress_bar_with_message():
+def test_generate_progress_bar_with_message() -> None:
     message = "Progress"
     value = 2
     max_value = 4
@@ -47,6 +47,6 @@ def test_generate_progress_bar_with_message():
         (-1, 5),
     ],
 )
-def test_generate_progress_bar_invalid_inputs(value, max_value):
+def test_generate_progress_bar_invalid_inputs(value: int, max_value: int) -> None:
     with pytest.raises(ValueError):
         generate_progress_bar(value, max_value)
