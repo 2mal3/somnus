@@ -658,14 +658,14 @@ async def _change_world_now_question(select_interaction: discord.Interaction, se
                 pass
         except stop_mc.MCServerStopError as e:
             log.error(f"Could not stop MC server after world change | {e}")
-            await interaction.followup.send(LH("commands.start.error", args={"e": edit_error_for_discord_subtitle(e)}))
+            await interaction.followup.send(LH("commands.stop.error", args={"e": edit_error_for_discord_subtitle(e)}))
 
         try:
             async for _ in start_mc.start_mc_server(CONFIG):
                 pass
         except start_mc.MCServerStartError as e:
             log.error(f"Could not start MC server after world change | {e}")
-            await interaction.followup.send(LH("commands.stop.error", args={"e": edit_error_for_discord_subtitle(e)}))
+            await interaction.followup.send(LH("commands.start.error", args={"e": edit_error_for_discord_subtitle(e)}))
 
     async def cancel_callback(interaction: discord.Interaction) -> None:
         if select_interaction.user.id != interaction.user.id:
