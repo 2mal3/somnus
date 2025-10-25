@@ -1,7 +1,6 @@
 import asyncio
 import aiofiles
 import toml
-from typing import Union
 
 import discord
 from discord import Status, app_commands
