@@ -282,8 +282,8 @@ async def delete_world_command(ctx: discord.Interaction, display_name: str) -> N
     async def cancel_callback(interaction: discord.Interaction) -> None:
         await ctx.edit_original_response(view=None, content=LH("commands.delete_world.canceled"))
 
-    confirm_button.callback = confirm_callback
-    cancel_button.callback = cancel_callback
+    confirm_button.callback = confirm_callback  # ty: ignore
+    cancel_button.callback = cancel_callback  # ty: ignore
 
     view = discord.ui.View()
     view.add_item(confirm_button)
@@ -350,7 +350,7 @@ async def change_world_command(ctx: discord.Interaction) -> None:
         elif not current_world_is_selected:
             await _change_world_now_message(ctx, selected_value)
 
-    select.callback = select_callback
+    select.callback = select_callback  # ty: ignore
 
     select_view = discord.ui.View()
     select_view.add_item(select)
@@ -475,8 +475,8 @@ async def reset_busy_command(ctx: discord.Interaction) -> bool | None:
         cancel_button.disabled = True
         await interaction.response.edit_message(content=LH("commands.reset_busy.canceled"), view=view)
 
-    confirm_button.callback = confirm_callback
-    cancel_button.callback = cancel_callback
+    confirm_button.callback = confirm_callback  # ty: ignore
+    cancel_button.callback = cancel_callback  # ty: ignore
 
     view = discord.ui.View()
     view.add_item(confirm_button)
@@ -593,8 +593,8 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
         await ctx.edit_original_response(content=LH("commands.stop.error.players_online.canceled"), view=view)
         result_future.set_result(False)
 
-    confirm_button.callback = confirm_callback
-    cancel_button.callback = cancel_callback
+    confirm_button.callback = confirm_callback  # ty: ignore
+    cancel_button.callback = cancel_callback  # ty: ignore
 
     view = discord.ui.View()
     view.add_item(confirm_button)
@@ -671,8 +671,8 @@ async def _change_world_now_message(select_interaction: discord.Interaction, sel
             view=button_view,
         )
 
-    confirm_button.callback = confirm_callback
-    cancel_button.callback = cancel_callback
+    confirm_button.callback = confirm_callback  # ty: ignore
+    cancel_button.callback = cancel_callback  # ty: ignore
 
     button_view = discord.ui.View()
     button_view.add_item(confirm_button)
@@ -807,7 +807,7 @@ async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> tup
         result_future.set_result(False)
         view.stop()
 
-    cancel_button.callback = cancel_callback
+    cancel_button.callback = cancel_callback  # ty: ignore
 
     view = discord.ui.View()
     view.add_item(cancel_button)
