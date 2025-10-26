@@ -1,6 +1,7 @@
 from pexpect import pxssh
 from somnus.config import Config
-from somnus.actions.ssh import shutdown_host
+from somnus.logger import log
+from somnus.actions.ssh import send_sudo_command
 
 
 class HostServerStopError(Exception):
@@ -14,6 +15,7 @@ async def stop_host_server(ssh: pxssh.pxssh, config: Config) -> None:
     """
 
     try:
-        await shutdown_host(ssh, config)
+        log.debug("Stopping host server ...")
+        await send_sudo_command(ssh, config, "shutdown -h now")
     except Exception as e:
         raise HostServerStopError from e

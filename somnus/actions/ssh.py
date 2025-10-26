@@ -42,10 +42,10 @@ async def send_possible_sudo_command(ssh: pxssh.pxssh, config: Config, command: 
     if not (await get_current_world()).start_cmd_sudo:
         ssh.sendline(command)
     else:
-        await _send_sudo_command(ssh, config, command)
+        await send_sudo_command(ssh, config, command)
 
 
-async def _send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> None:
+async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> None:
     ssh.sendline(f"sudo {command}")
     choice = ssh.expect(["sudo", "@"])
     if choice == 0:
@@ -72,11 +72,6 @@ async def create_screen(ssh: pxssh.pxssh, config: Config) -> None:
 async def attach_screen(ssh: pxssh.pxssh, config: Config) -> None:
     log.debug("Connecting to screen session ...")
     await send_possible_sudo_command(ssh, config, "screen -r mc-server-control")
-
-
-async def shutdown_host(ssh: pxssh.pxssh, config: Config) -> None:
-    log.debug("Stopping host server ...")
-    await _send_sudo_command(ssh, config, "shutdown -h now")
 
 
 def screen_is_installed(ssh: pxssh.pxssh) -> bool:
