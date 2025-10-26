@@ -58,11 +58,7 @@
       "placeholder": "Choose the world you want to play",
       "response": "`{current_selected_world}` is currently selected. Choose the world you want to play:",
       "success_offline": "`{selected_value}` was selected successfully!",
-      "success_online": "`{selected_value}` was successfully selected and will be started at the next start.\nWould you like to restart now?",
-      "wrong_user_error": "You cannot use the menu because it was requested by someone else. Use /change_world to change the world.",
-
-      "restart_now": "Restart Now",
-      "cancel": "Cancel"
+      "success_online": "`{selected_value}` was successfully selected and will be started at the next start.\nUse `/restart` if you want to restart now."
     },
     "show_worlds": {
       "description": "Shows all available worlds."

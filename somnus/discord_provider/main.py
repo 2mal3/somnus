@@ -178,6 +178,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
         await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
 
     finally:
+        await world_selector.change_world()
         await _update_bot_presence()
         busy_provider.make_available()
 
@@ -317,7 +318,6 @@ async def _get_world_choices() -> list[app_commands.Choice]:
 @tree.command(name="change_world", description=LH("commands.change_world.description"))
 async def change_world_command(ctx: discord.Interaction) -> None:
     world_selector_config = await world_selector.get_world_selector_config()
-    index = None
     options = []
 
     for world in world_selector_config.worlds:
@@ -328,8 +328,6 @@ async def change_world_command(ctx: discord.Interaction) -> None:
     select = discord.ui.Select(
         placeholder=LH("commands.change_world.placeholder"), min_values=1, max_values=1, options=options
     )
-    if index:
-        select.options[index].default = True
 
     async def select_callback(interaction: discord.Interaction) -> None:
         if ctx.user.id != interaction.user.id:
@@ -337,7 +335,7 @@ async def change_world_command(ctx: discord.Interaction) -> None:
             return
 
         selected_value = select.values[0]
-        current_world_is_selected = await world_selector.select_new_world(selected_value)
+        await world_selector.select_new_world(selected_value)
 
         await ctx.edit_original_response(
             content=LH("commands.change_world.success_offline", args={"selected_value": selected_value}), view=None
@@ -347,8 +345,6 @@ async def change_world_command(ctx: discord.Interaction) -> None:
         if not (await stats.get_server_state(CONFIG)).mc_server_running:
             await world_selector.change_world()
             await _update_bot_presence()
-        elif not current_world_is_selected:
-            await _change_world_now_question(ctx, selected_value)
 
     select.callback = select_callback  # ty: ignore
 
@@ -629,68 +625,6 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
 
     result = await result_future
     return result
-
-
-async def _change_world_now_question(select_interaction: discord.Interaction, selected_value: str) -> None:
-    confirm_button = discord.ui.Button(label=LH("commands.change_world.restart_now"), style=discord.ButtonStyle.green)
-    cancel_button = discord.ui.Button(label=LH("commands.change_world.cancel"), style=discord.ButtonStyle.gray)
-
-    async def confirm_callback(interaction: discord.Interaction) -> None:
-        if select_interaction.user.id != interaction.user.id:
-            await interaction.response.send_message(
-                LH("commands.change_world.error.wrong_user"),
-                ephemeral=True,
-            )
-            return
-        button_view.remove_item(confirm_button)
-        button_view.remove_item(cancel_button)
-        message = (
-            LH("commands.change_world.success_offline", args={"selected_value": selected_value})
-            + "\n"
-            + LH("commands.restart.above_process_bar.msg")
-        )
-        await interaction.response.edit_message(content=message, view=button_view)
-
-        ssh_client = await ssh.ssh_login(CONFIG)
-
-        try:
-            async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
-                pass
-        except stop_mc.MCServerStopError as e:
-            log.error(f"Could not stop MC server after world change | {e}")
-            await interaction.followup.send(LH("commands.stop.error", args={"e": edit_error_for_discord_subtitle(e)}))
-
-        try:
-            async for _ in start_mc.start_mc_server(CONFIG):
-                pass
-        except start_mc.MCServerStartError as e:
-            log.error(f"Could not start MC server after world change | {e}")
-            await interaction.followup.send(LH("commands.start.error", args={"e": edit_error_for_discord_subtitle(e)}))
-
-    async def cancel_callback(interaction: discord.Interaction) -> None:
-        if select_interaction.user.id != interaction.user.id:
-            await interaction.response.send_message(
-                LH("commands.change_world.error.wrong_user"),
-                ephemeral=True,
-            )
-            return
-        button_view.remove_item(confirm_button)
-        button_view.remove_item(cancel_button)
-        await interaction.response.edit_message(
-            content=LH("commands.change_world.success_offline", args={"selected_value": selected_value}),
-            view=button_view,
-        )
-
-    confirm_button.callback = confirm_callback  # ty: ignore
-    cancel_button.callback = cancel_callback  # ty: ignore
-
-    button_view = discord.ui.View()
-    button_view.add_item(confirm_button)
-    button_view.add_item(cancel_button)
-
-    await select_interaction.edit_original_response(
-        content=LH("commands.change_world.success_online", args={"selected_value": selected_value}), view=button_view
-    )
 
 
 async def _update_bot_presence() -> None:

@@ -58,13 +58,7 @@
       "placeholder": "Wähle die Welt aus, die du spielen möchtest",
       "response": "Aktuell ist `{current_selected_world}` ausgewählt. Wähle die Welt aus, die du spielen möchtest:",
       "success_offline": "`{selected_value}` wurde erfolgreich ausgewählt!",
-      "success_online": "`{selected_value}` wurde erfolgreich ausgewählt und wird beim nächsten Start gestartet.\nMöchtest du jetzt neustarten?",
-      "error": {
-        "wrong_user": "Du kannst das Menü von Anderen nicht verwenden. Nutze selbst /change_world um die Welt zu ändern.",
-        "general": "Die Welt konnte nicht zu `{selected_value}` gewechselt werden. | {e}"
-      },
-      "restart_now": "Jetzt Neustarten",
-      "cancel": "Abbruch"
+      "success_online": "`{selected_value}` wurde erfolgreich ausgewählt und wird beim nächsten Start gestartet.\nWenn du direkt neustarten möchtest, dann nutze `/restart`."
     },
     "show_worlds": {
       "description": "Zeigt alle verfügbaren Welten an."
