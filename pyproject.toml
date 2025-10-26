@@ -65,6 +65,7 @@ dev-dependencies = [
     "podman==5.*",
     "pytest==8.*",
     "ruff==0.9.*",
+    "pyright[nodejs==1.1.394",
 ]
 
 [tool.hatch.metadata]

@@ -39,6 +39,10 @@ mcstatus==11.1.1
 multidict==6.0.5
     # via aiohttp
     # via yarl
+nodeenv==1.9.1
+    # via pyright
+nodejs-wheel-binaries==22.20.0
+    # via pyright
 packaging==24.2
     # via pytest
 pexpect==4.9.0
@@ -51,6 +55,7 @@ ptyprocess==0.7.0
 pydantic==2.8.2
 pydantic-core==2.20.1
     # via pydantic
+pyright==1.1.407
 pytest==8.3.4
 python-dotenv==1.0.1
 requests==2.32.3
@@ -62,6 +67,7 @@ toml==0.10.2
 typing-extensions==4.12.2
     # via pydantic
     # via pydantic-core
+    # via pyright
 urllib3==2.3.0
     # via podman
     # via requests
