@@ -32,7 +32,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff
+          pip install -r requirements-dev.lock
 
       - name: Run Ruff
         run: ruff check --output-format=github
@@ -52,7 +52,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff
+          pip install -r requirements-dev.lock
 
       - name: Run Ruff
         run: ruff format --check
