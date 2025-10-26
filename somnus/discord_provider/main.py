@@ -1,4 +1,5 @@
 import asyncio
+from typing import Literal
 import aiofiles
 import toml
 
@@ -71,17 +72,28 @@ async def ping_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction) -> None:
+    await _start_server(ctx, command_string="start")
+    
+
+async def _start_server(ctx: discord.Interaction, command_string: Literal["start", "restart"]) -> None:
     global inactivity_seconds  # noqa: PLW0603
 
     if busy_provider.is_busy():
         await ctx.response.send_message(LH("other.busy"), ephemeral=True)
         return
     busy_provider.make_busy()
-
-    message = LH("commands.start.msg_above_process_bar")
-
+    
     log.info("Received start command ...")
-    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
+
+    message = LH(f"commands.{command_string}.msg_above_process_bar")
+    if command_string != "restart":
+        await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
+    
+    if command_string == "restart":
+        start_steps = int(TOTAL_PROGRESS_BAR_STEPS / 2)
+    else:
+        start_steps = 0
+    
 
     # Set bot presence
     world_config = await world_selector.get_world_selector_config()
@@ -89,15 +101,17 @@ async def start_server_command(ctx: discord.Interaction) -> None:
     await bot.change_presence(status=Status.idle, activity=activity)
 
     try:
-        i = 0
+        i = start_steps - 1
         async for wol_failed in start.start_server():
             if wol_failed:
                 original_message = await ctx.original_response()
                 await original_message.reply(LH("commands.start.error.wol_failed"))
-                i = 1
-            else:
+                i = start_steps
+            elif command_string == "restart":
+                i += 0.5
+            else:            
                 i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
+            await ctx.edit_original_response(content=generate_progress_bar(int(i), TOTAL_PROGRESS_BAR_STEPS, message))
 
     except errors.UserInputError as e:
         await ctx.edit_original_response(content=str(e))
@@ -116,7 +130,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
         await ctx.edit_original_response(
             content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
         )
-        await ctx.channel.send(LH("commands.start.finished_msg"))  # type: ignore
+        await ctx.channel.send(LH(f"commands.{command_string}.finished_msg"))  # type: ignore
         log.info("Server started!")
 
     finally:
@@ -126,23 +140,23 @@ async def start_server_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="stop", description=LH("commands.stop.description"))
 async def stop_server_command(ctx: discord.Interaction) -> None:
-    await _stop_server(ctx, prevent_host_shutdown=False)
+    await _stop_server(ctx, command_string="stop")
 
 
 @tree.command(name="stop_without_shutdown", description=LH("commands.stop_without_shutdown.description"))
 async def stop_without_shutdown_command(ctx: discord.Interaction) -> None:
     if not await _is_super_user(ctx):
         return
-    await _stop_server(ctx, prevent_host_shutdown=True)
+    await _stop_server(ctx, command_string="stop_without_shutdown")
 
 
-async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) -> None:
+async def _stop_server(ctx: discord.Interaction, command_string: Literal["stop", "stop_without_shutdown", "restart"]) -> None:
     if busy_provider.is_busy():
         await ctx.response.send_message(LH("other.busy"), ephemeral=True)
         return
     busy_provider.make_busy()
 
-    message = LH("commands.stop.msg_above_process_bar")
+    message = LH(f"commands.{command_string}.msg_above_process_bar")
     log.info("Received stop command ...")
     await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
 
@@ -157,8 +171,11 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
     try:
         i = 0
-        async for _ in stop.stop_server(not prevent_host_shutdown):
-            i += 2
+        async for _ in stop.stop_server(shutdown = command_string == "stop"):
+            if (command_string == "restart"):
+                i += 1
+            else:
+                i += 2
             await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
 
     except errors.UserInputError as e:
@@ -166,16 +183,17 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
     except Exception as e:
         await ctx.edit_original_response(
-            content=LH("commands.stop.error.general", args={"e": edit_error_for_discord_subtitle(e)})
+            content=LH(f"commands.stop.stop.general", args={"e": edit_error_for_discord_subtitle(e)})
         )
         await _ping_user_after_error(ctx)
 
     else:
         update_players_online_status.stop()
-        await ctx.edit_original_response(
+        if command_string != "restart":
+            await ctx.edit_original_response(
             content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
         )
-        await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
+            await ctx.channel.send(LH(f"commands.{command_string}.finished_msg"))  # type: ignore
 
     finally:
         await world_selector.change_world()
@@ -525,31 +543,10 @@ async def restart_command(ctx: discord.Interaction) -> None:
     if not (await stats.get_server_state(CONFIG)).mc_server_running:
         await ctx.response.send_message(content=LH("commands.restart.error"))
         return
-
-    message = LH("commands.restart.above_process_bar.msg")
     log.info("Received restart command ...")
-    await ctx.response.send_message(content=generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
 
-    try:
-        i = 0
-        ssh_client = await ssh.ssh_login(CONFIG)
-        async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
-            i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
-        async for _ in start_mc.start_mc_server(CONFIG):
-            i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
-    except Exception as e:
-        await ctx.edit_original_response(
-            content=LH("commands.stop.error.general", args={"e": edit_error_for_discord_subtitle(e)})
-        )
-        await _ping_user_after_error(ctx)
-        log.error("Error while restarting server", exc_info=e)
-    else:
-        await ctx.edit_original_response(
-            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
-        )
-        await ctx.channel.send(LH("commands.restart.finished_msg"))  # type: ignore
+    await _stop_server(ctx, command_string="restart")
+    await _start_server(ctx, command_string="restart")
 
 
 async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse) -> None:

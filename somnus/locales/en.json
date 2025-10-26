@@ -72,11 +72,7 @@
       "description": "Restarts just the Minecraft server process, not the hole server.",
       "error": "The Server is stopped. Use /start to start the server.",
       "finished_msg": "Server restarted!",
-      "above_process_bar": {
-        "msg": "**Restarting Server** ... ",
-        "starting_addon": "Starting",
-        "stopping_addon": "Stopping"
-      }
+      "msg_above_process_bar": "Restart Server..."
     },
     "reset_busy": {
       "description": "If the bot is busy message was sent by mistake, this command can reset the incorrect busy state.",

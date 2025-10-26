@@ -72,11 +72,7 @@
       "description": "Startet den Minecraft-Server neu, nicht den gesamten Server.",
       "error": "Der Server ist gestoppt. Nutze /start um ihn zu starten!",
       "finished_msg": "Server wurde neugestartet!",
-      "above_process_bar": {
-        "msg": "**Server neustarten** ... ",
-        "starting_addon": "Startet",
-        "stopping_addon": "Stoppt"
-      }
+      "msg_above_process_bar": "Server neustarten..."
     },
     "reset_busy": {
       "description": "Falls der Bot irrtümlich beschäftigt ist, kann dieser Befehl den falschen Busy-State zurücksetzen.",
