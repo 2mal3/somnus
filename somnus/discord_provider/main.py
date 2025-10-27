@@ -7,7 +7,7 @@ import discord
 from discord import Status, app_commands
 from discord.ext import tasks
 from mcstatus.status_response import JavaStatusResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from somnus.config import CONFIG, Config
 from somnus.logger import log
@@ -40,6 +40,8 @@ class ActionWrapperProperties(BaseModel):
     progress_message: str
     finish_message: str
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
 
 async def action_wrapper(props: ActionWrapperProperties):
     if busy_provider.is_busy():
@@ -52,7 +54,7 @@ async def action_wrapper(props: ActionWrapperProperties):
     await bot.change_presence(status=Status.idle, activity=discord.Game(name=props.activity))
 
     i = 0
-    await props.ctx.edit_original_response(
+    await props.ctx.response.send_message(
         content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
     )
 
@@ -68,12 +70,15 @@ async def action_wrapper(props: ActionWrapperProperties):
         )
         await _ping_user_after_error(props.ctx)
         raise RuntimeError
-    finally:
+    
+    else:
         log.info(props.finish_message)
         await props.ctx.edit_original_response(
             content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
         )
-        await props.ctx.channel.send(props.finish_message)
+        await props.ctx.channel.send(props.finish_message) # type: ignore
+    
+    finally:
         busy_provider.make_available()
         await _update_bot_presence()
 
