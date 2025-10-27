@@ -1,5 +1,6 @@
 {
   "commands": {
+    "general_error": "Action failed!\n-# ERROR: {e}",
     "ping": {
       "description": "Replies with Pong!",
       "response": "Pong!\n-# Somnus {version}"
@@ -129,7 +130,8 @@
       "starting": "`{world_name}` soon",
       "stopping": "of `{world_name}` was stopped",
       "offline": "to /start to play `{world_name}`",
-      "only_host_online": "to /start to play `{world_name}`"
+      "only_host_online": "to /start to play `{world_name}`",
+      "restarting": "Restarting ..."
     }
   },
   "formatting": {

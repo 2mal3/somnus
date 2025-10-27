@@ -1,11 +1,13 @@
 import asyncio
 import aiofiles
 import toml
+from typing import Callable, AsyncGenerator
 
 import discord
 from discord import Status, app_commands
 from discord.ext import tasks
 from mcstatus.status_response import JavaStatusResponse
+from pydantic import BaseModel
 
 from somnus.config import CONFIG, Config
 from somnus.logger import log
@@ -28,6 +30,52 @@ bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
 
 inactivity_seconds = 0
+
+
+class ActionWrapperProperties(BaseModel):
+    func: Callable[..., AsyncGenerator]
+    args: dict = {}
+    ctx: discord.Interaction
+    activity: str
+    progress_message: str
+    finish_message: str
+
+
+async def action_wrapper(props: ActionWrapperProperties):
+    if busy_provider.is_busy():
+        await props.ctx.response.send_message(LH("other.busy"), ephemeral=True)
+        return
+
+    log.info(props.progress_message)
+    busy_provider.make_busy()
+
+    await bot.change_presence(status=Status.idle, activity=discord.Game(name=props.activity))
+
+    i = 0
+    await props.ctx.edit_original_response(
+        content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
+    )
+
+    try:
+        async for _ in props.func(**props.args):
+            i += 1
+            await props.ctx.edit_original_response(
+                content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
+            )
+    except Exception as e:
+        await props.ctx.edit_original_response(
+            content=LH("commands.general_error", args={"e": edit_error_for_discord_subtitle(e)})
+        )
+        await _ping_user_after_error(props.ctx)
+        raise RuntimeError
+    finally:
+        log.info(props.finish_message)
+        await props.ctx.edit_original_response(
+            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
+        )
+        await props.ctx.channel.send(props.finish_message)
+        busy_provider.make_available()
+        await _update_bot_presence()
 
 
 @bot.event
@@ -73,55 +121,23 @@ async def ping_command(ctx: discord.Interaction) -> None:
 async def start_server_command(ctx: discord.Interaction) -> None:
     global inactivity_seconds  # noqa: PLW0603
 
-    if busy_provider.is_busy():
-        await ctx.response.send_message(LH("other.busy"), ephemeral=True)
-        return
-    busy_provider.make_busy()
-
-    message = LH("commands.start.msg_above_process_bar")
-
-    log.info("Received start command ...")
-    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
-
-    # Set bot presence
     world_config = await world_selector.get_world_selector_config()
-    activity = discord.Game(name=LH("status.text.starting", args={"world_name": world_config.current_world}))
-    await bot.change_presence(status=Status.idle, activity=activity)
+
+    action_props = ActionWrapperProperties(
+        func=start.start_server,
+        ctx=ctx,
+        activity=LH("status.text.starting", args={"world_name": world_config.current_world}),
+        progress_message=LH("commands.start.msg_above_process_bar"),
+        finish_message=LH("commands.start.finished_msg"),
+    )
 
     try:
-        i = 0
-        async for wol_failed in start.start_server():
-            if wol_failed:
-                original_message = await ctx.original_response()
-                await original_message.reply(LH("commands.start.error.wol_failed"))
-                i = 1
-            else:
-                i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
-
-    except errors.UserInputError as e:
-        await ctx.edit_original_response(content=str(e))
-
-    except Exception as e:
-        log.error("Could not start server", exc_info=e)
-        await ctx.edit_original_response(
-            content=LH("commands.start.error.general", args={"e": edit_error_for_discord_subtitle(e)})
-        )
-        await _ping_user_after_error(ctx)
-
+        await action_wrapper(action_props)
+    except Exception:
+        pass
     else:
         inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
         update_players_online_status.start()
-
-        await ctx.edit_original_response(
-            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
-        )
-        await ctx.channel.send(LH("commands.start.finished_msg"))  # type: ignore
-        log.info("Server started!")
-
-    finally:
-        await _update_bot_presence()
-        busy_provider.make_available()
 
 
 @tree.command(name="stop", description=LH("commands.stop.description"))
@@ -137,50 +153,31 @@ async def stop_without_shutdown_command(ctx: discord.Interaction) -> None:
 
 
 async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) -> None:
-    if busy_provider.is_busy():
-        await ctx.response.send_message(LH("other.busy"), ephemeral=True)
-        return
-    busy_provider.make_busy()
-
     message = LH("commands.stop.msg_above_process_bar")
-    log.info("Received stop command ...")
-    await ctx.response.send_message(generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
 
     mc_status = await stats.get_mcstatus(CONFIG)
     if mc_status and mc_status.players.online and not await _players_online_verification(ctx, message, mc_status):
         return
 
-    # Update bots presence
     world_config = await world_selector.get_world_selector_config()
-    activity = discord.Game(name=LH("status.text.stopping", args={"world_name": world_config.current_world}))
-    await bot.change_presence(status=Status.idle, activity=activity)
+
+    props = ActionWrapperProperties(
+        func=stop.stop_server,
+        args={"prevent_host_shutdown": prevent_host_shutdown},
+        ctx=ctx,
+        activity=LH("status.text.stopping", args={"world_name": world_config.current_world}),
+        progress_message=message,
+        finish_message=LH("commands.stop.finished_msg"),
+    )
 
     try:
-        i = 0
-        async for _ in stop.stop_server(not prevent_host_shutdown):
-            i += 2
-            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
-
-    except errors.UserInputError as e:
-        await ctx.edit_original_response(content=str(e))
-
-    except Exception as e:
-        await ctx.edit_original_response(
-            content=LH("commands.stop.error.general", args={"e": edit_error_for_discord_subtitle(e)})
-        )
-        await _ping_user_after_error(ctx)
-
+        await action_wrapper(props)
+    except Exception:
+        pass
     else:
         update_players_online_status.stop()
-        await ctx.edit_original_response(
-            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
-        )
-        await ctx.channel.send(LH("commands.stop.finished_msg"))  # type: ignore
-
     finally:
         await world_selector.change_world()
-        await _update_bot_presence()
-        busy_provider.make_available()
 
 
 @tree.command(name="add_world", description=LH("commands.add_world.description"))
@@ -527,29 +524,27 @@ async def restart_command(ctx: discord.Interaction) -> None:
         return
 
     message = LH("commands.restart.above_process_bar.msg")
-    log.info("Received restart command ...")
-    await ctx.response.send_message(content=generate_progress_bar(1, TOTAL_PROGRESS_BAR_STEPS, message))
+
+    props = ActionWrapperProperties(
+        func=_restart,
+        ctx=ctx,
+        activity=LH("status.text.restarting"),
+        progress_message=message,
+        finish_message=LH("commands.restart.finished_msg"),
+    )
 
     try:
-        i = 0
-        ssh_client = await ssh.ssh_login(CONFIG)
-        async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
-            i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
-        async for _ in start_mc.start_mc_server(CONFIG):
-            i += 1
-            await ctx.edit_original_response(content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, message))
+        await action_wrapper(props)
     except Exception as e:
-        await ctx.edit_original_response(
-            content=LH("commands.stop.error.general", args={"e": edit_error_for_discord_subtitle(e)})
-        )
-        await _ping_user_after_error(ctx)
-        log.error("Error while restarting server", exc_info=e)
-    else:
-        await ctx.edit_original_response(
-            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS)
-        )
-        await ctx.channel.send(LH("commands.restart.finished_msg"))  # type: ignore
+        pass
+
+
+async def _restart() -> AsyncGenerator:
+    ssh_client = await ssh.ssh_login(CONFIG)
+    async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
+        yield
+    async for _ in start_mc.start_mc_server(CONFIG):
+        yield
 
 
 async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse) -> None:
