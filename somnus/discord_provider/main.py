@@ -69,6 +69,10 @@ async def action_wrapper(props: ActionWrapperProperties):
             await props.ctx.edit_original_response(
                 content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
             )
+    except errors.UserInputError as e:
+        await props.ctx.edit_original_response(content=str(e))
+        raise RuntimeError
+        
     except Exception as e:
         log.error("Failed to run action", exc_info=e)
         await props.ctx.edit_original_response(
@@ -89,6 +93,7 @@ async def action_wrapper(props: ActionWrapperProperties):
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
             inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             update_players_online_status.start()
+            log.info("Status Updater started!")
         await _update_bot_presence_and_inactivity()
 
 
@@ -528,11 +533,17 @@ async def get_players_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="restart", description=LH("commands.restart.description"))
 async def restart_command(ctx: discord.Interaction) -> None:
+    global inactivity_seconds  # noqa: PLW0603
+    
     if not (await stats.get_server_state(CONFIG)).mc_server_running:
         await ctx.response.send_message(content=LH("commands.restart.error"))
         return
 
     message = LH("commands.restart.above_process_bar.msg")
+    
+    mc_status = await stats.get_mcstatus(CONFIG)
+    if mc_status and mc_status.players.online and not await _players_online_verification(ctx, message, mc_status):
+        return
 
     props = ActionWrapperProperties(
         func=_restart,
@@ -546,12 +557,20 @@ async def restart_command(ctx: discord.Interaction) -> None:
         await action_wrapper(props)
     except Exception as e:
         pass
+    else:
+        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
+            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            update_players_online_status.start()
+            log.info("Status Updater started!")
 
 
 async def _restart() -> AsyncGenerator:
     ssh_client = await ssh.ssh_login(CONFIG)
     async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
         yield
+        yield
+    update_players_online_status.stop()
+    await world_selector.change_world()
     async for _ in start_mc.start_mc_server(CONFIG):
         yield
 
