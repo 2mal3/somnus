@@ -79,7 +79,7 @@ async def action_wrapper(props: ActionWrapperProperties):
             content=LH("commands.general_error", args={"e": edit_error_for_discord_subtitle(e)})
         )
         await _ping_user_after_error(props.ctx)
-        raise RuntimeError
+        raise RuntimeError("Failed to run action") from e
     
     else:
         log.info(props.finish_message)
