@@ -56,9 +56,12 @@ async def action_wrapper(props: ActionWrapperProperties):
     await bot.change_presence(status=Status.idle, activity=discord.Game(name=props.activity))
 
     i = 0
-    await props.ctx.response.send_message(
-        content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
-    )
+    message_content = generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
+    
+    if props.ctx.response.is_done():
+        await props.ctx.edit_original_response(content=message_content)
+    else:
+        await props.ctx.response.send_message(content=message_content)
 
     try:
         async for _ in props.func(**props.args):
@@ -622,7 +625,7 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
                 args={"player_count": mcstatus.players.online, "player_names": player_names},
             )
         )
-    await ctx.edit_original_response(content=content, view=view)
+    await ctx.response.send_message(content=content, view=view)
 
     result = await result_future
     return result
