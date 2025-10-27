@@ -43,7 +43,7 @@ class ActionWrapperProperties(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-async def action_wrapper(props: ActionWrapperProperties):
+async def action_wrapper(props: ActionWrapperProperties) -> None:
     global inactivity_seconds  # noqa: PLW0603
 
     if busy_provider.is_busy():
@@ -114,8 +114,7 @@ async def on_ready() -> None:
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
 
-    if (await stats.get_server_state(CONFIG)).mc_server_running:
-        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
+    if (await stats.get_server_state(CONFIG)).mc_server_running and CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
             inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
             update_players_online_status.start()
             log.info("Status Updater started!")
@@ -555,7 +554,7 @@ async def restart_command(ctx: discord.Interaction) -> None:
 
     try:
         await action_wrapper(props)
-    except Exception as e:
+    except Exception:
         pass
     else:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
@@ -671,9 +670,8 @@ async def _update_bot_presence_and_inactivity() -> None:
                     "max_players": mc_status.players.max,
                 },
             )
-            if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-                if await _check_for_inactivity_shutdown(mc_status.players.online):
-                    return
+            if CONFIG.INACTIVITY_SHUTDOWN_MINUTES and await _check_for_inactivity_shutdown(mc_status.players.online):
+                return
         activity = discord.Game(name=text)
 
     elif server_status.host_server_running:
