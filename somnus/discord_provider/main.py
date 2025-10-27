@@ -45,7 +45,7 @@ class ActionWrapperProperties(BaseModel):
 
 async def action_wrapper(props: ActionWrapperProperties):
     global inactivity_seconds  # noqa: PLW0603
-    
+
     if busy_provider.is_busy():
         await props.ctx.response.send_message(LH("other.busy"), ephemeral=True)
         return
@@ -57,7 +57,7 @@ async def action_wrapper(props: ActionWrapperProperties):
 
     i = 0
     message_content = generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
-    
+
     if props.ctx.response.is_done():
         await props.ctx.edit_original_response(content=message_content)
     else:
@@ -72,7 +72,7 @@ async def action_wrapper(props: ActionWrapperProperties):
     except errors.UserInputError as e:
         await props.ctx.edit_original_response(content=str(e))
         raise RuntimeError
-        
+
     except Exception as e:
         log.error("Failed to run action", exc_info=e)
         await props.ctx.edit_original_response(
@@ -80,14 +80,14 @@ async def action_wrapper(props: ActionWrapperProperties):
         )
         await _ping_user_after_error(props.ctx)
         raise RuntimeError("Failed to run action") from e
-    
+
     else:
         log.info(props.finish_message)
         await props.ctx.edit_original_response(
             content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
         )
-        await props.ctx.channel.send(props.finish_message) # type: ignore
-    
+        await props.ctx.channel.send(props.finish_message)  # type: ignore
+
     finally:
         busy_provider.make_available()
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
@@ -534,13 +534,13 @@ async def get_players_command(ctx: discord.Interaction) -> None:
 @tree.command(name="restart", description=LH("commands.restart.description"))
 async def restart_command(ctx: discord.Interaction) -> None:
     global inactivity_seconds  # noqa: PLW0603
-    
+
     if not (await stats.get_server_state(CONFIG)).mc_server_running:
         await ctx.response.send_message(content=LH("commands.restart.error"))
         return
 
     message = LH("commands.restart.above_process_bar.msg")
-    
+
     mc_status = await stats.get_mcstatus(CONFIG)
     if mc_status and mc_status.players.online and not await _players_online_verification(ctx, message, mc_status):
         return

@@ -42,7 +42,11 @@ async def stop_server(prevent_host_shutdown: bool, config: Config = CONFIG) -> A
     yield
 
     # Stop host server
-    if server_state.host_server_running and not prevent_host_shutdown and config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"]:
+    if (
+        server_state.host_server_running
+        and not prevent_host_shutdown
+        and config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"]
+    ):
         await stop_host_server(ssh, config)
     yield
 
