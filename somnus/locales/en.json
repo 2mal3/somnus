@@ -26,7 +26,7 @@
         "players_online": {
           "stop_anyway": "Stop Anyway",
           "cancel": "Cancel",
-          "wrong_user": "You cannot use the menu because it was requested by someone else. Use /stop to stop the server.",
+          "wrong_user": "You cannot use the menu because it was requested by someone else. Use `/stop` to stop the server.",
           "canceled": "Canceled succesfully!",
           "question_singular": "There is still one player online: {player_name}\n**Would you still like to stop the server?**",
           "question_plural": "There are still {player_count} players online:{player_names}\n**Would you still like to stop the server?**"
@@ -49,9 +49,9 @@
       "canceled": "Deletion process canceled.",
       "verification": "Are you shure to delete the world `{display_name}`?{values}",
       "error": {
-        "current_world": "You can't delete the current world. Change the current world with /change_world and restart the server.",
+        "current_world": "You can't delete the current world. Change the current world with `/change_world` and restart the server.",
         "not_found": "World `{display_name}` not found.",
-        "button_inactive": "Button inactive, use /delete_world again."
+        "button_inactive": "Button inactive, use `/delete_world` again."
       }
     },
     "change_world": {
@@ -71,7 +71,7 @@
     },
     "restart": {
       "description": "Restarts just the Minecraft server process, not the hole server.",
-      "error": "The Server is stopped. Use /start to start the server.",
+      "error": "The Server is stopped. Use `/start` to start the server.",
       "finished_msg": "Server restarted!",
       "above_process_bar": {
         "msg": "**Restarting Server** ... ",
@@ -88,7 +88,7 @@
       "cancel": "Cancel",
       "error": {
         "general": "The bot is not busy. Errors cannot be corrected.",
-        "wrong_user": "You cannot use the menu because it was requested by someone else. Use /reset_busy to reset the busy state."
+        "wrong_user": "You cannot use the menu because it was requested by someone else. Use `/reset_busy` to reset the busy state."
       }
     },
     "get_players": {
@@ -126,11 +126,11 @@
   },
   "status": {
     "text": {
-      "online": "`{world_name}` ({players_online}/{max_players} online)",
-      "starting": "`{world_name}` soon",
-      "stopping": "of `{world_name}` was stopped",
-      "offline": "to /start to play `{world_name}`",
-      "only_host_online": "to /start to play `{world_name}`",
+      "online": "Plays `{world_name}` ({players_online}/{max_players} online)",
+      "starting": "Starts `{world_name}`",
+      "stopping": "Stopps `{world_name}`",
+      "offline": "`/start` to play `{world_name}`",
+      "only_host_online": "`/start` to play `{world_name}`",
       "restarting": "Restarting ..."
     }
   },

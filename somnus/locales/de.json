@@ -1,5 +1,6 @@
 {
   "commands": {
+    "general_error": "Aktion fehlgeschlagen!\n-# ERROR: {e}",
     "ping": {
       "description": "Antwortet mit Pong!",
       "response": "Pong!\n-# Somnus {version}"
@@ -125,11 +126,12 @@
   },
   "status": {
     "text": {
-      "online": "`{world_name}` ({players_online}/{max_players} online)",
-      "starting": "gleich `{world_name}`",
-      "stopping": "nicht mehr `{world_name}`",
-      "offline": "auf /start, um `{world_name}` zu spielen",
-      "only_host_online": "auf /start, um `{world_name}` zu spielen"
+      "online": "Spielt `{world_name}` ({players_online}/{max_players} online)",
+      "starting": "Startet `{world_name}`",
+      "stopping": "Stoppt `{world_name}`",
+      "offline": "/start, um `{world_name}` zu spielen",
+      "only_host_online": "/start, um `{world_name}` zu spielen",
+      "restarting": "Startet neu ..."
     }
   },
   "formatting": {
