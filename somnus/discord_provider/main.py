@@ -115,9 +115,9 @@ async def on_ready() -> None:
         log.error(f"Failed to sync commands: {e}")
 
     if (await stats.get_server_state(CONFIG)).mc_server_running and CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-            update_players_online_status.start()
-            log.info("Status Updater started!")
+        inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+        update_players_online_status.start()
+        log.info("Status Updater started!")
 
     log.debug("Updating bot presence ...")
     await _update_bot_presence_and_inactivity()
