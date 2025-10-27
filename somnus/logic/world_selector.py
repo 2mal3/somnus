@@ -68,24 +68,23 @@ async def _world_exists(display_name: str, world_selector_config: WorldSelectorC
 async def change_world() -> None:
     world_selector_config = await get_world_selector_config()
 
-    if world_selector_config.current_world != world_selector_config.new_selected_world:
+    # Check if world is existing
+    if world_selector_config.new_selected_world != "":
         for world in world_selector_config.worlds:
             if world.display_name == world_selector_config.new_selected_world and world.visible:
                 world_selector_config.current_world = world_selector_config.new_selected_world
                 await _save_world_selector_config(world_selector_config)
                 return
+        log.error(f"change world to '{world_selector_config.new_selected_world}' failed - world does not exist")
 
 
-async def select_new_world(new_world_name: str) -> bool:
+async def select_new_world(new_world_name: str) -> None:
     world_selector_config = await get_world_selector_config()
     if world_selector_config.current_world == new_world_name:
         world_selector_config.new_selected_world = ""
-        await _save_world_selector_config(world_selector_config)
-        return True
     else:
         world_selector_config.new_selected_world = new_world_name
-        await _save_world_selector_config(world_selector_config)
-        return False
+    await _save_world_selector_config(world_selector_config)
 
 
 async def edit_new_world(

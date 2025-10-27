@@ -1,5 +1,6 @@
 {
   "commands": {
+    "general_error": "Action failed!\n-# ERROR: {e}",
     "ping": {
       "description": "Replies with Pong!",
       "response": "Pong!\n-# Somnus {version}"
@@ -25,7 +26,7 @@
         "players_online": {
           "stop_anyway": "Stop Anyway",
           "cancel": "Cancel",
-          "wrong_user": "You cannot use the menu because it was requested by someone else. Use /stop to stop the server.",
+          "wrong_user": "You cannot use the menu because it was requested by someone else. Use `/stop` to stop the server.",
           "canceled": "Canceled succesfully!",
           "question_singular": "There is still one player online: {player_name}\n**Would you still like to stop the server?**",
           "question_plural": "There are still {player_count} players online:{player_names}\n**Would you still like to stop the server?**"
@@ -48,9 +49,9 @@
       "canceled": "Deletion process canceled.",
       "verification": "Are you shure to delete the world `{display_name}`?{values}",
       "error": {
-        "current_world": "You can't delete the current world. Change the current world with /change_world and restart the server.",
+        "current_world": "You can't delete the current world. Change the current world with `/change_world` and restart the server.",
         "not_found": "World `{display_name}` not found.",
-        "button_inactive": "Button inactive, use /delete_world again."
+        "button_inactive": "Button inactive, use `/delete_world` again."
       }
     },
     "change_world": {
@@ -58,11 +59,7 @@
       "placeholder": "Choose the world you want to play",
       "response": "`{current_selected_world}` is currently selected. Choose the world you want to play:",
       "success_offline": "`{selected_value}` was selected successfully!",
-      "success_online": "`{selected_value}` was successfully selected and will be started at the next start.\nWould you like to restart now?",
-      "wrong_user_error": "You cannot use the menu because it was requested by someone else. Use /change_world to change the world.",
-
-      "restart_now": "Restart Now",
-      "cancel": "Cancel"
+      "success_online": "`{selected_value}` was successfully selected and will be started at the next start.\nUse `/restart` if you want to restart now."
     },
     "show_worlds": {
       "description": "Shows all available worlds."
@@ -74,7 +71,7 @@
     },
     "restart": {
       "description": "Restarts just the Minecraft server process, not the hole server.",
-      "error": "The Server is stopped. Use /start to start the server.",
+      "error": "The Server is stopped. Use `/start` to start the server.",
       "finished_msg": "Server restarted!",
       "above_process_bar": {
         "msg": "**Restarting Server** ... ",
@@ -91,7 +88,7 @@
       "cancel": "Cancel",
       "error": {
         "general": "The bot is not busy. Errors cannot be corrected.",
-        "wrong_user": "You cannot use the menu because it was requested by someone else. Use /reset_busy to reset the busy state."
+        "wrong_user": "You cannot use the menu because it was requested by someone else. Use `/reset_busy` to reset the busy state."
       }
     },
     "get_players": {
@@ -129,11 +126,12 @@
   },
   "status": {
     "text": {
-      "online": "`{world_name}` ({players_online}/{max_players} online)",
-      "starting": "`{world_name}` soon",
-      "stopping": "of `{world_name}` was stopped",
-      "offline": "to /start to play `{world_name}`",
-      "only_host_online": "to /start to play `{world_name}`"
+      "online": "Plays `{world_name}` ({players_online}/{max_players} online)",
+      "starting": "Starts `{world_name}`",
+      "stopping": "Stopps `{world_name}`",
+      "offline": "`/start` to play `{world_name}`",
+      "only_host_online": "`/start` to play `{world_name}`",
+      "restarting": "Restarting ..."
     }
   },
   "formatting": {

@@ -10,7 +10,7 @@ from somnus.language_handler import LH
 from somnus.logic.errors import UserInputError
 
 
-async def stop_server(shutdown: bool, config: Config = CONFIG) -> AsyncGenerator:
+async def stop_server(prevent_host_shutdown: bool, config: Config = CONFIG) -> AsyncGenerator:
     """
     Raises:
         UserInputError: If the user input is invalid.
@@ -26,7 +26,7 @@ async def stop_server(shutdown: bool, config: Config = CONFIG) -> AsyncGenerator
 
     if not (server_state.host_server_running or server_state.mc_server_running):
         raise UserInputError(LH("commands.stop.error.already_stopped"))
-    elif not shutdown and not server_state.mc_server_running:
+    elif prevent_host_shutdown and not server_state.mc_server_running:
         raise UserInputError(LH("commands.stop.error.mc_already_stopped"))
 
     yield
@@ -42,7 +42,11 @@ async def stop_server(shutdown: bool, config: Config = CONFIG) -> AsyncGenerator
     yield
 
     # Stop host server
-    if server_state.host_server_running and shutdown and config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"]:
+    if (
+        server_state.host_server_running
+        and not prevent_host_shutdown
+        and config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"]
+    ):
         await stop_host_server(ssh, config)
     yield
 

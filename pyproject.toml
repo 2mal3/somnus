@@ -48,6 +48,8 @@ ignore = [
     "UP",
     "PD",   # we are not data scientists
     "S101", # we need assert for tests
+    "S110", # empty Except
+    "SIM105", # empty Except without else
 ]
 
 [tool.rye.scripts]
