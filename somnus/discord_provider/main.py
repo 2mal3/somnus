@@ -44,6 +44,8 @@ class ActionWrapperProperties(BaseModel):
 
 
 async def action_wrapper(props: ActionWrapperProperties):
+    global inactivity_seconds  # noqa: PLW0603
+    
     if busy_provider.is_busy():
         await props.ctx.response.send_message(LH("other.busy"), ephemeral=True)
         return
@@ -65,6 +67,7 @@ async def action_wrapper(props: ActionWrapperProperties):
                 content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
             )
     except Exception as e:
+        log.error("Failed to run action", exc_info=e)
         await props.ctx.edit_original_response(
             content=LH("commands.general_error", args={"e": edit_error_for_discord_subtitle(e)})
         )
@@ -80,7 +83,10 @@ async def action_wrapper(props: ActionWrapperProperties):
     
     finally:
         busy_provider.make_available()
-        await _update_bot_presence()
+        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
+            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            update_players_online_status.start()
+        await _update_bot_presence_and_inactivity()
 
 
 @bot.event
@@ -103,11 +109,11 @@ async def on_ready() -> None:
     if (await stats.get_server_state(CONFIG)).mc_server_running:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
             inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-        update_players_online_status.start()
-        log.info("Status Updater started!")
+            update_players_online_status.start()
+            log.info("Status Updater started!")
 
     log.debug("Updating bot presence ...")
-    await _update_bot_presence()
+    await _update_bot_presence_and_inactivity()
     log.debug("Initial bot presence updated!")
 
 
@@ -124,8 +130,6 @@ async def ping_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction) -> None:
-    global inactivity_seconds  # noqa: PLW0603
-
     world_config = await world_selector.get_world_selector_config()
 
     action_props = ActionWrapperProperties(
@@ -140,9 +144,6 @@ async def start_server_command(ctx: discord.Interaction) -> None:
         await action_wrapper(action_props)
     except Exception:
         pass
-    else:
-        inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-        update_players_online_status.start()
 
 
 @tree.command(name="stop", description=LH("commands.stop.description"))
@@ -346,7 +347,7 @@ async def change_world_command(ctx: discord.Interaction) -> None:
 
         if not (await stats.get_server_state(CONFIG)).mc_server_running:
             await world_selector.change_world()
-            await _update_bot_presence()
+            await _update_bot_presence_and_inactivity()
 
     select.callback = select_callback  # ty: ignore
 
@@ -627,7 +628,7 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
     return result
 
 
-async def _update_bot_presence() -> None:
+async def _update_bot_presence_and_inactivity() -> None:
     world_selector_config = await world_selector.get_world_selector_config()
     server_status = await stats.get_server_state(CONFIG)
 
@@ -648,8 +649,9 @@ async def _update_bot_presence() -> None:
                     "max_players": mc_status.players.max,
                 },
             )
-            if await _check_for_inactivity_shutdown(mc_status.players.online):
-                return
+            if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
+                if await _check_for_inactivity_shutdown(mc_status.players.online):
+                    return
         activity = discord.Game(name=text)
 
     elif server_status.host_server_running:
@@ -725,7 +727,7 @@ async def _stop_inactivity() -> bool | None:
 
         async for _ in stop.stop_server(True):
             pass
-        await _update_bot_presence()
+        await _update_bot_presence_and_inactivity()
         await message.edit(content=LH("other.inactivity_shutdown.finished_msg"))
         busy_provider.make_available()
 
@@ -809,7 +811,7 @@ async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool
 
 @tasks.loop(seconds=10)
 async def update_players_online_status() -> None:
-    await _update_bot_presence()
+    await _update_bot_presence_and_inactivity()
 
 
 def main(config: Config = CONFIG) -> None:
