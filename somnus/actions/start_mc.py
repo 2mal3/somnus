@@ -1,10 +1,11 @@
+import asyncio
 from typing import AsyncGenerator
 
-from pexpect import pxssh
+from pexpect import TIMEOUT, pxssh
 
+from somnus.actions.ssh import create_screen, detach_screen_session, kill_screen, ssh_login
 from somnus.config import Config
 from somnus.logger import log
-from somnus.actions.ssh import ssh_login, detach_screen_session, kill_screen, create_screen
 from somnus.logic.world_selector import get_current_world
 
 
@@ -79,5 +80,5 @@ async def _try_start_mc_server(ssh: pxssh.pxssh) -> AsyncGenerator:
                     yield
                 return
             yield
-        except TimeoutError as e:
+        except TIMEOUT as e:
             raise TimeoutError(f"Minecraft-Server could not be startet. Timeout in starting keyword expecting {e}")
