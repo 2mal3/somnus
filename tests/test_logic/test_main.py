@@ -1,12 +1,25 @@
 import asyncio
 from typing import Generator
 
+import mcstatus
 import podman
 import pytest
-import mcstatus
 from podman.domain.containers import Container
 
+from somnus.config import Config
 from somnus.logic import start, stop
+
+TEST_CONFIG = Config(
+    MC_SERVER_START_CMD="cd /app && ./run.sh",
+    DISCORD_TOKEN="a",
+    HOST_SERVER_HOST="localhost",
+    HOST_SERVER_SSH_PORT=25566,
+    HOST_SERVER_PASSWORD="root",
+    HOST_SERVER_USER="root",
+    MC_SERVER_ADDRESS="localhost:25565",
+    DEBUG=True,
+    DEBUG_LOGGING=True,
+)
 
 
 # Enable this for local testing
@@ -42,10 +55,10 @@ def test_main() -> None:
 
 
 async def start_server() -> None:
-    async for _ in start.start_server():
+    async for _ in start.start_server(TEST_CONFIG):
         pass
 
 
 async def stop_server() -> None:
-    async for _ in stop.stop_server(True):
+    async for _ in stop.stop_server(True, TEST_CONFIG):
         pass
