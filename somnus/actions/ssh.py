@@ -2,7 +2,7 @@ import asyncio
 
 from pexpect import pxssh
 
-from somnus.config import Config, CONFIG
+from somnus.config import CONFIG, Config
 from somnus.logger import log
 from somnus.logic.world_selector import get_current_world
 
