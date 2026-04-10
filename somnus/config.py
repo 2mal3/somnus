@@ -2,7 +2,7 @@ import sys
 from os import environ
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, field_validator, ValidationError
+from pydantic import BaseModel, ValidationError, field_validator
 
 
 class Config(BaseModel):
@@ -13,7 +13,6 @@ class Config(BaseModel):
     HOST_SERVER_PASSWORD: str
     HOST_SERVER_MAC: str = ""
     MC_SERVER_START_CMD: str
-    MC_SERVER_START_CMD_SUDO: bool = False
     MC_SERVER_ADDRESS: str
     GET_PLAYERS_COMMAND_ENABLED: bool = True
     INACTIVITY_SHUTDOWN_MINUTES: int = 0
@@ -23,7 +22,7 @@ class Config(BaseModel):
     DEBUG: bool = False
     DEBUG_LOGGING: bool = False
 
-    @field_validator("DEBUG", "DEBUG_LOGGING", "MC_SERVER_START_CMD_SUDO", mode="before")
+    @field_validator("DEBUG", "DEBUG_LOGGING", mode="before")
     def convert_str_to_bool(cls, value: str | bool) -> bool:  # noqa: N805
         if isinstance(value, bool):
             return value
