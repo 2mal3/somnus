@@ -1,26 +1,25 @@
 import asyncio
-import aiofiles
-import toml
-from typing import Callable, AsyncGenerator
+from typing import AsyncGenerator, Callable
 
+import aiofiles
 import discord
+import toml
 from discord import Status, app_commands
 from discord.ext import tasks
 from mcstatus.status_response import JavaStatusResponse
 from pydantic import BaseModel, ConfigDict
 
+from somnus.actions import ssh, start_mc, stats, stop_mc
 from somnus.config import CONFIG, Config
-from somnus.logger import log
-from somnus.logic import start, stop, world_selector, errors
-from somnus.actions import stats, stop_mc, start_mc, ssh
-from somnus.language_handler import LH
+from somnus.discord_provider.busy_provider import busy_provider
 from somnus.discord_provider.utils import (
     edit_error_for_discord_subtitle,
     generate_progress_bar,
     map_server_status_to_discord_activity,
 )
-from somnus.discord_provider.busy_provider import busy_provider
-
+from somnus.language_handler import LH
+from somnus.logger import log
+from somnus.logic import errors, start, stop, world_selector
 
 TOTAL_PROGRESS_BAR_STEPS = 20
 
@@ -194,15 +193,13 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
 
 
 @tree.command(name="add_world", description=LH("commands.add_world.description"))
-async def add_world_command(
-    ctx: discord.Interaction, display_name: str, start_cmd: str, start_cmd_sudo: bool, visible: bool
-) -> None:
+async def add_world_command(ctx: discord.Interaction, display_name: str, start_cmd: str, visible: bool) -> None:
     # only allow super users
     if not await _is_super_user(ctx):
         return
 
     try:
-        await world_selector.create_new_world(display_name, start_cmd, start_cmd_sudo, visible)
+        await world_selector.create_new_world(display_name, start_cmd, visible)
         await ctx.response.send_message(
             LH("commands.add_world.success", args={"display_name": display_name}), ephemeral=True
         )
@@ -220,7 +217,6 @@ async def edit_world_command(  # noqa: PLR0913
     editing_world_name: str,
     new_display_name: str | None = None,
     start_cmd: str | None = None,
-    sudo_start_cmd: bool | None = None,
     visible: bool | None = None,
 ) -> None:
     # only super users
@@ -228,9 +224,7 @@ async def edit_world_command(  # noqa: PLR0913
         return
 
     try:
-        world = await world_selector.edit_new_world(
-            editing_world_name, new_display_name, start_cmd, sudo_start_cmd, visible
-        )
+        world = await world_selector.edit_new_world(editing_world_name, new_display_name, start_cmd, visible)
         await ctx.response.send_message(
             LH(
                 "commands.edit_world.success",
