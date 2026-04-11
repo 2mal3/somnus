@@ -739,7 +739,7 @@ async def _stop_inactivity() -> bool | None:
         activity = discord.Game(name=LH("status.text.stopping", args={"world_name": world_config.current_world}))
         await bot.change_presence(status=Status.idle, activity=activity)
 
-        async for _ in stop.stop_server(True):
+        async for _ in stop.stop_server(True, CONFIG):
             pass
         await _update_bot_presence_and_inactivity()
         await message.edit(content=LH("other.inactivity_shutdown.finished_msg"))

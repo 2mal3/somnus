@@ -2,7 +2,7 @@ import asyncio
 
 from pexpect import pxssh
 
-from somnus.config import CONFIG, Config
+from somnus.config import Config
 from somnus.logger import log
 from somnus.logic.world_selector import get_current_world
 
@@ -52,7 +52,7 @@ async def detach_screen_session(ssh: pxssh.pxssh) -> None:
     ssh.sendcontrol("d")
 
 
-async def kill_screen(ssh: pxssh.pxssh, config: Config = CONFIG) -> None:
+async def kill_screen(ssh: pxssh.pxssh, config: Config) -> None:
     log.debug("Killing screen session ...")
     ssh.sendline("screen -X -S mc-server-control quit")
 

@@ -1,16 +1,16 @@
 from typing import AsyncGenerator
 
-from somnus.actions.stop_mc import stop_mc_server
-from somnus.actions.stop_host import stop_host_server
-from somnus.config import Config, CONFIG
-from somnus.logger import log
-from somnus.actions.stats import get_server_state
 from somnus.actions.ssh import ssh_login
+from somnus.actions.stats import get_server_state
+from somnus.actions.stop_host import stop_host_server
+from somnus.actions.stop_mc import stop_mc_server
+from somnus.config import Config
 from somnus.language_handler import LH
+from somnus.logger import log
 from somnus.logic.errors import UserInputError
 
 
-async def stop_server(prevent_host_shutdown: bool, config: Config = CONFIG) -> AsyncGenerator:
+async def stop_server(prevent_host_shutdown: bool, config: Config) -> AsyncGenerator:
     """
     Raises:
         UserInputError: If the user input is invalid.
