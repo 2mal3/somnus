@@ -2,7 +2,6 @@
 .idea/
 .direnv/
 .venv/
-.aider*
 
 # python generated files
 __pycache__/
