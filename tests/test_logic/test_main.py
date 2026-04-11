@@ -23,7 +23,7 @@ TEST_CONFIG = Config(
 
 
 # Enable this for local testing
-# @pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def podman_setup() -> Generator:
     client = podman.PodmanClient()
 
