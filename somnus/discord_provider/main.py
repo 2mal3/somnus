@@ -33,7 +33,6 @@ inactivity_seconds = 0
 
 class ActionWrapperProperties(BaseModel):
     func: Callable[..., AsyncGenerator]
-    args: dict = {}
     ctx: discord.Interaction
     activity: str
     progress_message: str
@@ -63,7 +62,7 @@ async def action_wrapper(props: ActionWrapperProperties) -> None:
         await props.ctx.response.send_message(content=message_content)
 
     try:
-        async for _ in props.func(**props.args):
+        async for _ in props.func():
             i += 1
             await props.ctx.edit_original_response(
                 content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
@@ -139,7 +138,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
     world_config = await world_selector.get_world_selector_config()
 
     action_props = ActionWrapperProperties(
-        func=start.start_server,
+        func=lambda: start.start_server(CONFIG),
         ctx=ctx,
         activity=LH("status.text.starting", args={"world_name": world_config.current_world}),
         progress_message=LH("commands.start.msg_above_process_bar"),
@@ -174,8 +173,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
     world_config = await world_selector.get_world_selector_config()
 
     props = ActionWrapperProperties(
-        func=stop.stop_server,
-        args={"prevent_host_shutdown": prevent_host_shutdown},
+        func=lambda: stop.stop_server(prevent_host_shutdown, CONFIG),
         ctx=ctx,
         activity=LH("status.text.stopping", args={"world_name": world_config.current_world}),
         progress_message=message,
