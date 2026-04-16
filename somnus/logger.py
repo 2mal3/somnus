@@ -1,10 +1,8 @@
-import logging
 import datetime
+import logging
 from pathlib import Path
 
-from somnus.config import CONFIG
-
-_LEVEL = logging.DEBUG if CONFIG.DEBUG_LOGGING else logging.INFO
+_LEVEL = logging.DEBUG
 
 log = logging.getLogger("somnus")
 

@@ -18,7 +18,6 @@ TEST_CONFIG = Config(
     HOST_SERVER_USER="root",
     MC_SERVER_ADDRESS="localhost:25565",
     DEBUG=True,
-    DEBUG_LOGGING=True,
 )
 
 
