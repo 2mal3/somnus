@@ -1,4 +1,5 @@
 import pytest
+
 from somnus.discord_provider.utils import edit_error_for_discord_subtitle, generate_progress_bar
 
 
@@ -25,6 +26,7 @@ def test_edit_error_for_discord_subtitle(err: Exception, expected: str) -> None:
         (0, 5, "░░░░░"),
         (3, 5, "███░░"),
         (5, 5, "█████"),
+        (10, 5, "██████████"),  # to large value should result in overflow
     ],
 )
 def test_generate_progress_bar_without_message(value: int, max_value: int, expected: str) -> None:
@@ -43,7 +45,6 @@ def test_generate_progress_bar_with_message() -> None:
 @pytest.mark.parametrize(
     "value, max_value",
     [
-        (6, 5),
         (-1, 5),
     ],
 )
