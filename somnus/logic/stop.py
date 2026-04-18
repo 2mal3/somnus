@@ -26,8 +26,10 @@ async def stop_server(prevent_host_shutdown: bool, config: Config) -> AsyncGener
 
     if not (server_state.host_server_running or server_state.mc_server_running):
         raise UserInputError(LH("commands.stop.error.already_stopped"))
+        ssh.close()
     elif prevent_host_shutdown and not server_state.mc_server_running:
         raise UserInputError(LH("commands.stop.error.mc_already_stopped"))
+        ssh.close()
 
     yield
 
