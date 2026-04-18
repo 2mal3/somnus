@@ -66,6 +66,7 @@ async def change_world() -> None:
         for world in world_selector_config.worlds:
             if world.display_name == world_selector_config.new_selected_world and world.visible:
                 world_selector_config.current_world = world_selector_config.new_selected_world
+                world_selector_config.new_selected_world = ""
                 await _save_world_selector_config(world_selector_config)
                 return
         log.error(f"change world to '{world_selector_config.new_selected_world}' failed - world does not exist")
