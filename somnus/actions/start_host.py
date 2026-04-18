@@ -1,11 +1,12 @@
 import asyncio
 from typing import AsyncGenerator
 
+from asyncer import asyncify
 from wakeonlan import send_magic_packet
 
+from somnus.actions.stats import get_server_state
 from somnus.config import Config
 from somnus.logger import log
-from somnus.actions.stats import get_server_state
 
 
 class HostServerStartError(Exception):
@@ -47,5 +48,5 @@ async def _send_wol_packet(config: Config) -> None:
 
     if config.HOST_SERVER_MAC != "":
         for _ in range(wol_packed_amount):
-            send_magic_packet(config.HOST_SERVER_MAC)
+            await asyncify(send_magic_packet)(config.HOST_SERVER_MAC)
             await asyncio.sleep(wol_send_delay_seconds)

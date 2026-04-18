@@ -1,10 +1,11 @@
 from typing import AsyncGenerator
 
+from asyncer import asyncify
 from pexpect import pxssh
 
+from somnus.actions.ssh import attach_screen, detach_screen_session, kill_screen
 from somnus.config import Config
 from somnus.logger import log
-from somnus.actions.ssh import detach_screen_session, kill_screen, attach_screen
 
 
 class MCServerStopError(Exception):
@@ -39,7 +40,7 @@ async def _try_stop_mc_server(ssh: pxssh.pxssh, config: Config) -> AsyncGenerato
 
     messages = ["overworld", "nether", "end", "All"]
     for i, message in enumerate(messages):
-        found_element_index = ssh.expect(["All", message], timeout=server_shutdown_maximum_time)
+        found_element_index = await asyncify(ssh.expect)(["All", message], timeout=server_shutdown_maximum_time)
         log.debug(f"Stage '{message}' completed")
 
         if found_element_index == 0:
