@@ -55,7 +55,7 @@ pytest==8.3.4
 python-dotenv==1.0.1
 requests==2.32.3
     # via podman
-ruff==0.9.9
+ruff==0.15.11
 setuptools==70.3.0
     # via asyncio-dgram
 toml==0.10.2

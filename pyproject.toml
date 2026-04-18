@@ -66,7 +66,7 @@ virtual = true
 dev-dependencies = [
     "podman==5.*",
     "pytest==8.*",
-    "ruff==0.9.*",
+    "ruff==0.15.11",
     "ty==0.0.31",
 ]
 
