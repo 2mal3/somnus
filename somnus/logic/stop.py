@@ -14,8 +14,8 @@ async def stop_server(prevent_host_shutdown: bool, config: Config) -> AsyncGener
     """
     Raises:
         UserInputError: If the user input is invalid.
-        MCServerStartError: If MC server could not be started.
-        HostServerStartError: If host server could not be started.
+        MCServerStopError: If MC server could not be started.
+        HostServerStopError: If host server could not be started.
     """
 
     ssh = await ssh_login(config)
