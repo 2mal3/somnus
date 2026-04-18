@@ -44,6 +44,16 @@ def podman_setup() -> Generator:
 def test_main() -> None:
     server = mcstatus.JavaServer("127.0.0.1", 25565)
 
+    # Run 1
+    asyncio.run(start_server())
+
+    server.ping()
+
+    asyncio.run(stop_server())
+    with pytest.raises(Exception):
+        server.ping()
+
+    # Run 2
     asyncio.run(start_server())
 
     server.ping()
