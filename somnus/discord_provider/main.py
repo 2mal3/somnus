@@ -187,6 +187,7 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
     else:
         update_players_online_status.stop()
     finally:
+        # Its now safe to change the world if it was requested
         await world_selector.change_world()
 
 
