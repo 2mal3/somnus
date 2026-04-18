@@ -17,7 +17,7 @@ class ServerState(BaseModel):
 async def get_mcstatus(config: Config) -> JavaStatusResponse | None:
     try:
         server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
-        return server.status()
+        return await asyncify(server.status)()
     except Exception as e:
         if (not isinstance(e, OSError)) and (not isinstance(e, TimeoutError)):
             log.error(f"Couldn't get mcstatus: {e}")
