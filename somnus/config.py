@@ -44,7 +44,8 @@ def text_is_true(text: str) -> bool:
 load_dotenv()
 
 try:
-    environ = {key: value for key, value in environ.items() if value.strip() != ""}
+    for key, value in {key: value for key, value in environ.items() if value.strip() != ""}.items():
+        environ[key] = value.strip()
     CONFIG = Config(**environ)  # type: ignore
 except ValidationError as errors:
     for error in errors.errors():

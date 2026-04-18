@@ -3,18 +3,18 @@ name: "CodeQL"
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "**.py"
       - "**.toml"
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "**.py"
       - "**.toml"
   schedule:
-    - cron: '29 19 * * 5'
+    - cron: "29 19 * * 5"
 
 jobs:
   ruff-lint:
@@ -47,8 +47,8 @@ jobs:
       - name: Run Ruff
         run: ruff format --check
 
-  pyright:
-    name: Pyright
+  ty:
+    name: Ty
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -60,4 +60,4 @@ jobs:
         run: pip install -r requirements-dev.lock
 
       - name: Run Pyright
-        run: pyright
+        run: ty check --output-format=github
