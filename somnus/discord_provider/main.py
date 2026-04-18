@@ -739,8 +739,12 @@ async def _stop_inactivity() -> bool | None:
         activity = discord.Game(name=LH("status.text.stopping", args={"world_name": world_config.current_world}))
         await bot.change_presence(status=Status.idle, activity=activity)
 
-        async for _ in stop.stop_server(True, CONFIG):
-            pass
+        try:
+            async for _ in stop.stop_server(True, CONFIG):
+                pass
+        except Exception as e:
+            log.error("Failed to stop server during inactivity shutdown", exc_info=e)
+            await message.edit(content=LH("commands.stop.error.general", args={"e": e}))
         await _update_bot_presence_and_inactivity()
         await message.edit(content=LH("other.inactivity_shutdown.finished_msg"))
         busy_provider.make_available()
@@ -825,7 +829,10 @@ async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool
 
 @tasks.loop(seconds=10)
 async def update_players_online_status() -> None:
-    await _update_bot_presence_and_inactivity()
+    try:
+        await _update_bot_presence_and_inactivity()
+    except Exception as e:
+        log.error("Failed to update bot presence and inactivity", exc_info=e)
 
 
 def main(config: Config = CONFIG) -> None:
