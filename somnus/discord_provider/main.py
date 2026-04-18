@@ -42,8 +42,6 @@ class ActionWrapperProperties(BaseModel):
 
 
 async def action_wrapper(props: ActionWrapperProperties) -> None:
-    global inactivity_seconds  # noqa: PLW0603
-
     if busy_provider.is_busy():
         await props.ctx.response.send_message(LH("other.busy"), ephemeral=True)
         return
@@ -88,10 +86,6 @@ async def action_wrapper(props: ActionWrapperProperties) -> None:
 
     finally:
         busy_provider.make_available()
-        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-            update_players_online_status.start()
-            log.info("Status Updater started!")
         await _update_bot_presence_and_inactivity()
 
 
@@ -135,6 +129,8 @@ async def ping_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction) -> None:
+    global inactivity_seconds
+
     world_config = await world_selector.get_world_selector_config()
 
     action_props = ActionWrapperProperties(
@@ -149,6 +145,11 @@ async def start_server_command(ctx: discord.Interaction) -> None:
         await action_wrapper(action_props)
     except Exception:
         pass
+    else:
+        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
+            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
+            update_players_online_status.start()
+            log.info("Status Updater started!")
 
 
 @tree.command(name="stop", description=LH("commands.stop.description"))
