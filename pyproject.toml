@@ -35,7 +35,7 @@ ignore = [
     "B",
     "EM",
     "TRY",
-    "PGH",
+    "PGH003",
     "COM812",   # unnecessary complex
     "TCH",
     "I",    # way to complex to automate this
@@ -44,7 +44,7 @@ ignore = [
     "BLE",
     "ARG",  # discord.py needs some arguments to be present even when we don't use them
     "RUF005",   # Bad readability / unnecessary complex
-    "DTZ",
+    "DTZ005",
     "UP",
     "PD",   # we are not data scientists
     "S101", # we need assert for tests
