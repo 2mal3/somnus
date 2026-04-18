@@ -4,7 +4,6 @@ from pexpect import pxssh
 
 from somnus.config import Config
 from somnus.logger import log
-from somnus.logic.world_selector import get_current_world
 
 
 async def ssh_login(config: Config) -> pxssh.pxssh:

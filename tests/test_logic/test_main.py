@@ -11,10 +11,10 @@ from somnus.logic import start, stop
 
 TEST_CONFIG = Config(
     MC_SERVER_START_CMD="cd /app && ./run.sh",
-    DISCORD_TOKEN="a",
+    DISCORD_TOKEN="a",  # noqa: S106
     HOST_SERVER_HOST="localhost",
     HOST_SERVER_SSH_PORT=25566,
-    HOST_SERVER_PASSWORD="root",
+    HOST_SERVER_PASSWORD="root",  # noqa: S106
     HOST_SERVER_USER="root",
     MC_SERVER_ADDRESS="localhost:25565",
     DEBUG=True,

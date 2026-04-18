@@ -1,4 +1,3 @@
-import asyncio
 from typing import AsyncGenerator
 
 from pexpect import TIMEOUT, pxssh

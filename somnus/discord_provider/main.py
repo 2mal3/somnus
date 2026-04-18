@@ -211,7 +211,7 @@ async def add_world_command(ctx: discord.Interaction, display_name: str, start_c
 
 
 @tree.command(name="edit_world", description=LH("commands.edit_world.description"))
-async def edit_world_command(  # noqa: PLR0913
+async def edit_world_command(
     ctx: discord.Interaction,
     editing_world_name: str,
     new_display_name: str | None = None,
@@ -354,10 +354,7 @@ async def change_world_command(ctx: discord.Interaction) -> None:
     select_view = discord.ui.View()
     select_view.add_item(select)
 
-    if world_selector_config.new_selected_world:
-        selected_world = world_selector_config.new_selected_world
-    else:
-        selected_world = world_selector_config.current_world
+    selected_world = world_selector_config.new_selected_world or world_selector_config.current_world
 
     # Sende die Nachricht mit dem Dropdown-Menü
     await ctx.response.send_message(

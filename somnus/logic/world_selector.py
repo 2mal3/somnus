@@ -2,7 +2,7 @@ import json
 import os
 
 import aiofiles
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 from somnus.config import CONFIG, Config
 from somnus.logger import log
@@ -149,7 +149,7 @@ async def get_world_selector_config() -> WorldSelectorConfig:
 
 
 async def _get_world_selector_config_from_path(path: str) -> WorldSelectorConfig:
-    if not os.path.exists(path):
+    if not os.path.exists(path):  # noqa: ASYNC240
         raise FileNotFoundError
 
     async with aiofiles.open(path, encoding="utf-8") as file:

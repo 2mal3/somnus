@@ -1,4 +1,3 @@
-import asyncio
 from typing import AsyncGenerator
 
 from somnus.actions.start_host import start_host_server
