@@ -17,6 +17,7 @@ dependencies = [
     "aiofiles==24.*",
     "yet-another-i18n==0.2.*",
     "toml==0.10.*",
+    "asyncer==0.0.17",
 ]
 readme = "README.md"
 requires-python = ">= 3.11"

@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 
+from asyncer import asyncify
 from pexpect import TIMEOUT, pxssh
 
 from somnus.actions.ssh import create_screen, detach_screen_session, kill_screen, ssh_login
@@ -25,7 +26,7 @@ async def start_mc_server(config: Config) -> AsyncGenerator:
         # Exit peacefully
         log.debug("Detaching screen ...")
         await detach_screen_session(ssh)
-        ssh.prompt()
+        await asyncify(ssh.prompt)()
         log.debug("Logging out ...")
         ssh.logout()
         yield
@@ -35,9 +36,9 @@ async def start_mc_server(config: Config) -> AsyncGenerator:
         try:
             log.debug("Problem occurred, try to gracefully exit ...", exc_info=exception1)
             await detach_screen_session(ssh)
-            ssh.prompt()
+            await asyncify(ssh.prompt)()
             await kill_screen(ssh, config)
-            ssh.prompt()
+            await asyncify(ssh.prompt)()
             ssh.close()
         except Exception as exception2:
             log.error("Could not gracefully exit", exc_info=exception2)
@@ -71,7 +72,7 @@ async def _try_start_mc_server(ssh: pxssh.pxssh) -> AsyncGenerator:
     ]
     for i, message in enumerate(messages):
         try:
-            found_element_index = ssh.expect(["Done"] + message, timeout=log_search_timeout_seconds)
+            found_element_index = await asyncify(ssh.expect)(["Done"] + message, timeout=log_search_timeout_seconds)
             log.debug(f"Stage '{message}' completed")
 
             if found_element_index == 0:  # if finished earlier, animate the progress bar to its end

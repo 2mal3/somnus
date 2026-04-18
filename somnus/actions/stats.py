@@ -1,3 +1,4 @@
+from asyncer import asyncify
 from mcstatus import JavaServer
 from mcstatus.status_response import JavaStatusResponse
 from pexpect import pxssh
@@ -16,7 +17,7 @@ class ServerState(BaseModel):
 async def get_mcstatus(config: Config) -> JavaStatusResponse | None:
     try:
         server = await JavaServer.async_lookup(config.MC_SERVER_ADDRESS)
-        return server.status()
+        return await asyncify(server.status)()
     except Exception as e:
         if (not isinstance(e, OSError)) and (not isinstance(e, TimeoutError)):
             log.error(f"Couldn't get mcstatus: {e}")
@@ -41,12 +42,13 @@ async def _is_host_server_running(config: Config) -> bool:
     if config.DEBUG and config.HOST_SERVER_HOST in ["localhost", "127.0.0.1"]:
         return True
 
-    if config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"] and not ping(config.HOST_SERVER_HOST):
+    ping_success = await asyncify(ping)(config.HOST_SERVER_HOST)
+    if config.HOST_SERVER_HOST not in ["localhost", "127.0.0.1"] and not ping_success:
         return False
 
     try:
         ssh = pxssh.pxssh()
-        ssh.login(
+        await asyncify(ssh.login)(
             config.HOST_SERVER_HOST,
             config.HOST_SERVER_USER,
             config.HOST_SERVER_PASSWORD,

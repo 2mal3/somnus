@@ -1,5 +1,6 @@
 import asyncio
 
+from asyncer import asyncify
 from pexpect import pxssh
 
 from somnus.config import Config
@@ -19,7 +20,7 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
     for tries in range(attempts):
         try:
             ssh = pxssh.pxssh()
-            ssh.login(
+            await asyncify(ssh.login)(
                 config.HOST_SERVER_HOST,
                 config.HOST_SERVER_USER,
                 config.HOST_SERVER_PASSWORD,
@@ -39,7 +40,7 @@ async def ssh_login(config: Config) -> pxssh.pxssh:
 
 async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> None:
     ssh.sendline(f"sudo {command}")
-    choice = ssh.expect(["sudo", "@"])
+    choice = await asyncify(ssh.expect)(["sudo", "@"])
     if choice == 0:
         ssh.sendline(config.HOST_SERVER_PASSWORD)
 
@@ -66,11 +67,11 @@ async def attach_screen(ssh: pxssh.pxssh, config: Config) -> None:
     ssh.sendline("screen -r mc-server-control")
 
 
-def screen_is_installed(ssh: pxssh.pxssh) -> bool:
+async def screen_is_installed(ssh: pxssh.pxssh) -> bool:
     ssh.sendline("command -v screen")
-    ssh.prompt()
+    await asyncify(ssh.prompt)()
     ssh.sendline("echo $?")
-    ssh.prompt()
+    await asyncify(ssh.prompt)()
 
     before_output = ssh.before
     if before_output is None:
