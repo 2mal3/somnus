@@ -43,6 +43,7 @@ async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> N
     choice = ssh.expect(["sudo", "@"])
     if choice == 0:
         ssh.sendline(config.HOST_SERVER_PASSWORD)
+    ssh.prompt()
 
 
 async def detach_screen_session(ssh: pxssh.pxssh) -> None:
