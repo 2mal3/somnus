@@ -563,7 +563,7 @@ async def _restart() -> AsyncGenerator:
     await world_selector.change_world()
     async for _ in start_mc.start_mc_server(CONFIG):
         yield
-        ssh_client.close()
+    ssh_client.close()
 
 
 async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse) -> None:
