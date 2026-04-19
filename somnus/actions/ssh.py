@@ -43,7 +43,7 @@ async def send_sudo_command(ssh: pxssh.pxssh, config: Config, command: str) -> N
     choice = await asyncify(ssh.expect)(["sudo", "@"])
     if choice == 0:
         ssh.sendline(config.HOST_SERVER_PASSWORD)
-    ssh.prompt()
+    await asyncify(ssh.prompt)()
 
 
 async def detach_screen_session(ssh: pxssh.pxssh) -> None:
@@ -51,13 +51,13 @@ async def detach_screen_session(ssh: pxssh.pxssh) -> None:
     ssh.sendcontrol("a")
     await asyncio.sleep(0.1)
     ssh.sendcontrol("d")
-    ssh.prompt()
+    await asyncify(ssh.prompt)()
 
 
 async def kill_screen(ssh: pxssh.pxssh, config: Config) -> None:
     log.debug("Killing screen session ...")
     ssh.sendline("screen -X -S mc-server-control quit")
-    ssh.prompt()
+    await asyncify(ssh.prompt)()
 
 
 async def create_screen(ssh: pxssh.pxssh, config: Config) -> None:
