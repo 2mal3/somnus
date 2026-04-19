@@ -129,7 +129,7 @@ async def ping_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction) -> None:
-    global inactivity_seconds
+    global inactivity_seconds  # noqa: PLW0603
 
     world_config = await world_selector.get_world_selector_config()
 
