@@ -54,7 +54,7 @@ ignore = [
 ]
 
 [tool.rye.scripts]
-dev = "python3 -m somnus.__main__"
+dev = "python3 -m somnus.discord_provider.main"
 prod = "python3 -m somnus.__main__"
 
 [build-system]

@@ -20,11 +20,6 @@ def generate_progress_bar(value: int, max_value: int, message: str = "") -> str:
     return progress
 
 
-def map_server_status_to_discord_activity(server_status: stats.ServerState) -> discord.Status:
-    if not server_status.host_server_running:
-        return discord.Status.dnd
-    # After here the host server is running
-    elif not server_status.mc_server_running:
-        return discord.Status.idle
-    else:
-        return discord.Status.online
+async def ping_user_after_error(ctx: discord.Interaction) -> None:
+    user_mention = ctx.user.mention
+    await ctx.followup.send(content=f"{user_mention}", ephemeral=False)

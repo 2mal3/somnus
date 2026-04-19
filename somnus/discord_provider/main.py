@@ -1,98 +1,29 @@
 import asyncio
-from typing import AsyncGenerator, Callable
+from typing import AsyncGenerator
 
 import aiofiles
 import discord
 import toml
-from discord import Status, app_commands
+from discord import app_commands
 from discord.ext import tasks
 from mcstatus.status_response import JavaStatusResponse
-from pydantic import BaseModel, ConfigDict
 
 from somnus.actions import ssh, start_mc, stats, stop_mc
-from somnus.config import CONFIG, Config
+from somnus.config import CONFIG
+from somnus.discord_provider.action_warpper import ActionWrapperProperties, action_wrapper
+from somnus.discord_provider.bot import bot
 from somnus.discord_provider.busy_provider import busy_provider
-from somnus.discord_provider.utils import (
-    edit_error_for_discord_subtitle,
-    generate_progress_bar,
-    map_server_status_to_discord_activity,
-)
+from somnus.discord_provider.inactivity_shutdown import check_and_shutdown_for_inactivity, inactivity_provider
+from somnus.discord_provider.update_bot_presence import update_bot_presence
 from somnus.language_handler import LH
 from somnus.logger import log
-from somnus.logic import errors, start, stop, world_selector
+from somnus.logic import start, stop, world_selector
 
-TOTAL_PROGRESS_BAR_STEPS = 20
-
-intents = discord.Intents.default()
-intents.message_content = True
-bot = discord.Client(intents=intents)
 tree = app_commands.CommandTree(bot)
-
-inactivity_seconds = 0
-
-
-class ActionWrapperProperties(BaseModel):
-    func: Callable[..., AsyncGenerator]
-    ctx: discord.Interaction
-    activity: str
-    progress_message: str
-    finish_message: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
-async def action_wrapper(props: ActionWrapperProperties) -> None:
-    if busy_provider.is_busy():
-        await props.ctx.response.send_message(LH("other.busy"), ephemeral=True)
-        return
-
-    log.info(props.progress_message)
-    busy_provider.make_busy()
-
-    await bot.change_presence(status=Status.idle, activity=discord.Game(name=props.activity))
-
-    i = 0
-    message_content = generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
-
-    if props.ctx.response.is_done():
-        await props.ctx.edit_original_response(content=message_content)
-    else:
-        await props.ctx.response.send_message(content=message_content)
-
-    try:
-        async for _ in props.func():
-            i += 1
-            await props.ctx.edit_original_response(
-                content=generate_progress_bar(i, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
-            )
-    except errors.UserInputError as e:
-        await props.ctx.edit_original_response(content=str(e))
-        raise RuntimeError
-
-    except Exception as e:
-        log.error("Failed to run action", exc_info=e)
-        await props.ctx.edit_original_response(
-            content=LH("commands.general_error", args={"e": edit_error_for_discord_subtitle(e)})
-        )
-        await _ping_user_after_error(props.ctx)
-        raise RuntimeError("Failed to run action") from e
-
-    else:
-        log.info(props.finish_message)
-        await props.ctx.edit_original_response(
-            content=generate_progress_bar(TOTAL_PROGRESS_BAR_STEPS, TOTAL_PROGRESS_BAR_STEPS, props.progress_message)
-        )
-        await props.ctx.channel.send(props.finish_message)  # type: ignore
-
-    finally:
-        busy_provider.make_available()
-        await _update_bot_presence_and_inactivity()
 
 
 @bot.event
 async def on_ready() -> None:
-    global inactivity_seconds  # noqa: PLW0603
-
     if not bot.user:
         log.fatal("Bot user not found!")
         raise RuntimeError("Bot user not found!")
@@ -106,14 +37,10 @@ async def on_ready() -> None:
     except Exception as e:
         log.error(f"Failed to sync commands: {e}")
 
-    if (await stats.get_server_state(CONFIG)).mc_server_running and CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-        inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-        update_players_online_status.start()
-        log.info("Status Updater started!")
+    if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
+        inactivity_provider.inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
 
-    log.debug("Updating bot presence ...")
-    await _update_bot_presence_and_inactivity()
-    log.debug("Initial bot presence updated!")
+    await hartbeat.start()
 
 
 @tree.command(name="ping", description=LH("commands.ping.description"))
@@ -129,8 +56,6 @@ async def ping_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="start", description=LH("commands.start.description"))
 async def start_server_command(ctx: discord.Interaction) -> None:
-    global inactivity_seconds  # noqa: PLW0603
-
     world_config = await world_selector.get_world_selector_config()
 
     action_props = ActionWrapperProperties(
@@ -147,9 +72,7 @@ async def start_server_command(ctx: discord.Interaction) -> None:
         pass
     else:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-            update_players_online_status.start()
-            log.info("Status Updater started!")
+            inactivity_provider.inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
 
 
 @tree.command(name="stop", description=LH("commands.stop.description"))
@@ -168,7 +91,11 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
     message = LH("commands.stop.msg_above_process_bar")
 
     mc_status = await stats.get_mcstatus(CONFIG)
-    if mc_status and mc_status.players.online and not await _players_online_verification(ctx, message, mc_status):
+    if (
+        mc_status
+        and mc_status.players.online
+        and not await _players_online_verification_for_stop(ctx, message, mc_status)
+    ):
         return
 
     world_config = await world_selector.get_world_selector_config()
@@ -185,8 +112,6 @@ async def _stop_server(ctx: discord.Interaction, prevent_host_shutdown: bool) ->
         await action_wrapper(props)
     except Exception:
         pass
-    else:
-        update_players_online_status.stop()
     finally:
         # Its now safe to change the world if it was requested
         await world_selector.change_world()
@@ -348,7 +273,7 @@ async def change_world_command(ctx: discord.Interaction) -> None:
 
         if not (await stats.get_server_state(CONFIG)).mc_server_running:
             await world_selector.change_world()
-            await _update_bot_presence_and_inactivity()
+            await update_bot_presence()
 
     select.callback = select_callback  # ty: ignore
 
@@ -523,8 +448,6 @@ async def get_players_command(ctx: discord.Interaction) -> None:
 
 @tree.command(name="restart", description=LH("commands.restart.description"))
 async def restart_command(ctx: discord.Interaction) -> None:
-    global inactivity_seconds  # noqa: PLW0603
-
     if not (await stats.get_server_state(CONFIG)).mc_server_running:
         await ctx.response.send_message(content=LH("commands.restart.error"))
         return
@@ -532,7 +455,11 @@ async def restart_command(ctx: discord.Interaction) -> None:
     message = LH("commands.restart.above_process_bar.msg")
 
     mc_status = await stats.get_mcstatus(CONFIG)
-    if mc_status and mc_status.players.online and not await _players_online_verification(ctx, message, mc_status):
+    if (
+        mc_status
+        and mc_status.players.online
+        and not await _players_online_verification_for_stop(ctx, message, mc_status)
+    ):
         return
 
     props = ActionWrapperProperties(
@@ -549,9 +476,7 @@ async def restart_command(ctx: discord.Interaction) -> None:
         pass
     else:
         if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-            update_players_online_status.start()
-            log.info("Status Updater started!")
+            inactivity_provider.inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
 
 
 async def _restart() -> AsyncGenerator:
@@ -559,15 +484,15 @@ async def _restart() -> AsyncGenerator:
     async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
         yield
         yield
-    update_players_online_status.stop()
     await world_selector.change_world()
     async for _ in start_mc.start_mc_server(CONFIG):
         yield
     ssh_client.close()
 
 
-async def _players_online_verification(ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse) -> None:
-    busy_provider.make_available()
+async def _players_online_verification_for_stop(
+    ctx: discord.Interaction, message: str, mcstatus: JavaStatusResponse
+) -> None:
     result_future = asyncio.Future()
 
     confirm_button = discord.ui.Button(
@@ -641,162 +566,6 @@ async def _players_online_verification(ctx: discord.Interaction, message: str, m
     return result
 
 
-async def _update_bot_presence_and_inactivity() -> None:
-    world_selector_config = await world_selector.get_world_selector_config()
-    server_status = await stats.get_server_state(CONFIG)
-
-    if server_status.mc_server_running:
-        # Online
-        mc_status = await stats.get_mcstatus(CONFIG)
-        if not mc_status:
-            text = LH(
-                "status.text.online",
-                args={"world_name": world_selector_config.current_world, "players_online": "X", "max_players": "Y"},
-            )
-        else:
-            text = LH(
-                "status.text.online",
-                args={
-                    "world_name": world_selector_config.current_world,
-                    "players_online": mc_status.players.online,
-                    "max_players": mc_status.players.max,
-                },
-            )
-            if CONFIG.INACTIVITY_SHUTDOWN_MINUTES and await _check_for_inactivity_shutdown(mc_status.players.online):
-                return
-        activity = discord.Game(name=text)
-
-    elif server_status.host_server_running:
-        # Only Host online
-        text = LH("status.text.only_host_online", args={"world_name": world_selector_config.current_world})
-        activity = discord.Activity(type=discord.ActivityType.listening, name=text)
-    else:
-        # Offline
-        text = LH("status.text.offline", args={"world_name": world_selector_config.current_world})
-        activity = discord.Activity(type=discord.ActivityType.listening, name=text)
-
-    status = map_server_status_to_discord_activity(server_status)
-
-    await bot.change_presence(status=status, activity=activity)
-
-
-async def _check_for_inactivity_shutdown(players_online: int) -> bool:
-    global inactivity_seconds  # noqa: PLW0603
-
-    if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-        if players_online == 0:
-            if inactivity_seconds >= 0:
-                if inactivity_seconds == 0:
-                    await _stop_inactivity()
-                    return True
-                inactivity_seconds -= 10
-        else:
-            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-    return False
-
-
-async def _stop_inactivity() -> bool | None:
-    global inactivity_seconds  # noqa: PLW0603
-
-    if not CONFIG.DISCORD_STATUS_CHANNEL_ID:
-        log.error(
-            "DISCORD_STATUS_CHANNEL_ID in .env.test not correct. Automatic shutdown due to inactivity not possible!"
-        )
-        return False
-    channel = bot.get_channel(CONFIG.DISCORD_STATUS_CHANNEL_ID)
-    if not channel or not isinstance(channel, discord.TextChannel):
-        raise TypeError("Could not get channel from Discord!")
-
-    log.info("Send information message for shutdown due to inactivity ...")
-    message, player_confirmed_stop = await _inactivity_shutdown_verification(channel)
-    if player_confirmed_stop:
-        log.info("Stopping due to inactivity ...")
-        if busy_provider.is_busy():
-            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-            await message.edit(content=LH("other.inactivity_shutdown.error.is_busy"))
-            return None
-        busy_provider.make_busy()
-        mcstatus = await stats.get_mcstatus(CONFIG)
-        if mcstatus is None:
-            busy_provider.make_available()
-            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-            await message.edit(content=LH("other.inactivity_shutdown.error.offline"))
-            return None
-        if mcstatus.players.online != 0:
-            busy_provider.make_available()
-            inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-            await message.edit(content=LH("other.inactivity_shutdown.error.players_online"))
-            return None
-
-        inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-
-        world_config = await world_selector.get_world_selector_config()
-        update_players_online_status.stop()
-        log.info("Status Updater stopped!")
-
-        activity = discord.Game(name=LH("status.text.stopping", args={"world_name": world_config.current_world}))
-        await bot.change_presence(status=Status.idle, activity=activity)
-
-        try:
-            async for _ in stop.stop_server(True, CONFIG):
-                pass
-        except Exception as e:
-            log.error("Failed to stop server during inactivity shutdown", exc_info=e)
-            await message.edit(content=LH("commands.stop.error.general", args={"e": e}))
-        await _update_bot_presence_and_inactivity()
-        await message.edit(content=LH("other.inactivity_shutdown.finished_msg"))
-        busy_provider.make_available()
-
-
-async def _inactivity_shutdown_verification(channel: discord.TextChannel) -> tuple[discord.Message, bool]:
-    result_future = asyncio.Future()
-
-    cancel_button = discord.ui.Button(label=LH("other.inactivity_shutdown.cancel"), style=discord.ButtonStyle.green)
-
-    async def cancel_callback(interaction: discord.Interaction) -> None:
-        global inactivity_seconds  # noqa: PLW0603
-
-        await interaction.response.defer()
-        cancel_button.disabled = True
-        inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
-        await message.edit(
-            content=LH(
-                "other.inactivity_shutdown.canceled",
-                args={"inactivity_shutdown_minutes": CONFIG.INACTIVITY_SHUTDOWN_MINUTES},
-            ),
-            view=view,
-        )
-        result_future.set_result(False)
-        view.stop()
-
-    cancel_button.callback = cancel_callback  # ty: ignore
-
-    view = discord.ui.View()
-    view.add_item(cancel_button)
-
-    message = await channel.send(
-        content=LH(
-            "other.inactivity_shutdown.verification",
-            args={"inactivity_shutdown_minutes": CONFIG.INACTIVITY_SHUTDOWN_MINUTES},
-        ),
-        view=view,
-    )
-
-    try:
-        await asyncio.wait_for(view.wait(), timeout=30.0)
-    except asyncio.TimeoutError:
-        if not result_future.done():
-            result_future.set_result(True)
-            cancel_button.disabled = True
-            await message.edit(content=LH("other.inactivity_shutdown.stopping"), view=view)
-    finally:
-        result = await result_future
-        if result:
-            return message, True
-        else:
-            return message, False
-
-
 async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWorld) -> str:
     string = LH("formatting.sudo_world_info.start")
 
@@ -807,11 +576,6 @@ async def _get_formatted_world_info_string(world: world_selector.WorldSelectorWo
             args={"attr": attr, "value": str(getattr(world, attr)), "gap_filler": ((15 - len(attr)) * " ")},
         )
     return string + LH("formatting.sudo_world_info.end")
-
-
-async def _ping_user_after_error(ctx: discord.Interaction) -> None:
-    user_mention = ctx.user.mention
-    await ctx.followup.send(content=f"{user_mention}", ephemeral=False)
 
 
 async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool:
@@ -826,16 +590,18 @@ async def _is_super_user(ctx: discord.Interaction, message: bool = True) -> bool
 
 
 @tasks.loop(seconds=10)
-async def update_players_online_status() -> None:
+async def hartbeat() -> None:
     try:
-        await _update_bot_presence_and_inactivity()
+        await update_bot_presence()
+        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
+            await check_and_shutdown_for_inactivity()
     except Exception as e:
         log.error("Failed to update bot presence and inactivity", exc_info=e)
 
 
-def main(config: Config = CONFIG) -> None:
+def main() -> None:
     log.info("Starting bot ...")
-    bot.run(config.DISCORD_TOKEN, log_handler=None)
+    bot.run(CONFIG.DISCORD_TOKEN, log_handler=None)
 
 
 if __name__ == "__main__":

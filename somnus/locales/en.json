@@ -115,8 +115,8 @@
       "verification": "The Minecraft-Server has been online without players for {inactivity_shutdown_minutes} minutes. \n**Therefore the server will be stopped in 30 seconds!**",
       "cancel": "Cancel, keep Server online",
       "canceled": "Automatic stop canceled. If there are still no players online for the next {inactivity_shutdown_minutes} minutes, an attempt is made to stop the server again.",
-      "stopping": "**Stopping due to inactivity**",
-      "finished_msg": "**Server stopped due to inactivity!**",
+      "stopping": "Stopping due to inactivity",
+      "finished_msg": "Server stopped due to inactivity!",
       "error": {
         "is_busy": "Server not stopped because an operation is currently running.",
         "players_online": "Server not stopped because players are now online.",
