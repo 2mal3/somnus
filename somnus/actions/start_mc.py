@@ -24,7 +24,6 @@ async def start_mc_server(config: Config) -> AsyncGenerator:
             yield
 
         # Exit peacefully
-        log.debug("Detaching screen ...")
         await detach_screen_session(ssh)
         await asyncify(ssh.prompt)()
         log.debug("Logging out ...")

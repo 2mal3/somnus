@@ -4,7 +4,6 @@ import discord
 
 from somnus.actions import stats
 from somnus.config import CONFIG
-from somnus.discord_provider.action_warpper import ActionWrapperProperties, action_wrapper
 from somnus.discord_provider.bot import bot
 from somnus.discord_provider.busy_provider import busy_provider
 from somnus.language_handler import LH
@@ -31,11 +30,10 @@ async def check_and_shutdown_for_inactivity() -> None:
         log.warning("Could not get mcstatus for inactivity shutdown check!")
         return
 
-    if mc_status.players.online == 0:
-        if inactivity_provider.inactivity_seconds >= 0:
-            if inactivity_provider.inactivity_seconds == 0:
-                await _stop_inactivity()
-            inactivity_provider.inactivity_seconds -= 10
+    if mc_status.players.online == 0 and not busy_provider.is_busy():
+        inactivity_provider.inactivity_seconds -= 10
+        if inactivity_provider.inactivity_seconds <= 0:
+            await _stop_inactivity()
     else:
         inactivity_provider.inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
 
