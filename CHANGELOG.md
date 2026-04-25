@@ -1,19 +1,22 @@
-
-## v2.0.0
+## v3.0.0
 
 ### Removed
 
-- `de-fun` language pack
-- restart request after changing worlds
-
-### Fixed
-
-- critical bug: change_world didn't work if server was offline
+- MC_SERVER_START_CMD_SUDO config
+- DEBUG_LOGGING config
 
 ### Changed
 
-- improved display of errors
-- better error handling in `/start`, `/stop`, `/restart`
-- consistent error display in `/start`, `/stop`, `/restart` 
-- various language pack improvements
-- discord status text updated due to discord redesign
+- always log debug logs
+- improved responsivness
+- more stable inactivity shutdown
+- stabler discord bot status
+
+### Fixed
+
+- didn't wait for some shell commands to finish before sending additional commands
+- busy state sometimes set incorrectly
+- update_players_online_status incorrectly started
+- broken ssh timeout detection
+- ssh connection not always properly closed
+- changing worlds sometimes wouldn't work
