@@ -1,6 +1,5 @@
 import discord
 
-from somnus.actions import stats
 
 
 def edit_error_for_discord_subtitle(err: Exception) -> str:
