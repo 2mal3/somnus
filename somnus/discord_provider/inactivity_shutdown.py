@@ -117,7 +117,7 @@ async def _stop_inactivity() -> None:
 
     busy_provider.make_busy()
     try:
-        async for _ in stop.stop_server(True, CONFIG):
+        async for _ in stop.stop_server(False, CONFIG):
             pass
     except Exception as e:
         log.error("Failed to stop server during inactivity shutdown", exc_info=e)
