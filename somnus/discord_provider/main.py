@@ -474,9 +474,6 @@ async def restart_command(ctx: discord.Interaction) -> None:
         await action_wrapper(props)
     except Exception:
         pass
-    else:
-        if CONFIG.INACTIVITY_SHUTDOWN_MINUTES:
-            inactivity_provider.inactivity_seconds = CONFIG.INACTIVITY_SHUTDOWN_MINUTES * 60
 
 
 async def _restart() -> AsyncGenerator:

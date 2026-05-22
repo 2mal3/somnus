@@ -9,7 +9,7 @@ from somnus.logger import log
 from somnus.logic.errors import UserInputError
 
 
-async def start_server(config: Config) -> AsyncGenerator[bool | None, None]:
+async def start_server(config: Config) -> AsyncGenerator:
     """
     Raises:
         UserInputError: If the user input is invalid.
@@ -36,7 +36,7 @@ async def start_server(config: Config) -> AsyncGenerator[bool | None, None]:
 
         except Exception:
             log.warning("Could not connect to host server. Send WOL packages again and retry.")
-            yield True
+            yield
             try:
                 async for _ in start_host_server(config):
                     yield

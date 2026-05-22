@@ -16,7 +16,7 @@ from somnus.logic import errors
 
 
 class ActionWrapperProperties(BaseModel):
-    func: Callable[..., AsyncGenerator]
+    func: Callable[..., AsyncGenerator[None, None]]
     ctx: discord.Interaction
     activity: str
     progress_message: str
