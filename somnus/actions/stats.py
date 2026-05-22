@@ -55,7 +55,8 @@ async def _is_host_server_running(config: Config) -> bool:
             port=config.HOST_SERVER_SSH_PORT,
             login_timeout=5,
         )
-        ssh.close()
+        await asyncify(ssh.prompt)()
+        ssh.logout()
     except Exception:
         return False
 

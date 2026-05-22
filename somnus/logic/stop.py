@@ -1,5 +1,7 @@
 from typing import AsyncGenerator
 
+from asyncer import asyncify
+
 from somnus.actions.ssh import ssh_login
 from somnus.actions.stats import get_server_state
 from somnus.actions.stop_host import stop_host_server
@@ -25,10 +27,12 @@ async def stop_server(prevent_host_shutdown: bool, config: Config) -> AsyncGener
     )
 
     if not (server_state.host_server_running or server_state.mc_server_running):
-        ssh.close()
+        asyncify(ssh.prompt)()
+        ssh.logout()
         raise UserInputError(LH("commands.stop.error.already_stopped"))
     elif prevent_host_shutdown and not server_state.mc_server_running:
-        ssh.close()
+        asyncify(ssh.prompt)()
+        ssh.logout()
         raise UserInputError(LH("commands.stop.error.mc_already_stopped"))
 
     yield
@@ -52,6 +56,6 @@ async def stop_server(prevent_host_shutdown: bool, config: Config) -> AsyncGener
         await stop_host_server(ssh, config)
     yield
 
-    ssh.sendline("exit")
-    ssh.close()
+    await asyncify(ssh.prompt)()
+    ssh.logout()
     yield

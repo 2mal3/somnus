@@ -33,15 +33,17 @@ async def start_mc_server(config: Config) -> AsyncGenerator:
     # Exit in error, kill screen
     except Exception as exception1:
         try:
+            # Gracefull exit
             log.debug("Problem occurred, try to gracefully exit ...", exc_info=exception1)
             await detach_screen_session(ssh)
             await asyncify(ssh.prompt)()
             await kill_screen(ssh, config)
             await asyncify(ssh.prompt)()
-            ssh.close()
+            ssh.logout()
+            # TODO: raise error to notify parent that the server dindt start correctly
         except Exception as exception2:
             log.error("Could not gracefully exit", exc_info=exception2)
-            ssh.close()
+            ssh.close()  # Hard closing here to make shure the connection is dropped
             raise MCServerStartError(
                 "Problem occured, try to gracefully exit failed. Problem01 (initial problem):\n"
                 + str(exception1)
