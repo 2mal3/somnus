@@ -476,6 +476,7 @@ async def restart_command(ctx: discord.Interaction) -> None:
         pass
 
 
+# TODO(2mal3): prevent duble login
 async def _restart() -> AsyncGenerator:
     ssh_client = await ssh.ssh_login(CONFIG)
     async for _ in stop_mc.stop_mc_server(ssh_client, CONFIG):
