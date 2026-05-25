@@ -4,6 +4,8 @@
 [![CodeQL](https://github.com/2mal3/somnus/actions/workflows/codeql.yml/badge.svg)](https://github.com/2mal3/somnus/actions/workflows/codeql.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/2mal3/somnus)
 
+> ⚠️ This Project has been moved to https://codeberg.org/2mal3/somnus.
+
 A Discord bot to remotely control and manage multiple Minecraft servers.
 
 ## 📋 Features
